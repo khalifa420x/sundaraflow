@@ -701,7 +701,7 @@ export default function LoginPage() {
                   className="lp-role-btn"
                   onClick={() => router.push('/register/client')}
                 >
-                  ⚡ Je suis client
+                  ⚡ Je suis membre
                 </button>
               </div>
             </div>

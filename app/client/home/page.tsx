@@ -40,7 +40,7 @@ const MOCK_TIPS = [
 const TYPE_CONFIG: Record<string, { icon: string; badge: string; label: string; gradient: string }> = {
   nutrition: { icon: '🥗', badge: 'badge-green', label: 'Nutrition', gradient: 'linear-gradient(135deg,#16a34a,var(--green))' },
   sport:     { icon: '🏋️', badge: 'badge-blue',  label: 'Sport',     gradient: 'linear-gradient(135deg,#2563eb,var(--blue))'  },
-  business:  { icon: '🧠', badge: 'badge-gold',  label: 'Business',  gradient: 'linear-gradient(135deg,var(--gold-d),var(--gold))' },
+  business:  { icon: '🧠', badge: 'badge-dim',   label: 'Business',  gradient: 'linear-gradient(135deg,#374151,#4B5563)' },
 };
 const CAT_ICON: Record<string, string> = { nutrition: '🥗', training: '🏋️', lifestyle: '🌿', mindset: '🧠' };
 const TIP_CAT_LABEL: Record<string, string> = { nutrition: 'Nutrition', training: 'Entraînement', lifestyle: 'Lifestyle', mindset: 'Mindset' };
@@ -191,11 +191,11 @@ export default function ClientHome() {
 
   const SecHeader = ({ tag, icon, title, accent, byCoach = false }: { tag: string; icon: string; title: string; accent: string; byCoach?: boolean }) => (
     <div style={{ marginBottom: 22 }}>
-      <div className="tag">{icon} {tag}</div>
-      <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(1.4rem,2.8vw,2rem)', fontWeight: 300, fontStyle: 'italic', marginTop: 8 }}>
-        {title} <span className="gold-i">{accent}</span>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(158,27,27,.1)', border: '1px solid rgba(158,27,27,.22)', borderRadius: '9999px', padding: '4px 14px', marginBottom: 12, fontFamily: 'Lexend, sans-serif', fontSize: '.6rem', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#f87171' }}>{icon} {tag}</div>
+      <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,2.8vw,2.2rem)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, marginTop: 4 }}>
+        {title} <span style={{ color: '#9E1B1B' }}>{accent}</span>
       </h2>
-      {byCoach && coachName && <p style={{ fontSize: '.75rem', color: 'var(--wd)', marginTop: 5 }}>Par {coachName}</p>}
+      {byCoach && coachName && <p style={{ fontSize: '.75rem', color: '#9CA3AF', marginTop: 6, fontFamily: 'Inter, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' as const, fontWeight: 600, fontSize: '.62rem' as any }}>Par {coachName}</p>}
     </div>
   );
 
@@ -203,17 +203,26 @@ export default function ClientHome() {
     <ProtectedRoute role="client">
       <>
         <Toast />
-        <div style={{ minHeight: '100vh', background: 'var(--k0)', color: 'var(--w)', fontFamily: 'var(--fb)' }}>
+        <div className="sf-page-root" style={{ minHeight: '100vh', background: '#121212', color: '#FFFFFF', fontFamily: 'Inter, sans-serif',
+          /* ── Color token overrides — Kinetic Monolith system ── */
+          ['--gold' as any]: '#9E1B1B', ['--gold-d' as any]: '#7a1212', ['--gold-glow' as any]: 'rgba(158,27,27,0.14)',
+          ['--amber' as any]: '#9E1B1B', ['--blue' as any]: '#9E1B1B', ['--purple' as any]: '#9E1B1B',
+          ['--green' as any]: '#16a34a', ['--red' as any]: '#dc2626',
+          ['--k0' as any]: '#121212', ['--k2' as any]: '#1a1a1a', ['--k3' as any]: '#1e1e1e', ['--k4' as any]: '#252525',
+          ['--wf' as any]: 'rgba(255,255,255,0.07)', ['--w' as any]: '#FFFFFF', ['--wd' as any]: '#9CA3AF',
+          ['--fd' as any]: 'Lexend, sans-serif', ['--fb' as any]: 'Inter, sans-serif',
+          ['--r' as any]: '6px', ['--rl' as any]: '12px', ['--rxl' as any]: '16px',
+        }}>
 
           {/* ══ HEADER ══ */}
           <header style={{ borderBottom: '1px solid var(--wf)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: 'rgba(6,6,6,.93)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 100 }}>
-            <div style={{ fontFamily: 'var(--fd)', fontSize: '1.3rem', letterSpacing: '.04em', cursor: 'pointer' }} onClick={() => router.push('/')}>
-              Sundara<span style={{ color: 'var(--gold)' }}>Flow</span>
-              <span style={{ fontSize: '.58rem', color: 'var(--wd)', marginLeft: 10, fontFamily: 'var(--fb)', letterSpacing: '.08em' }}>Espace Client</span>
+            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.3rem', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 700 }} onClick={() => router.push('/')}>
+              Sundara<span style={{ color: '#9E1B1B' }}>Flow</span>
+              <span style={{ fontSize: '.58rem', color: '#9CA3AF', marginLeft: 10, fontFamily: 'Inter, sans-serif', letterSpacing: '.08em', fontWeight: 400 }}>Espace Membre</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-              <span className="badge badge-blue">👤 Client</span>
-              <span style={{ fontSize: '.7rem', color: 'var(--wd)' }}>{userName || user?.email}</span>
+              <span style={{ background: 'rgba(158,27,27,.2)', border: '1px solid rgba(158,27,27,.35)', borderRadius: '9999px', padding: '3px 10px', fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: '#f87171' }}>👤 Membre</span>
+              <span style={{ fontSize: '.7rem', color: '#9CA3AF' }}>{userName || user?.email}</span>
               <button className="btn btn-gold btn-sm" onClick={() => router.push('/client')}>Mes programmes →</button>
               <button className="btn btn-ghost btn-sm" onClick={handleSignOut}>Déconnexion</button>
             </div>
@@ -228,8 +237,8 @@ export default function ClientHome() {
               <div className="hero-grid-lines" />
               <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(22px)', transition: 'opacity .55s ease, transform .55s ease' }}>
                 <div className="hero-eyebrow" style={{ marginBottom: 18 }}>{greeting()}, {userName || 'athlète'}</div>
-                <h1 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(2rem,5vw,3.8rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.06, marginBottom: 14 }}>
-                  Votre parcours <span className="gold-i">commence ici.</span>
+                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(2rem,5vw,3.8rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .96, marginBottom: 14 }}>
+                  Votre parcours <span style={{ color: '#9E1B1B' }}>commence ici.</span>
                 </h1>
                 <p style={{ fontSize: 'clamp(.88rem,1.6vw,1.05rem)', color: 'var(--wd)', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.88 }}>
                   {displayPrograms.length} programme{displayPrograms.length !== 1 ? 's' : ''}{displayNut ? ' · Nutrition active' : ''}{displayMeals.length > 0 ? ` · ${displayMeals.length} repas` : ''}{displayTips.length > 0 ? ` · ${displayTips.length} conseils` : ''}.
@@ -250,12 +259,12 @@ export default function ClientHome() {
                     <div className="atb-dot atb-dot-y" />
                     <div className="atb-dot atb-dot-g" />
                   </div>
-                  <div className="atb-brand">Sundara<span>Flow</span> <span style={{ fontSize: '.65rem', color: 'var(--wd)', fontFamily: 'var(--fb)', fontWeight: 400 }}>— Espace Client</span></div>
+                  <div className="atb-brand">Sundara<span>Flow</span> <span style={{ fontSize: '.65rem', color: 'var(--wd)', fontFamily: 'var(--fb)', fontWeight: 400 }}>— Espace Membre</span></div>
                 </div>
                 <div className="atb-right">
                   <div className="atb-user">
                     <div className="atb-av">{(userName || 'CL').slice(0, 2).toUpperCase()}</div>
-                    <span>{userName || 'Client'}</span>
+                    <span>{userName || 'Membre'}</span>
                   </div>
                   {coachName && <span style={{ fontSize: '.68rem', color: 'var(--wd)' }}>Coach : <strong style={{ color: 'var(--gold)' }}>{coachName}</strong></span>}
                 </div>
@@ -265,11 +274,11 @@ export default function ClientHome() {
               <div className="app-main" style={{ padding: '18px 22px' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
                   {[
-                    { icon: '📋', label: 'Programmes',      val: loading ? '—' : displayPrograms.length,    color: 'var(--gold)' },
-                    { icon: '🥗', label: 'Plan nutrition',  val: loading ? '—' : `${displayNut.calories} kcal`, color: 'var(--green)' },
-                    { icon: '🍽️', label: 'Repas assignés',  val: loading ? '—' : displayMeals.length,       color: 'var(--amber)' },
-                    { icon: '💡', label: 'Conseils',        val: loading ? '—' : displayTips.length,        color: 'var(--blue)' },
-                    { icon: '⏱️', label: 'Jeûne',           val: loading ? '—' : displayNut.fastingType || '—', color: 'var(--gold)' },
+                    { icon: '📋', label: 'Programmes',      val: loading ? '—' : displayPrograms.length,    color: '#9E1B1B' },
+                    { icon: '🥗', label: 'Plan nutrition',  val: loading ? '—' : `${displayNut.calories} kcal`, color: '#16a34a' },
+                    { icon: '🍽️', label: 'Repas assignés',  val: loading ? '—' : displayMeals.length,       color: '#9E1B1B' },
+                    { icon: '💡', label: 'Conseils',        val: loading ? '—' : displayTips.length,        color: '#9CA3AF' },
+                    { icon: '⏱️', label: 'Jeûne',           val: loading ? '—' : displayNut.fastingType || '—', color: '#9E1B1B' },
                   ].map(k => (
                     <div className="kpi-card" key={k.label}>
                       <div className="kpi-label">{k.icon} {k.label}</div>
@@ -353,7 +362,7 @@ export default function ClientHome() {
                     ].map((c, i) => (
                       <div key={c.title} className="feat-card" style={{ animation: 'fadeUp .4s ease both', animationDelay: `${i*80}ms` }}>
                         <div className="feat-icon">{c.icon}</div>
-                        <h3 style={{ fontFamily: 'var(--fd)', fontSize: '1rem', fontWeight: 300, marginBottom: 8 }}>{c.title}</h3>
+                        <h3 style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1rem', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8 }}>{c.title}</h3>
                         <p style={{ fontSize: '.8rem', color: 'var(--wd)', lineHeight: 1.72 }}>{c.desc}</p>
                       </div>
                     ))}
@@ -400,12 +409,12 @@ export default function ClientHome() {
                   <div style={{ background: deficit > 0 ? 'rgba(34,197,94,.07)' : 'rgba(248,113,113,.07)', border: `1px solid ${deficit > 0 ? 'rgba(34,197,94,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 'var(--rl)', padding: '20px 24px', marginBottom: 20, display: 'flex', flexWrap: 'wrap', gap: 22, alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontSize: '.62rem', letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--wd)', marginBottom: 5 }}>{deficit > 0 ? 'Déficit calorique' : 'Surplus calorique'}</div>
-                      <div style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 300, color: defColor, fontStyle: 'italic', lineHeight: 1 }}>{defLabel}</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-.04em', color: defColor, lineHeight: 1 }}>{defLabel}</div>
                       <div style={{ fontSize: '.72rem', color: 'var(--wd)', marginTop: 5 }}>Maintenance {(displayNut.maintenanceCalories || 2500).toLocaleString('fr-FR')} → Objectif {(displayNut.calories || 2000).toLocaleString('fr-FR')} kcal/j</div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '.62rem', color: 'var(--wd)', marginBottom: 4 }}>Estimation / semaine</div>
-                      <div style={{ fontFamily: 'var(--fd)', fontSize: '1.6rem', color: defColor, fontStyle: 'italic' }}>{deficit > 0 ? '−' : '+'}{Math.abs(parseFloat(weeklyKg))} kg</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-.04em', color: defColor }}>{deficit > 0 ? '−' : '+'}{Math.abs(parseFloat(weeklyKg))} kg</div>
                       <div style={{ fontSize: '.65rem', color: 'var(--wd)' }}>sur 7 jours</div>
                     </div>
                   </div>
@@ -429,7 +438,7 @@ export default function ClientHome() {
                   </div>
 
                   {displayNut.notes && (
-                    <div style={{ background: 'var(--k3)', border: '1px solid rgba(201,168,76,.16)', borderRadius: 'var(--r)', padding: '12px 16px', fontSize: '.82rem', color: 'var(--wd)' }}>
+                    <div style={{ background: 'var(--k3)', border: '1px solid rgba(158,27,27,.16)', borderRadius: 'var(--r)', padding: '12px 16px', fontSize: '.82rem', color: 'var(--wd)' }}>
                       📝 <strong style={{ color: 'var(--w)' }}>Note de {coachName || 'votre coach'} :</strong> {displayNut.notes}
                     </div>
                   )}
@@ -500,9 +509,9 @@ export default function ClientHome() {
                   { icon: '📊', title: 'Suivi de progression',  desc: 'Visualisez votre évolution semaine par semaine avec des graphiques et indicateurs clés.' },
                 ].map(item => (
                   <div key={item.title} className="feat-card" style={{ opacity: .6, cursor: 'default', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: 14, right: 14, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--gold)', background: 'var(--gold-glow)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 100, padding: '2px 8px' }}>Bientôt</div>
+                    <div style={{ position: 'absolute', top: 14, right: 14, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--gold)', background: 'var(--gold-glow)', border: '1px solid rgba(158,27,27,.2)', borderRadius: 100, padding: '2px 8px' }}>Bientôt</div>
                     <div className="feat-icon" style={{ fontSize: '1.4rem' }}>{item.icon}</div>
-                    <h3 style={{ fontFamily: 'var(--fd)', fontSize: '1.05rem', fontWeight: 300, marginBottom: 8 }}>{item.title}</h3>
+                    <h3 style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8 }}>{item.title}</h3>
                     <p style={{ fontSize: '.8rem', color: 'var(--wd)', lineHeight: 1.72 }}>{item.desc}</p>
                   </div>
                 ))}
@@ -510,10 +519,10 @@ export default function ClientHome() {
             </div>
 
             {/* ══ CTA → /client ══ */}
-            <div style={{ background: 'linear-gradient(135deg,rgba(96,165,250,.06),rgba(201,168,76,.04))', border: '1px solid rgba(201,168,76,.18)', borderRadius: 'var(--rxl)', padding: 'clamp(30px,5vw,50px)', textAlign: 'center', opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .5s' }}>
+            <div style={{ background: 'linear-gradient(135deg,rgba(158,27,27,.08),rgba(158,27,27,.02))', border: '1px solid rgba(158,27,27,.18)', borderRadius: 'var(--rxl)', padding: 'clamp(30px,5vw,50px)', textAlign: 'center', opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .5s' }}>
               <div className="tag" style={{ marginBottom: 16 }}>📂 Espace personnel</div>
-              <h2 style={{ fontFamily: 'var(--fd)', fontSize: 'clamp(1.4rem,3vw,2.3rem)', fontWeight: 300, fontStyle: 'italic', marginBottom: 12 }}>
-                Tous vos programmes en <span className="gold-i">un seul endroit.</span>
+              <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,3vw,2.3rem)', fontWeight: 900, letterSpacing: '-.03em', marginBottom: 12 }}>
+                Tous vos programmes en <span style={{ color: '#9E1B1B' }}>un seul endroit.</span>
               </h2>
               <p style={{ fontSize: '.9rem', color: 'var(--wd)', marginBottom: 28, maxWidth: 440, margin: '0 auto 28px', lineHeight: 1.8 }}>
                 Accédez à votre dashboard complet pour consulter, filtrer et gérer l&apos;ensemble de vos programmes.
@@ -527,6 +536,126 @@ export default function ClientHome() {
         </div>
 
         <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+
+          /* ── Global typography resets scoped to this page ── */
+          .sf-page-root, .sf-page-root * { font-family: 'Inter', sans-serif; }
+
+          /* Headings — extrabold, tight tracking, Lexend */
+          .sf-page-root h1, .sf-page-root h2, .sf-page-root h3 {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 800 !important;
+            letter-spacing: -.03em !important;
+            line-height: 1.05 !important;
+            color: #FFFFFF;
+          }
+          .sf-page-root h4 {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: -.02em !important;
+          }
+
+          /* Labels — uppercase, wide tracking */
+          .sf-page-root .kpi-label {
+            font-family: 'Inter', sans-serif !important;
+            font-size: .62rem !important;
+            font-weight: 600 !important;
+            letter-spacing: .16em !important;
+            text-transform: uppercase !important;
+            color: #9CA3AF !important;
+          }
+
+          /* KPI values — Lexend heavy */
+          .sf-page-root .kpi-val {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: -.04em !important;
+            color: #FFFFFF;
+          }
+
+          /* Body text */
+          .sf-page-root p {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 400 !important;
+            color: #D1D5DB;
+          }
+
+          /* Buttons — uppercase Lexend bold */
+          .sf-page-root button,
+          .sf-page-root .btn {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: .08em !important;
+            text-transform: uppercase !important;
+          }
+
+          /* Badges */
+          .sf-page-root .badge {
+            font-family: 'Inter', sans-serif !important;
+            font-size: .6rem !important;
+            font-weight: 700 !important;
+            letter-spacing: .1em !important;
+            text-transform: uppercase !important;
+          }
+
+          /* App-shell titlebar brand */
+          .sf-page-root .atb-brand {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: .04em !important;
+            text-transform: uppercase !important;
+            font-size: .82rem !important;
+          }
+          .sf-page-root .atb-brand span:first-child { color: #9E1B1B; }
+
+          /* Hero elements */
+          .sf-page-root .hero-eyebrow {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 700 !important;
+            font-size: .65rem !important;
+            letter-spacing: .18em !important;
+            text-transform: uppercase !important;
+            color: #9E1B1B !important;
+          }
+
+          /* Stat boxes */
+          .sf-page-root .stat-box-val {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: -.03em !important;
+          }
+          .sf-page-root .stat-box-label {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 600 !important;
+            letter-spacing: .1em !important;
+            text-transform: uppercase !important;
+            font-size: .6rem !important;
+          }
+
+          /* Card names */
+          .sf-page-root .feat-card h3,
+          .sf-page-root .cp-name {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 700 !important;
+            letter-spacing: -.02em !important;
+          }
+
+          /* Mac values (nutrition) */
+          .sf-page-root .mac-val {
+            font-family: 'Lexend', sans-serif !important;
+            font-weight: 900 !important;
+            letter-spacing: -.03em !important;
+          }
+
+          /* Input fields */
+          .sf-page-root input,
+          .sf-page-root textarea,
+          .sf-page-root select {
+            font-family: 'Inter', sans-serif !important;
+            font-weight: 400 !important;
+            font-size: .85rem !important;
+          }
+
           @keyframes spin   { to { transform: rotate(360deg); } }
           @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
           @media (max-width:900px) { .macro-grid { grid-template-columns: 1fr 1fr !important; } }

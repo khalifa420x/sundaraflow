@@ -23,7 +23,7 @@ import Toast, { fireToast } from '@/components/Toast';
 const TYPE_CONFIG: Record<string, { icon: string; badge: string; label: string; color: string }> = {
   nutrition: { icon: '🥗', badge: 'badge-green',  label: 'Nutrition', color: 'var(--green)'  },
   sport:     { icon: '🏋️', badge: 'badge-blue',   label: 'Sport',     color: 'var(--blue)'   },
-  business:  { icon: '🧠', badge: 'badge-gold',   label: 'Business',  color: 'var(--gold)'   },
+  business:  { icon: '🧠', badge: 'badge-dim',    label: 'Business',  color: '#9CA3AF'       },
 };
 
 const formatDate = (ts: Timestamp | null | undefined): string => {
@@ -120,10 +120,17 @@ export default function ClientDashboard() {
         <div
           style={{
             minHeight: '100vh',
-            background:
-              'radial-gradient(ellipse 65% 40% at 50% -5%, rgba(201,168,76,.07) 0%, transparent 55%), var(--k0)',
-            color: 'var(--w)',
-            fontFamily: 'var(--fb)',
+            background: 'radial-gradient(ellipse 65% 40% at 50% -5%, rgba(158,27,27,.07) 0%, transparent 55%), #121212',
+            color: '#FFFFFF',
+            fontFamily: 'Inter, sans-serif',
+            /* ── Color token overrides — Kinetic Monolith system ── */
+            ['--gold' as any]: '#9E1B1B', ['--gold-d' as any]: '#7a1212', ['--gold-glow' as any]: 'rgba(158,27,27,0.14)',
+            ['--amber' as any]: '#9E1B1B', ['--blue' as any]: '#9E1B1B', ['--purple' as any]: '#9E1B1B',
+            ['--green' as any]: '#16a34a', ['--red' as any]: '#dc2626',
+            ['--k0' as any]: '#121212', ['--k2' as any]: '#1a1a1a', ['--k3' as any]: '#1e1e1e', ['--k4' as any]: '#252525',
+            ['--wf' as any]: 'rgba(255,255,255,0.07)', ['--w' as any]: '#FFFFFF', ['--wd' as any]: '#9CA3AF',
+            ['--fd' as any]: 'Lexend, sans-serif', ['--fb' as any]: 'Inter, sans-serif',
+            ['--r' as any]: '6px', ['--rl' as any]: '12px', ['--rxl' as any]: '16px',
           }}
         >
           {/* ══ HEADER ══ */}
@@ -143,11 +150,11 @@ export default function ClientDashboard() {
               zIndex: 100,
             }}
           >
-            <div style={{ fontFamily: 'var(--fd)', fontSize: '1.35rem', letterSpacing: '.04em' }}>
-              Sundara<span style={{ color: 'var(--gold)' }}>Flow</span>
+            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.35rem', letterSpacing: '.04em', fontWeight: 700 }}>
+              Sundara<span style={{ color: '#9E1B1B' }}>Flow</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span className="badge badge-blue">👤 Client</span>
+              <span style={{ background: 'rgba(158,27,27,.2)', border: '1px solid rgba(158,27,27,.35)', borderRadius: '9999px', padding: '3px 10px', fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: '#f87171' }}>👤 Membre</span>
               <span style={{ fontSize: '.72rem', color: 'var(--wd)' }}>
                 {(user as any)?.email}
               </span>
@@ -200,7 +207,7 @@ export default function ClientDashboard() {
                   marginBottom: 8,
                 }}
               >
-                Votre espace <span className="gold-i">d&apos;entraînement.</span>
+                Votre espace <span style={{ color: '#9E1B1B' }}>d&apos;entraînement.</span>
               </h1>
               <p style={{ fontSize: '.85rem', color: 'var(--wd)' }}>
                 Programmes assignés par votre coach, mis à jour en temps réel.
@@ -236,7 +243,7 @@ export default function ClientDashboard() {
                     height: 36,
                     borderRadius: '50%',
                     border: '2px solid var(--wf)',
-                    borderTopColor: 'var(--gold)',
+                    borderTopColor: '#9E1B1B',
                     animation: 'spin .8s linear infinite',
                     margin: '0 auto 16px',
                   }}
@@ -275,7 +282,7 @@ export default function ClientDashboard() {
                   Votre coach vous assignera bientôt un programme personnalisé.<br />
                   {selectedType && (
                     <span
-                      style={{ color: 'var(--gold)', cursor: 'pointer' }}
+                      style={{ color: '#9E1B1B', cursor: 'pointer' }}
                       onClick={() => setSelectedType('')}
                     >
                       Voir tous les types →
@@ -353,7 +360,7 @@ export default function ClientDashboard() {
                           <div style={{ fontSize: '.6rem', letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--wd)', marginBottom: 3 }}>
                             Assigné le
                           </div>
-                          <div style={{ fontSize: '.78rem', color: 'var(--gold)' }}>
+                          <div style={{ fontSize: '.78rem', color: '#9E1B1B' }}>
                             {formatDate(p.assignedAt) || '—'}
                           </div>
                         </div>

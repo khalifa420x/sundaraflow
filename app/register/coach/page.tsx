@@ -57,7 +57,7 @@ export default function RegisterCoach() {
       {/* ══ LEFT — Image Panel ══ */}
       <div className="rc-left">
         <img
-          src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1400&q=80"
+          src="https://images.unsplash.com/photo-1534367610401-9f5ed68180aa?auto=format&fit=crop&w=1920&q=80"
           alt="Coach professionnel"
           className="rc-img"
         />
@@ -185,7 +185,7 @@ export default function RegisterCoach() {
               </p>
               <p>
                 Vous êtes client ?{' '}
-                <span className="rc-link rc-link-dim" onClick={() => router.push('/register/client')}>Créer un compte client</span>
+                <span className="rc-link rc-link-dim" onClick={() => router.push('/register/client')}>Créer un compte membre</span>
               </p>
             </div>
           </div>
@@ -227,22 +227,22 @@ export default function RegisterCoach() {
         .rc-ov-right {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to right, transparent 40%, #121212 100%);
+          background: linear-gradient(to right, rgba(0,0,0,.35) 0%, #121212 92%);
           z-index: 1;
         }
         .rc-ov-bottom {
           position: absolute;
           inset: 0;
-          background: linear-gradient(to top, rgba(10,10,10,.92) 0%, transparent 50%);
+          background: linear-gradient(to top, rgba(5,5,5,.97) 0%, rgba(5,5,5,.55) 40%, transparent 70%);
           z-index: 2;
         }
         .rc-ov-crimson {
           position: absolute;
-          top: -20%;
-          left: -10%;
-          width: 65%;
-          height: 65%;
-          background: radial-gradient(circle, rgba(158,27,27,.28) 0%, transparent 70%);
+          top: -10%;
+          left: -5%;
+          width: 70%;
+          height: 70%;
+          background: radial-gradient(circle, rgba(158,27,27,.38) 0%, transparent 65%);
           z-index: 3;
           pointer-events: none;
         }

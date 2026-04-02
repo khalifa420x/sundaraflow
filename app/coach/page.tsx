@@ -23,11 +23,11 @@ type Tab = 'programs' | 'create' | 'clients' | 'assign';
 const TYPE_CONFIG: Record<string, { icon: string; badge: string; label: string }> = {
   nutrition: { icon: '🥗', badge: 'badge-green', label: 'Nutrition' },
   sport:     { icon: '🏋️', badge: 'badge-blue',  label: 'Sport'     },
-  business:  { icon: '🧠', badge: 'badge-gold',  label: 'Business'  },
+  business:  { icon: '🧠', badge: 'badge-dim',   label: 'Business'  },
 };
 
 const AVATAR_COLORS = [
-  'linear-gradient(135deg,var(--gold-d),var(--gold))',
+  'linear-gradient(135deg,#9E1B1B,#b91c1c)',
   'linear-gradient(135deg,#2563eb,var(--blue))',
   'linear-gradient(135deg,#7c3aed,var(--purple))',
   'linear-gradient(135deg,#16a34a,var(--green))',
@@ -134,32 +134,32 @@ export default function CoachDashboard() {
 
   /* ── Ajouter client (logique inchangée, alert → fireToast) ── */
   const handleAddClient = async (email: string) => {
-    if (!email) return fireToast('⚠️', 'Email requis', 'Veuillez saisir un email client.');
+    if (!email) return fireToast('⚠️', 'Email requis', 'Veuillez saisir un email membre.');
     if (!user)  return fireToast('⚠️', 'Non connecté', 'Veuillez vous reconnecter.');
     try {
       const q = query(collection(db, 'users'), where('email', '==', email));
       const snap = await getDocs(q);
-      if (snap.empty) return fireToast('❌', 'Client introuvable', `Aucun compte pour ${email}.`);
+      if (snap.empty) return fireToast('❌', 'Membre introuvable', `Aucun compte pour ${email}.`);
 
       const clientUserId = snap.docs[0].id;
       const q2 = query(collection(db, 'clients'), where('clientUserId', '==', clientUserId));
       const check = await getDocs(q2);
-      if (!check.empty) return fireToast('⚠️', 'Déjà ajouté', 'Ce client est déjà dans votre liste.');
+      if (!check.empty) return fireToast('⚠️', 'Déjà ajouté', 'Ce membre est déjà dans votre liste.');
 
       await addDoc(collection(db, 'clients'), { coachId: user.uid, clientUserId });
       setClientEmail('');
       await fetchClients();
-      fireToast('🎉', 'Client ajouté !', `${email} rejoint votre espace.`);
+      fireToast('🎉', 'Membre ajouté !', `${email} rejoint votre espace.`);
     } catch (e) {
       console.error(e);
-      fireToast('❌', 'Erreur', "Impossible d'ajouter le client.");
+      fireToast('❌', 'Erreur', "Impossible d'ajouter le membre.");
     }
   };
 
   /* ── Assigner programme (logique inchangée, alert → fireToast) ── */
   const handleAssignProgram = async () => {
     if (!selectedClient || !selectedProgram)
-      return fireToast('⚠️', 'Sélection incomplète', 'Choisissez un client et un programme.');
+      return fireToast('⚠️', 'Sélection incomplète', 'Choisissez un membre et un programme.');
     try {
       await addDoc(collection(db, 'program_assignments'), {
         clientId: selectedClient,
@@ -273,7 +273,7 @@ export default function CoachDashboard() {
             >
               {[
                 { icon: '📋', label: 'Programmes', val: programs.length },
-                { icon: '👥', label: 'Clients',    val: clients.length  },
+                { icon: '👥', label: 'Membres',    val: clients.length  },
                 { icon: '🔗', label: 'Assignations', val: '—'           },
               ].map((k) => (
                 <div className="kpi-card" key={k.label}>
@@ -289,7 +289,7 @@ export default function CoachDashboard() {
                 [
                   { id: 'programs', label: '🏋️ Programmes', badge: programs.length > 0 ? String(programs.length) : undefined },
                   { id: 'create',   label: '✏️ Créer'  },
-                  { id: 'clients',  label: '👥 Clients', badge: clients.length > 0 ? String(clients.length) : undefined },
+                  { id: 'clients',  label: '👥 Membres', badge: clients.length > 0 ? String(clients.length) : undefined },
                   { id: 'assign',   label: '🔗 Assigner' },
                 ] as { id: Tab; label: string; badge?: string }[]
               ).map((t) => (
@@ -346,7 +346,7 @@ export default function CoachDashboard() {
                     </p>
                     <p style={{ fontSize: '.8rem' }}>
                       <span
-                        style={{ color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline' }}
+                        style={{ color: '#9E1B1B', cursor: 'pointer', textDecoration: 'underline' }}
                         onClick={() => setActiveTab('create')}
                       >
                         Créer votre premier programme →
@@ -394,10 +394,10 @@ export default function CoachDashboard() {
                 <div style={{ marginBottom: 28 }}>
                   <div className="tag">✏️ Nouveau programme</div>
                   <h2 style={{ fontFamily: 'var(--fd)', fontSize: '1.6rem', fontWeight: 300, fontStyle: 'italic', marginBottom: 6 }}>
-                    Créez un <span className="gold-i">programme premium.</span>
+                    Créez un <span style={{ color: '#9E1B1B' }}>programme premium.</span>
                   </h2>
                   <p style={{ fontSize: '.82rem', color: 'var(--wd)' }}>
-                    Il sera disponible pour être assigné à vos clients.
+                    Il sera disponible pour être assigné à vos membres.
                   </p>
                 </div>
 
@@ -441,7 +441,7 @@ export default function CoachDashboard() {
                       lineHeight: 1.6,
                     }}
                   >
-                    <span style={{ color: 'var(--gold)' }}>🚀 Prochainement :</span>{' '}
+                    <span style={{ color: '#9E1B1B' }}>🚀 Prochainement :</span>{' '}
                     Upload PDF, vidéos, plan nutritionnel intégré, intégration Stripe.
                   </div>
 
@@ -471,7 +471,7 @@ export default function CoachDashboard() {
                 {/* Ajouter client */}
                 <div style={{ marginBottom: 28, maxWidth: 480 }}>
                   <div style={{ fontSize: '.65rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--wd)', marginBottom: 12 }}>
-                    Ajouter un client
+                    Ajouter un membre
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <div className="fld" style={{ flex: 1, marginBottom: 0 }}>
@@ -492,19 +492,19 @@ export default function CoachDashboard() {
                     </button>
                   </div>
                   <p style={{ fontSize: '.68rem', color: 'var(--wd)', marginTop: 7 }}>
-                    Le client doit avoir un compte SundaraFlow.
+                    Le membre doit avoir un compte SundaraFlow.
                   </p>
                 </div>
 
                 {/* Liste clients */}
                 <div style={{ fontSize: '.65rem', letterSpacing: '.18em', textTransform: 'uppercase', color: 'var(--wd)', marginBottom: 14 }}>
-                  Mes clients ({clients.length})
+                  Mes membres ({clients.length})
                 </div>
 
                 {clients.length === 0 && (
                   <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--wd)' }}>
                     <div style={{ fontSize: '2.5rem', marginBottom: 10 }}>👥</div>
-                    <p style={{ fontFamily: 'var(--fd)', fontSize: '1.1rem' }}>Aucun client encore.</p>
+                    <p style={{ fontFamily: 'var(--fd)', fontSize: '1.1rem' }}>Aucun membre encore.</p>
                     <p style={{ fontSize: '.78rem', marginTop: 6 }}>Ajoutez leur email ci-dessus pour commencer.</p>
                   </div>
                 )}
@@ -526,7 +526,7 @@ export default function CoachDashboard() {
                       <div className="cc-actions" style={{ marginTop: 14 }}>
                         <button
                           className="btn btn-xs btn-outline btn"
-                          onClick={() => { setSelectedClient(c.id); setActiveTab('assign'); fireToast('🔗', 'Client sélectionné', `${c.name} prêt pour l\'assignation.`); }}
+                          onClick={() => { setSelectedClient(c.id); setActiveTab('assign'); fireToast('🔗', 'Membre sélectionné', `${c.name} prêt pour l\'assignation.`); }}
                         >
                           Assigner →
                         </button>
@@ -552,21 +552,21 @@ export default function CoachDashboard() {
                 <div style={{ marginBottom: 28 }}>
                   <div className="tag">🔗 Assignation</div>
                   <h2 style={{ fontFamily: 'var(--fd)', fontSize: '1.6rem', fontWeight: 300, fontStyle: 'italic', marginBottom: 6 }}>
-                    Assigner un <span className="gold-i">programme à un client.</span>
+                    Assigner un <span style={{ color: '#9E1B1B' }}>programme à un membre.</span>
                   </h2>
                   <p style={{ fontSize: '.82rem', color: 'var(--wd)' }}>
-                    Le client verra ce programme dans son dashboard immédiatement.
+                    Le membre verra ce programme dans son espace immédiatement.
                   </p>
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   <div className="fld">
-                    <label>Client</label>
+                    <label>Membre</label>
                     <select
                       value={selectedClient}
                       onChange={(e) => setSelectedClient(e.target.value)}
                     >
-                      <option value="">— Sélectionner un client —</option>
+                      <option value="">— Sélectionner un membre —</option>
                       {clients.map((c) => (
                         <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
                       ))}
@@ -596,7 +596,7 @@ export default function CoachDashboard() {
                     const p = programs.find((x) => x.id === selectedProgram);
                     const cfg = TYPE_CONFIG[p?.type] || { icon: '📄', badge: 'badge-dim', label: p?.type };
                     return (
-                      <div style={{ background: 'var(--k3)', border: '1px solid rgba(201,168,76,.2)', borderRadius: 'var(--r)', padding: '14px 16px', fontSize: '.8rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ background: 'var(--k3)', border: '1px solid rgba(158,27,27,.2)', borderRadius: 'var(--r)', padding: '14px 16px', fontSize: '.8rem', display: 'flex', alignItems: 'center', gap: 12 }}>
                         <span style={{ fontSize: '1.2rem' }}>{cfg.icon}</span>
                         <div>
                           <div style={{ fontWeight: 500, marginBottom: 2 }}>{p?.title}</div>

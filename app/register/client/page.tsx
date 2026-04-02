@@ -74,7 +74,7 @@ export default function RegisterClient() {
           </div>
 
           {/* Badge */}
-          <div className="rc-badge">✨ Espace Client</div>
+          <div className="rc-badge">✨ Espace Membre</div>
 
           {/* Headline */}
           <h1 className="rc-headline">
@@ -106,7 +106,7 @@ export default function RegisterClient() {
               <div className="rc-author-av">SM</div>
               <div>
                 <div className="rc-author-name">Sophie M.</div>
-                <div className="rc-author-title">Cliente depuis 6 mois</div>
+                <div className="rc-author-title">Membre depuis 6 mois</div>
               </div>
             </div>
           </div>
