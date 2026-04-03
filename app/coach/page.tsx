@@ -16,6 +16,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Toast, { fireToast } from '@/components/Toast';
+import CalorieCalculator from '@/components/CalorieCalculator';
 
 /* ── Types ── */
 type Tab = 'programs' | 'create' | 'clients' | 'assign';
@@ -89,6 +90,7 @@ export default function CoachDashboard() {
   const [clientEmail, setClientEmail]         = useState('');
   const [mounted, setMounted]                 = useState(false);
   const [sidebarOpen, setSidebarOpen]         = useState(false);
+  const [calcModal, setCalcModal]             = useState<{ name: string; id: string } | null>(null);
 
   /* Animated KPI counters */
   const progCount   = useCounter(programs.length, 800, mounted);
@@ -617,6 +619,12 @@ export default function CoachDashboard() {
                           >
                             Assigner un programme →
                           </button>
+                          <button
+                            className="calc-needs-btn"
+                            onClick={() => setCalcModal({ name: c.name || c.email || 'Membre', id: c.id })}
+                          >
+                            📊 Calculer les besoins
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -696,6 +704,50 @@ export default function CoachDashboard() {
           </div>{/* /body */}
         </div>{/* /root */}
 
+        {/* ══ MODALE CALCULATEUR ══ */}
+        {calcModal && (
+          <div
+            style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+            onClick={e => { if (e.target === e.currentTarget) setCalcModal(null); }}
+          >
+            <div style={{ background: '#1c1b1b', borderRadius: 16, padding: 32, maxWidth: 620, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', animation: 'modalIn .25s ease' }}>
+
+              {/* Bouton fermer */}
+              <button
+                onClick={() => setCalcModal(null)}
+                style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 6, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#9CA3AF', fontSize: '1.2rem', lineHeight: 1, transition: 'background .2s', flexShrink: 0 }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
+              >×</button>
+
+              {/* En-tête */}
+              <div style={{ marginBottom: 22, paddingRight: 40 }}>
+                <div style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 7 }}>
+                  📊 Calculateur
+                </div>
+                <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.3rem', letterSpacing: '-.04em', lineHeight: .95, color: '#e5e2e1', margin: 0 }}>
+                  Calculateur — {calcModal.name}
+                </h2>
+                <p style={{ fontSize: '.78rem', color: '#9CA3AF', marginTop: 8, lineHeight: 1.7 }}>
+                  Estimez les besoins caloriques de ce membre pour adapter son programme.
+                </p>
+              </div>
+
+              {/* Composant calculateur */}
+              <CalorieCalculator mode="coach" memberName={calcModal.name} />
+
+              {/* CTA bas */}
+              <button
+                onClick={() => setCalcModal(null)}
+                className="modal-use-btn"
+                style={{ width: '100%', marginTop: 20, padding: 14, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 8, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.12em', textTransform: 'uppercase', cursor: 'pointer', transition: 'transform .2s, box-shadow .2s' }}
+              >
+                UTILISER CES VALEURS POUR LE PROGRAMME →
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ── MOBILE OVERLAY ── */}
         {sidebarOpen && (
           <div
@@ -754,6 +806,22 @@ export default function CoachDashboard() {
             transition: background .2s ease, transform .2s ease;
           }
           .assign-btn:hover { background: rgba(178,42,39,0.2); transform: scale(1.02); }
+
+          .calc-needs-btn {
+            width: 100%; margin-top: 7px;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 7px;
+            padding: 8px; font-size: .6rem; font-family: 'Lexend', sans-serif; font-weight: 700;
+            letter-spacing: .08em; text-transform: uppercase; color: #6B7280; cursor: pointer;
+            transition: background .2s ease, border-color .2s ease, color .2s ease;
+          }
+          .calc-needs-btn:hover { background: rgba(178,42,39,0.08); border-color: rgba(178,42,39,0.28); color: #e3beb8; }
+
+          .modal-use-btn:hover { transform: scale(1.02) !important; box-shadow: 0 0 24px rgba(178,42,39,0.35) !important; }
+
+          @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.96) translateY(12px); }
+            to   { opacity: 1; transform: scale(1)    translateY(0); }
+          }
 
           /* ── Forms ── */
           .field-label {

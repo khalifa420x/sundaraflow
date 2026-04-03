@@ -10,6 +10,7 @@ import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Toast, { fireToast } from '@/components/Toast';
+import CalorieCalculator from '@/components/CalorieCalculator';
 
 /* ══════════════════════════════════════════════════
    MOCK DATA  — affichés si Firestore est vide
@@ -407,6 +408,25 @@ export default function ClientHome() {
                   )}
                 </>
               )}
+            </section>
+
+            {/* ══ SECTION — CALCULATEUR CALORIQUE ══ */}
+            <section style={{ marginBottom: 64 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
+                <div>
+                  <span style={S.tag}>⚡ Outil personnel</span>
+                  <h2 style={S.sectionTitle}>MON CALCULATEUR <span style={{ color: '#b22a27' }}>CALORIQUE.</span></h2>
+                </div>
+              </div>
+              <p style={{ fontSize: '.85rem', color: '#9CA3AF', lineHeight: 1.75, marginBottom: 24, maxWidth: 520 }}>
+                Calculez vos besoins caloriques et vos macronutriments en fonction de votre profil.
+              </p>
+              <div style={{ background: '#1c1b1b', borderRadius: 12, padding: 28 }}>
+                <CalorieCalculator mode="membre" />
+              </div>
+              <div style={{ marginTop: 14, background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '12px 16px', fontSize: '.78rem', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 10 }}>
+                💡 Votre coach peut ajuster ces valeurs directement dans votre plan nutritionnel.
+              </div>
             </section>
 
             {/* ══ SECTION — REPAS ══ */}
