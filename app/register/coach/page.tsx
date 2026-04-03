@@ -69,7 +69,7 @@ export default function RegisterCoach() {
         {/* Left panel content */}
         <div className="rc-left-content" style={{ opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(24px)', transition: 'opacity .7s ease .1s, transform .7s ease .1s' }}>
           {/* Logo */}
-          <div className="rc-logo">
+          <div className="rc-logo" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>
             Sundara<span>Flow</span>
           </div>
 

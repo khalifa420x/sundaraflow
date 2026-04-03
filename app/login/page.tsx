@@ -543,7 +543,7 @@ export default function LoginPage() {
             {/* Marque */}
             <div className="lp-brand-top">
               <div className="lp-brand-line" />
-              <span className="lp-brand-name">Sundara Flow</span>
+              <span className="lp-brand-name" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>Sundara Flow</span>
               <div className="lp-brand-line" />
             </div>
 
@@ -592,7 +592,7 @@ export default function LoginPage() {
             {/* Logo mobile */}
             <div className="lp-mobile-logo">
               <div className="lp-mobile-logo-line" />
-              <span className="lp-mobile-logo-text">Sundara Flow</span>
+              <span className="lp-mobile-logo-text" onClick={() => router.push('/')} style={{ cursor: 'pointer' }}>Sundara Flow</span>
               <div className="lp-mobile-logo-line" />
             </div>
 

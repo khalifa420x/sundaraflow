@@ -37,10 +37,10 @@ const MOCK_TIPS = [
 ];
 
 /* ── Constants ── */
-const TYPE_CONFIG: Record<string, { icon: string; badge: string; label: string; gradient: string }> = {
-  nutrition: { icon: '🥗', badge: 'badge-green', label: 'Nutrition', gradient: 'linear-gradient(135deg,#16a34a,var(--green))' },
-  sport:     { icon: '🏋️', badge: 'badge-blue',  label: 'Sport',     gradient: 'linear-gradient(135deg,#2563eb,var(--blue))'  },
-  business:  { icon: '🧠', badge: 'badge-dim',   label: 'Business',  gradient: 'linear-gradient(135deg,#374151,#4B5563)' },
+const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }> = {
+  nutrition: { icon: '🥗', label: 'Nutrition', color: '#16a34a' },
+  sport:     { icon: '🏋️', label: 'Sport',     color: '#b22a27' },
+  business:  { icon: '🧠', label: 'Business',  color: '#6B7280' },
 };
 const CAT_ICON: Record<string, string> = { nutrition: '🥗', training: '🏋️', lifestyle: '🌿', mindset: '🧠' };
 const TIP_CAT_LABEL: Record<string, string> = { nutrition: 'Nutrition', training: 'Entraînement', lifestyle: 'Lifestyle', mindset: 'Mindset' };
@@ -84,10 +84,10 @@ export default function ClientHome() {
   const displayTips     = tips.length > 0 ? tips : MOCK_TIPS;
 
   /* Deficit */
-  const deficit   = (displayNut.maintenanceCalories || 2500) - (displayNut.calories || 2000);
-  const weeklyKg  = (deficit * 7 / 7700).toFixed(2);
-  const defColor  = deficit > 0 ? 'var(--green)' : deficit < 0 ? '#f87171' : 'var(--wd)';
-  const defLabel  = deficit > 0 ? `−${deficit} kcal` : deficit < 0 ? `+${Math.abs(deficit)} kcal surplus` : 'Équilibre';
+  const deficit  = (displayNut.maintenanceCalories || 2500) - (displayNut.calories || 2000);
+  const weeklyKg = (deficit * 7 / 7700).toFixed(2);
+  const defColor = deficit > 0 ? '#16a34a' : deficit < 0 ? '#f87171' : '#9CA3AF';
+  const defLabel = deficit > 0 ? `−${deficit} kcal` : deficit < 0 ? `+${Math.abs(deficit)} kcal surplus` : 'Équilibre';
 
   /* Fasting status */
   const getFastingStatus = () => {
@@ -184,482 +184,377 @@ export default function ClientHome() {
   /* ── Helpers ── */
   const Spinner = () => (
     <div style={{ textAlign: 'center', padding: '40px 0' }}>
-      <div style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid var(--wf)', borderTopColor: 'var(--gold)', animation: 'spin .8s linear infinite', margin: '0 auto 12px' }} />
-      <p style={{ fontSize: '.73rem', color: 'var(--wd)' }}>Chargement…</p>
+      <div style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', animation: 'spin .8s linear infinite', margin: '0 auto 12px' }} />
+      <p style={{ fontSize: '.73rem', color: '#9CA3AF' }}>Chargement…</p>
     </div>
   );
 
-  const SecHeader = ({ tag, icon, title, accent, byCoach = false }: { tag: string; icon: string; title: string; accent: string; byCoach?: boolean }) => (
-    <div style={{ marginBottom: 22 }}>
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(158,27,27,.1)', border: '1px solid rgba(158,27,27,.22)', borderRadius: '9999px', padding: '4px 14px', marginBottom: 12, fontFamily: 'Lexend, sans-serif', fontSize: '.6rem', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#f87171' }}>{icon} {tag}</div>
-      <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,2.8vw,2.2rem)', fontWeight: 800, letterSpacing: '-.03em', lineHeight: 1.05, marginTop: 4 }}>
-        {title} <span style={{ color: '#9E1B1B' }}>{accent}</span>
-      </h2>
-      {byCoach && coachName && <p style={{ fontSize: '.75rem', color: '#9CA3AF', marginTop: 6, fontFamily: 'Inter, sans-serif', letterSpacing: '.06em', textTransform: 'uppercase' as const, fontWeight: 600, fontSize: '.62rem' as any }}>Par {coachName}</p>}
-    </div>
-  );
+  /* ─── shared inline style atoms ─── */
+  const S = {
+    tag: { fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase' as const, color: '#b22a27', marginBottom: 10, display: 'block' },
+    sectionTitle: { fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .92, color: '#e5e2e1' },
+    card: { background: '#2a2a2a', borderRadius: 10, padding: '20px' },
+    surface: { background: '#1c1b1b', borderRadius: 10, padding: '20px' },
+    label: { fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF' },
+    badge: { fontSize: '.58rem', background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const },
+    gradBtn: { background: 'linear-gradient(135deg,#89070e,#0e0e0e)', color: '#e5e2e1', border: 'none', borderRadius: 6, padding: '11px 22px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase' as const, cursor: 'pointer' },
+    ghostBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '9px 18px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#9CA3AF', cursor: 'pointer' },
+  };
 
   return (
     <ProtectedRoute role="client">
       <>
         <Toast />
-        <div className="sf-page-root" style={{ minHeight: '100vh', background: '#121212', color: '#FFFFFF', fontFamily: 'Inter, sans-serif',
-          /* ── Color token overrides — Kinetic Monolith system ── */
-          ['--gold' as any]: '#9E1B1B', ['--gold-d' as any]: '#7a1212', ['--gold-glow' as any]: 'rgba(158,27,27,0.14)',
-          ['--amber' as any]: '#9E1B1B', ['--blue' as any]: '#9E1B1B', ['--purple' as any]: '#9E1B1B',
-          ['--green' as any]: '#16a34a', ['--red' as any]: '#dc2626',
-          ['--k0' as any]: '#121212', ['--k2' as any]: '#1a1a1a', ['--k3' as any]: '#1e1e1e', ['--k4' as any]: '#252525',
-          ['--wf' as any]: 'rgba(255,255,255,0.07)', ['--w' as any]: '#FFFFFF', ['--wd' as any]: '#9CA3AF',
+        <div className="sf-page-root" style={{
+          minHeight: '100vh', background: '#131313', color: '#e5e2e1', fontFamily: 'Inter, sans-serif',
+          ['--gold' as any]: '#b22a27', ['--gold-d' as any]: '#89070e', ['--gold-glow' as any]: 'rgba(178,42,39,0.12)',
+          ['--green' as any]: '#16a34a', ['--k0' as any]: '#131313', ['--k2' as any]: '#1c1b1b',
+          ['--k3' as any]: '#232222', ['--k4' as any]: '#2a2a2a', ['--k5' as any]: '#353534',
+          ['--wf' as any]: 'rgba(255,255,255,0.06)', ['--w' as any]: '#e5e2e1', ['--wd' as any]: '#9CA3AF',
           ['--fd' as any]: 'Lexend, sans-serif', ['--fb' as any]: 'Inter, sans-serif',
-          ['--r' as any]: '6px', ['--rl' as any]: '12px', ['--rxl' as any]: '16px',
+          ['--r' as any]: '8px', ['--rl' as any]: '12px', ['--rxl' as any]: '20px',
+          ['--tr' as any]: 'all .2s ease',
         }}>
 
           {/* ══ HEADER ══ */}
-          <header style={{ borderBottom: '1px solid var(--wf)', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: 'rgba(6,6,6,.93)', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 100 }}>
-            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.3rem', letterSpacing: '.04em', cursor: 'pointer', fontWeight: 700 }} onClick={() => router.push('/')}>
-              Sundara<span style={{ color: '#9E1B1B' }}>Flow</span>
-              <span style={{ fontSize: '.58rem', color: '#9CA3AF', marginLeft: 10, fontFamily: 'Inter, sans-serif', letterSpacing: '.08em', fontWeight: 400 }}>Espace Membre</span>
+          <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(19,19,19,0.9)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '13px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '.06em', cursor: 'pointer', textTransform: 'uppercase' }} onClick={() => router.push('/client/home')}>
+              SUNDARA<span style={{ color: '#b22a27' }}>FLOW</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9, flexWrap: 'wrap' }}>
-              <span style={{ background: 'rgba(158,27,27,.2)', border: '1px solid rgba(158,27,27,.35)', borderRadius: '9999px', padding: '3px 10px', fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' as const, color: '#f87171' }}>👤 Membre</span>
-              <span style={{ fontSize: '.7rem', color: '#9CA3AF' }}>{userName || user?.email}</span>
-              <button className="btn btn-gold btn-sm" onClick={() => router.push('/client')}>Mes programmes →</button>
-              <button className="btn btn-ghost btn-sm" onClick={handleSignOut}>Déconnexion</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ background: 'rgba(178,42,39,0.15)', borderRadius: 4, padding: '4px 12px', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#e3beb8' }}>👤 Membre</div>
+              <span style={{ fontSize: '.72rem', color: '#9CA3AF' }}>{userName || user?.email}</span>
+              {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Coach : <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
+              <button style={S.ghostBtn} onClick={() => router.push('/client')}>Mes programmes →</button>
+              <button style={{ ...S.ghostBtn, borderColor: 'rgba(255,255,255,0.06)', color: '#6B7280' }} onClick={handleSignOut}>Déconnexion</button>
             </div>
           </header>
 
-          {/* ══ APP SHELL ══ */}
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px 100px' }}>
-
-            {/* ── HERO ── */}
-            <section style={{ position: 'relative', overflow: 'hidden', padding: '52px 0 40px', marginBottom: 32 }}>
-              <div className="hero-bg" />
-              <div className="hero-grid-lines" />
-              <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(22px)', transition: 'opacity .55s ease, transform .55s ease' }}>
-                <div className="hero-eyebrow" style={{ marginBottom: 18 }}>{greeting()}, {userName || 'athlète'}</div>
-                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(2rem,5vw,3.8rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .96, marginBottom: 14 }}>
-                  Votre parcours <span style={{ color: '#9E1B1B' }}>commence ici.</span>
-                </h1>
-                <p style={{ fontSize: 'clamp(.88rem,1.6vw,1.05rem)', color: 'var(--wd)', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.88 }}>
-                  {displayPrograms.length} programme{displayPrograms.length !== 1 ? 's' : ''}{displayNut ? ' · Nutrition active' : ''}{displayMeals.length > 0 ? ` · ${displayMeals.length} repas` : ''}{displayTips.length > 0 ? ` · ${displayTips.length} conseils` : ''}.
-                </p>
-                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <button className="btn btn-gold" onClick={() => router.push('/client')}>📂 Voir mes programmes</button>
-                  <button className="btn btn-outline" onClick={() => document.getElementById('prog-section')?.scrollIntoView({ behavior: 'smooth' })}>↓ Aperçu</button>
-                </div>
-              </div>
-            </section>
-
-            {/* App shell titlebar */}
-            <div className="app-shell" style={{ marginBottom: 48, opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .1s' }}>
-              <div className="app-titlebar">
-                <div className="atb-left">
-                  <div className="atb-dots">
-                    <div className="atb-dot atb-dot-r" />
-                    <div className="atb-dot atb-dot-y" />
-                    <div className="atb-dot atb-dot-g" />
-                  </div>
-                  <div className="atb-brand">Sundara<span>Flow</span> <span style={{ fontSize: '.65rem', color: 'var(--wd)', fontFamily: 'var(--fb)', fontWeight: 400 }}>— Espace Membre</span></div>
-                </div>
-                <div className="atb-right">
-                  <div className="atb-user">
-                    <div className="atb-av">{(userName || 'CL').slice(0, 2).toUpperCase()}</div>
-                    <span>{userName || 'Membre'}</span>
-                  </div>
-                  {coachName && <span style={{ fontSize: '.68rem', color: 'var(--wd)' }}>Coach : <strong style={{ color: 'var(--gold)' }}>{coachName}</strong></span>}
-                </div>
-              </div>
-
-              {/* KPI row */}
-              <div className="app-main" style={{ padding: '18px 22px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 12 }}>
-                  {[
-                    { icon: '📋', label: 'Programmes',      val: loading ? '—' : displayPrograms.length,    color: '#9E1B1B' },
-                    { icon: '🥗', label: 'Plan nutrition',  val: loading ? '—' : `${displayNut.calories} kcal`, color: '#16a34a' },
-                    { icon: '🍽️', label: 'Repas assignés',  val: loading ? '—' : displayMeals.length,       color: '#9E1B1B' },
-                    { icon: '💡', label: 'Conseils',        val: loading ? '—' : displayTips.length,        color: '#9CA3AF' },
-                    { icon: '⏱️', label: 'Jeûne',           val: loading ? '—' : displayNut.fastingType || '—', color: '#9E1B1B' },
-                  ].map(k => (
-                    <div className="kpi-card" key={k.label}>
-                      <div className="kpi-label">{k.icon} {k.label}</div>
-                      <div className="kpi-val" style={{ fontSize: '1.5rem', color: k.color }}>{k.val}</div>
-                    </div>
-                  ))}
-                </div>
+          {/* ══ HERO ══ */}
+          <section style={{ position: 'relative', height: 'clamp(400px,52vh,660px)', overflow: 'hidden' }}>
+            <img
+              src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1920&q=80"
+              alt=""
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.28) saturate(0.7)' }}
+            />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(19,19,19,0.96) 0%, rgba(19,19,19,0.6) 55%, transparent 100%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to top, #131313, transparent)' }} />
+            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, #b22a27, #89070e, transparent)' }} />
+            <div style={{
+              position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+              padding: 'clamp(24px,5vw,60px)', maxWidth: 1200, margin: '0 auto',
+              opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(28px)', transition: 'opacity .65s ease, transform .65s ease',
+            }}>
+              <span style={S.tag}>{greeting()}, {userName || 'athlète'} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+              <h1 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(2.6rem,6.5vw,5.2rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .88, marginBottom: 18, color: '#e5e2e1' }}>
+                VOTRE PARCOURS<br /><span style={{ color: '#b22a27' }}>COMMENCE ICI.</span>
+              </h1>
+              <p style={{ fontSize: 'clamp(.85rem,1.5vw,.98rem)', color: '#9CA3AF', marginBottom: 26, maxWidth: 500, lineHeight: 1.8 }}>
+                {loading ? 'Chargement de vos données…' : `${displayPrograms.length} programme${displayPrograms.length !== 1 ? 's' : ''} · Nutrition active · ${displayMeals.length} repas · ${displayTips.length} conseil${displayTips.length !== 1 ? 's' : ''}`}
+              </p>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <button style={{ ...S.gradBtn, padding: '14px 32px', fontSize: '.78rem' }} onClick={() => router.push('/client')}>Voir mes programmes →</button>
+                <button style={{ background: 'transparent', color: '#e3beb8', border: '1px solid rgba(227,190,184,0.2)', borderRadius: 6, padding: '14px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', letterSpacing: '.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  onClick={() => document.getElementById('prog-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Aperçu ↓
+                </button>
               </div>
             </div>
+          </section>
 
-            {/* ══════════════════════════════════════
-                SECTION 1 — PROGRAMMES
-            ══════════════════════════════════════ */}
-            <div id="prog-section" style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .15s, transform .5s ease .15s' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 22 }}>
-                <SecHeader tag="Entraînement" icon="🏋️" title="Mes" accent="programmes." byCoach={false} />
-                <button className="btn btn-outline btn-sm" onClick={() => router.push('/client')}>Voir tout →</button>
+          {/* ══ KPI BAR ══ */}
+          <section style={{ background: '#1c1b1b', borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .1s' }}>
+            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(5,1fr)' }} className="kpi-row">
+              {[
+                { icon: '📋', label: 'Programmes',      val: loading ? '—' : displayPrograms.length,          sub: 'assignés' },
+                { icon: '🔥', label: 'Objectif kcal',   val: loading ? '—' : `${displayNut.calories}`,        sub: 'kcal / jour' },
+                { icon: '🍽️', label: 'Repas assignés',  val: loading ? '—' : displayMeals.length,            sub: 'par votre coach' },
+                { icon: '💡', label: 'Conseils',         val: loading ? '—' : displayTips.length,             sub: 'disponibles' },
+                { icon: '⏱️', label: 'Jeûne',            val: loading ? '—' : displayNut.fastingType || '—',  sub: 'protocole actif' },
+              ].map((k, i) => (
+                <div key={k.label} style={{ padding: '22px 20px', borderRight: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <div style={{ ...S.label, marginBottom: 7 }}>{k.icon} {k.label}</div>
+                  <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,2.5vw,2.2rem)', fontWeight: 900, letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1 }}>{k.val}</div>
+                  <div style={{ fontSize: '.58rem', color: '#9CA3AF', marginTop: 5 }}>{k.sub}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* ══ MAIN CONTENT ══ */}
+          <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(24px,4vw,56px) clamp(16px,4vw,48px) 80px', opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(16px)', transition: 'opacity .5s ease .2s, transform .5s ease .2s' }}>
+
+            {/* ══ SECTION — PROGRAMMES ══ */}
+            <section id="prog-section" style={{ marginBottom: 64 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
+                <div>
+                  <span style={S.tag}>🏋️ Entraînement</span>
+                  <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>PROGRAMMES.</span></h2>
+                </div>
+                <button style={S.ghostBtn} onClick={() => router.push('/client')}>Voir tout →</button>
               </div>
               {loading ? <Spinner /> : (
-                <div style={{ display: 'grid', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
                   {displayPrograms.slice(0, 4).map((p: any, i: number) => {
-                    const cfg = TYPE_CONFIG[p.type] || { icon: '📄', badge: 'badge-dim', label: p.type || 'Programme', gradient: 'var(--k4)' };
+                    const cfg = TYPE_CONFIG[p.type] || { icon: '📄', label: p.type || 'Programme', color: '#9CA3AF' };
                     const days = p.assignedAt ? daysSince(p.assignedAt) : (p.days || 0);
                     const prog = p.progress || 0;
                     return (
-                      <div key={p.id} className="cp-card" style={{ animation: 'fadeUp .4s ease both', animationDelay: `${i*70}ms`, cursor: 'pointer' }} onClick={() => router.push('/client')}>
-                        <div className="cp-av" style={{ background: cfg.gradient, fontSize: '1.2rem', color: 'var(--k0)' }}>{cfg.icon}</div>
-                        <div className="cp-info">
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
-                            <span className="cp-name">{p.title}</span>
-                            <span className={`badge ${cfg.badge}`}>{cfg.label}</span>
+                      <div key={p.id} onClick={() => router.push('/client')}
+                        style={{ position: 'relative', background: '#1c1b1b', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'background .2s', minHeight: 175 }}
+                      >
+                        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: `linear-gradient(to bottom, ${cfg.color}, transparent)` }} />
+                        <div style={{ padding: '20px 20px 16px 24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ fontSize: '1.7rem' }}>{cfg.icon}</div>
+                            <span style={{ ...S.badge, background: `${cfg.color}18`, color: cfg.color }}>{cfg.label}</span>
                           </div>
-                          <div className="cp-prog-wrap">
-                            <div className="cp-prog-bar"><div className="cp-fill" style={{ width: `${prog}%` }} /></div>
-                            <span className="cp-pct">{prog > 0 ? `${prog}%` : 'À démarrer'}</span>
-                          </div>
-                          <div className="cp-meta">
-                            {p.coachName && <span className="badge badge-dim">👤 {p.coachName}</span>}
-                            <span className="badge badge-dim">📅 {days === 0 ? "Assigné aujourd'hui" : `Il y a ${days}j`}</span>
+                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2vw,1.05rem)', letterSpacing: '-.03em', lineHeight: 1.15, marginBottom: 10, color: '#e5e2e1' }}>{p.title}</div>
+                          <div style={{ ...S.label, marginBottom: 7 }}>{days === 0 ? "Assigné aujourd'hui" : `Démarré il y a ${days}j`}{p.coachName ? ` · ${p.coachName}` : ''}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${prog}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10, transition: 'width 1.4s ease' }} />
+                            </div>
+                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', color: prog > 0 ? '#b22a27' : '#6B7280', flexShrink: 0 }}>
+                              {prog > 0 ? `${prog}%` : 'À démarrer'}
+                            </span>
                           </div>
                         </div>
-                        <span style={{ color: 'var(--wd)', fontSize: '1.1rem', flexShrink: 0 }}>→</span>
                       </div>
                     );
                   })}
                 </div>
               )}
-            </div>
+            </section>
 
-            {/* ══════════════════════════════════════
-                SECTION 2 — JEÛNE INTERMITTENT
-            ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .2s, transform .5s ease .2s' }}>
-              <SecHeader tag="Jeûne Intermittent" icon="⏱️" title="Votre protocole" accent="de jeûne." byCoach />
+            {/* ══ SECTION — JEÛNE & NUTRITION ══ */}
+            <section style={{ marginBottom: 64 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
+                <div>
+                  <span style={S.tag}>📊 Nutrition & Jeûne</span>
+                  <h2 style={S.sectionTitle}>MA <span style={{ color: '#b22a27' }}>NUTRITION.</span></h2>
+                </div>
+                {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Par <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
+              </div>
+
               {loading ? <Spinner /> : (
                 <>
-                  <div className="fast-widget" style={{ marginBottom: 18 }}>
-                    <div className="fast-timer">{displayNut.fastingType || '—'}</div>
-                    <div className="fast-body">
-                      <h4>Jeûne Intermittent {displayNut.fastingType}</h4>
-                      <p>
-                        Fenêtre alimentaire : <strong style={{ color: 'var(--gold)' }}>{displayNut.windowStart} – {displayNut.windowEnd}</strong>
-                        {fastStatus?.inWindow
-                          ? <span style={{ marginLeft: 12 }}>· <span style={{ color: 'var(--green)' }}>✓ Fenêtre ouverte</span></span>
-                          : <span style={{ marginLeft: 12 }}>· <span style={{ color: 'var(--wd)' }}>Hors fenêtre</span></span>
-                        }
-                      </p>
-                      <div className="fast-prog-bar">
-                        <div className="fast-prog-fill" style={{ width: fastStatus ? `${fastStatus.pct}%` : '0%' }} />
-                      </div>
-                    </div>
-                    <span className={`badge ${fastStatus?.inWindow ? 'badge-green' : 'badge-dim'}`}>
-                      {fastStatus?.inWindow ? '✓ Fenêtre ouverte' : '⏸ Jeûne en cours'}
-                    </span>
-                  </div>
-                  <div className="g3">
-                    {[
-                      { icon: '🔥', title: 'Brûler les graisses',   desc: 'Après 12-16h de jeûne, votre corps utilise les graisses stockées comme carburant principal — mode cétose légère.' },
-                      { icon: '🧠', title: 'Clarté mentale',        desc: 'Le jeûne augmente la production de BDNF et améliore la concentration, la mémoire et la créativité.' },
-                      { icon: '⚗️', title: 'Autophagie cellulaire', desc: 'À partir de 16h, votre corps active l\'autophagie — nettoyage cellulaire aux effets anti-vieillissement prouvés.' },
-                    ].map((c, i) => (
-                      <div key={c.title} className="feat-card" style={{ animation: 'fadeUp .4s ease both', animationDelay: `${i*80}ms` }}>
-                        <div className="feat-icon">{c.icon}</div>
-                        <h3 style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1rem', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8 }}>{c.title}</h3>
-                        <p style={{ fontSize: '.8rem', color: 'var(--wd)', lineHeight: 1.72 }}>{c.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+                  {/* Fasting + deficit row */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }} className="nut-top-grid">
 
-            {/* ══════════════════════════════════════
-                SECTION 3 — REPAS IDÉAUX
-            ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .25s, transform .5s ease .25s' }}>
-              <SecHeader tag="Repas Idéaux" icon="🍽️" title="Votre plan" accent="alimentaire." byCoach />
-              {loading ? <Spinner /> : (
-                <div className="meal-plan-grid">
-                  {displayMeals.map((m: any, i: number) => (
-                    <div key={m.id} className="meal-row" style={{ animation: 'fadeUp .4s ease both', animationDelay: `${i*60}ms` }}>
-                      <div className="meal-emoji">{m.emoji || '🍽️'}</div>
-                      <div className="meal-info">
-                        <div className="meal-name">{m.name}</div>
-                        {m.description && <div className="meal-desc">{m.description}</div>}
-                        <div className="meal-macros-row">
-                          {m.calories && <span className="meal-m">🔥 <strong>{m.calories}</strong> kcal</span>}
-                          {m.protein  && <span className="meal-m">🥩 <strong>{m.protein}g</strong> prot</span>}
-                          {m.carbs    && <span className="meal-m">🌾 <strong>{m.carbs}g</strong> gluc</span>}
-                          {m.fat      && <span className="meal-m">🥑 <strong>{m.fat}g</strong> lip</span>}
+                    {/* Fasting widget */}
+                    <div style={{ background: '#1c1b1b', borderRadius: 12, padding: '20px', display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '2.6rem', fontWeight: 900, letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1, flexShrink: 0 }}>
+                        {displayNut.fastingType || '—'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', letterSpacing: '-.02em', marginBottom: 5, color: '#e5e2e1' }}>
+                          Jeûne Intermittent {displayNut.fastingType}
+                        </div>
+                        <p style={{ fontSize: '.74rem', color: '#9CA3AF', marginBottom: 10 }}>
+                          Fenêtre alimentaire : <strong style={{ color: '#e3beb8' }}>{displayNut.windowStart} – {displayNut.windowEnd}</strong>
+                          {fastStatus?.inWindow
+                            ? <span style={{ marginLeft: 10, color: '#16a34a' }}>✓ Fenêtre ouverte</span>
+                            : <span style={{ marginLeft: 10, color: '#9CA3AF' }}>Hors fenêtre</span>
+                          }
+                        </p>
+                        <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: fastStatus ? `${fastStatus.pct}%` : '0%', background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10, transition: 'width 1s ease' }} />
                         </div>
                       </div>
-                      {m.time && <div className="meal-time">{m.time}</div>}
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            {/* ══════════════════════════════════════
-                SECTION 4 — DÉFICIT CALORIQUE
-            ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .3s, transform .5s ease .3s' }}>
-              <SecHeader tag="Nutrition & Déficit" icon="📊" title="Suivi" accent="calorique." byCoach />
-              {loading ? <Spinner /> : (
-                <>
-                  {/* Deficit banner */}
-                  <div style={{ background: deficit > 0 ? 'rgba(34,197,94,.07)' : 'rgba(248,113,113,.07)', border: `1px solid ${deficit > 0 ? 'rgba(34,197,94,.25)' : 'rgba(248,113,113,.25)'}`, borderRadius: 'var(--rl)', padding: '20px 24px', marginBottom: 20, display: 'flex', flexWrap: 'wrap', gap: 22, alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontSize: '.62rem', letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--wd)', marginBottom: 5 }}>{deficit > 0 ? 'Déficit calorique' : 'Surplus calorique'}</div>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.8rem,4vw,2.6rem)', fontWeight: 900, letterSpacing: '-.04em', color: defColor, lineHeight: 1 }}>{defLabel}</div>
-                      <div style={{ fontSize: '.72rem', color: 'var(--wd)', marginTop: 5 }}>Maintenance {(displayNut.maintenanceCalories || 2500).toLocaleString('fr-FR')} → Objectif {(displayNut.calories || 2000).toLocaleString('fr-FR')} kcal/j</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: '.62rem', color: 'var(--wd)', marginBottom: 4 }}>Estimation / semaine</div>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.6rem', fontWeight: 900, letterSpacing: '-.04em', color: defColor }}>{deficit > 0 ? '−' : '+'}{Math.abs(parseFloat(weeklyKg))} kg</div>
-                      <div style={{ fontSize: '.65rem', color: 'var(--wd)' }}>sur 7 jours</div>
+                    {/* Deficit banner */}
+                    <div style={{ background: deficit > 0 ? 'rgba(22,163,74,0.07)' : 'rgba(220,38,38,0.07)', borderRadius: 12, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                      <div style={S.label}>{deficit > 0 ? 'Déficit calorique' : 'Surplus calorique'}</div>
+                      <div>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.6rem,3.5vw,2.4rem)', fontWeight: 900, letterSpacing: '-.04em', color: defColor, lineHeight: 1, marginBottom: 5, marginTop: 8 }}>{defLabel}</div>
+                        <div style={{ fontSize: '.68rem', color: '#9CA3AF', marginBottom: 14 }}>
+                          Maintenance {(displayNut.maintenanceCalories || 2500).toLocaleString('fr-FR')} → Objectif {(displayNut.calories || 2000).toLocaleString('fr-FR')} kcal/j
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
+                          <span style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-.04em', color: defColor }}>{deficit > 0 ? '−' : '+'}{Math.abs(parseFloat(weeklyKg))} kg</span>
+                          <span style={{ fontSize: '.62rem', color: '#9CA3AF', marginBottom: 4 }}>/ semaine estimé</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Macro cards */}
-                  <div className="macro-grid" style={{ marginBottom: 18 }}>
+                  <div className="macro-grid" style={{ marginBottom: 14 }}>
                     {[
-                      { icon: '🔥', label: 'Objectif calorique', val: displayNut.calories?.toLocaleString('fr-FR'), unit: 'kcal/j', cls: 'mc-gold', pct: 100 },
-                      { icon: '🥩', label: 'Protéines',  val: displayNut.protein, unit: 'g', cls: 'mc-blue',  pct: Math.round(((displayNut.protein || 0) * 4 / (displayNut.calories || 2000)) * 100) },
-                      { icon: '🌾', label: 'Glucides',   val: displayNut.carbs,   unit: 'g', cls: 'mc-amber', pct: Math.round(((displayNut.carbs || 0) * 4 / (displayNut.calories || 2000)) * 100) },
-                      { icon: '🥑', label: 'Lipides',    val: displayNut.fat,     unit: 'g', cls: 'mc-green', pct: Math.round(((displayNut.fat || 0) * 9 / (displayNut.calories || 2000)) * 100) },
+                      { icon: '🔥', label: 'Objectif calorique', val: displayNut.calories?.toLocaleString('fr-FR'), unit: 'kcal/j', pct: 100 },
+                      { icon: '🥩', label: 'Protéines', val: displayNut.protein, unit: 'g', pct: Math.round(((displayNut.protein || 0) * 4 / (displayNut.calories || 2000)) * 100) },
+                      { icon: '🌾', label: 'Glucides',  val: displayNut.carbs,   unit: 'g', pct: Math.round(((displayNut.carbs || 0) * 4 / (displayNut.calories || 2000)) * 100) },
+                      { icon: '🥑', label: 'Lipides',   val: displayNut.fat,     unit: 'g', pct: Math.round(((displayNut.fat || 0) * 9 / (displayNut.calories || 2000)) * 100) },
                     ].map(m => (
-                      <div className="mac-card" key={m.label}>
-                        <div className="mac-icon">{m.icon}</div>
-                        <div className="mac-val" style={{ color: 'var(--gold)' }}>{m.val}</div>
-                        <div className="mac-unit">{m.unit}</div>
-                        <div className="mac-label">{m.label}</div>
-                        <div className="mac-bar"><div className={`mac-fill ${m.cls}`} style={{ width: `${Math.min(m.pct, 100)}%` }} /></div>
+                      <div key={m.label} style={{ background: '#1c1b1b', borderRadius: 8, padding: '16px' }}>
+                        <div style={{ fontSize: '1.2rem', marginBottom: 7 }}>{m.icon}</div>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.45rem', letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1 }}>{m.val}</div>
+                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2, marginBottom: 8 }}>{m.unit} · {m.label}</div>
+                        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${Math.min(m.pct, 100)}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10 }} />
+                        </div>
                       </div>
                     ))}
                   </div>
 
+                  {/* Coach note */}
                   {displayNut.notes && (
-                    <div style={{ background: 'var(--k3)', border: '1px solid rgba(158,27,27,.16)', borderRadius: 'var(--r)', padding: '12px 16px', fontSize: '.82rem', color: 'var(--wd)' }}>
-                      📝 <strong style={{ color: 'var(--w)' }}>Note de {coachName || 'votre coach'} :</strong> {displayNut.notes}
+                    <div style={{ background: '#1c1b1b', borderRadius: 8, padding: '14px 18px', fontSize: '.8rem', color: '#9CA3AF', borderLeft: '3px solid rgba(178,42,39,0.4)' }}>
+                      📝 <strong style={{ color: '#e5e2e1' }}>Note de {coachName || 'votre coach'} :</strong> {displayNut.notes}
                     </div>
                   )}
                 </>
               )}
-            </div>
+            </section>
 
-            {/* ══════════════════════════════════════
-                SECTION 5 — CONSEILS & LIFESTYLE
-            ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .35s, transform .5s ease .35s' }}>
-              <SecHeader tag="Conseils & Lifestyle" icon="💡" title={coachName ? `${coachName} vous` : 'Conseils de votre'} accent={coachName ? 'conseille.' : 'coach.'} byCoach={false} />
+            {/* ══ SECTION — REPAS ══ */}
+            <section style={{ marginBottom: 64 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
+                <div>
+                  <span style={S.tag}>🍽️ Plan alimentaire</span>
+                  <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>REPAS.</span></h2>
+                </div>
+                {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Par <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
+              </div>
+              {loading ? <Spinner /> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {displayMeals.map((m: any, i: number) => (
+                    <div key={m.id} style={{ background: '#1c1b1b', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div style={{ fontSize: '1.6rem', flexShrink: 0, width: 44, height: 44, background: '#2a2a2a', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {m.emoji || '🍽️'}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.9rem', letterSpacing: '-.02em', marginBottom: 3, color: '#e5e2e1' }}>{m.name}</div>
+                        {m.description && <div style={{ fontSize: '.7rem', color: '#9CA3AF', marginBottom: 6, lineHeight: 1.5 }}>{m.description}</div>}
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          {m.calories && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🔥 <strong>{m.calories}</strong> kcal</span>}
+                          {m.protein  && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🥩 <strong>{m.protein}g</strong> prot</span>}
+                          {m.carbs    && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🌾 <strong>{m.carbs}g</strong> gluc</span>}
+                          {m.fat      && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🥑 <strong>{m.fat}g</strong> lip</span>}
+                        </div>
+                      </div>
+                      {m.time && (
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', color: '#b22a27', flexShrink: 0, background: 'rgba(178,42,39,0.1)', borderRadius: 6, padding: '5px 10px' }}>
+                          {m.time}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* ══ SECTION — CONSEILS DU COACH ══ */}
+            <section style={{ marginBottom: 64 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
+                <div>
+                  <span style={S.tag}>💡 Lifestyle & Mindset</span>
+                  <h2 style={S.sectionTitle}>CONSEILS DU <span style={{ color: '#b22a27' }}>COACH.</span></h2>
+                </div>
+              </div>
               {loading ? <Spinner /> : (
                 <>
-                  <div className="tip-hero" style={{ marginBottom: 18 }}>
-                    <div className="tip-qm">"</div>
-                    <div>
-                      <div className="tip-lbl">{CAT_ICON[displayTips[0]?.category] || '💡'} {TIP_CAT_LABEL[displayTips[0]?.category] || displayTips[0]?.category} — Conseil du moment</div>
-                      <div className="tip-quote">{displayTips[0]?.content}</div>
-                      <div className="tip-author">— {displayTips[0]?.title} · <span style={{ color: 'var(--gold)' }}>{coachName || 'Votre coach'}</span></div>
+                  {/* Featured tip */}
+                  {displayTips.length > 0 && (
+                    <div style={{ background: 'linear-gradient(135deg,rgba(137,7,14,0.12),rgba(20,18,18,0.95))', borderRadius: 12, padding: '24px', marginBottom: 18, borderLeft: '3px solid #b22a27' }}>
+                      <div style={{ fontSize: '2.5rem', color: 'rgba(178,42,39,0.35)', fontFamily: 'Georgia, serif', lineHeight: 1, marginBottom: 6 }}>"</div>
+                      <div style={{ ...S.label, color: '#b22a27', marginBottom: 10 }}>
+                        {CAT_ICON[displayTips[0]?.category] || '💡'} {TIP_CAT_LABEL[displayTips[0]?.category] || displayTips[0]?.category} — Conseil du moment
+                      </div>
+                      <p style={{ fontSize: '.92rem', color: '#e5e2e1', lineHeight: 1.8, marginBottom: 12 }}>{displayTips[0]?.content}</p>
+                      <div style={{ fontSize: '.7rem', color: '#9CA3AF' }}>— {displayTips[0]?.title} · <span style={{ color: '#b22a27' }}>{coachName || 'Votre coach'}</span></div>
                     </div>
-                  </div>
+                  )}
+
+                  {/* Tips grid */}
                   {displayTips.length > 1 && (
-                    <div className="advice-grid">
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
                       {displayTips.slice(1).map((t: any, i: number) => (
-                        <div key={t.id} className="adv-card" style={{ animation: 'fadeUp .4s ease both', animationDelay: `${i*60}ms` }}>
-                          <div className="adv-icon">{CAT_ICON[t.category] || '💡'}</div>
-                          <h4>{t.title}</h4>
-                          <p>{t.content}</p>
-                          <div style={{ marginTop: 10 }}><span className="badge badge-dim">{TIP_CAT_LABEL[t.category] || t.category}</span></div>
+                        <div key={t.id} style={{ background: '#1c1b1b', borderRadius: 10, padding: '18px' }}>
+                          <div style={{ fontSize: '1.4rem', marginBottom: 9 }}>{CAT_ICON[t.category] || '💡'}</div>
+                          <h4 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', letterSpacing: '-.02em', marginBottom: 7, color: '#e5e2e1' }}>{t.title}</h4>
+                          <p style={{ fontSize: '.76rem', color: '#9CA3AF', lineHeight: 1.7, marginBottom: 10 }}>{t.content}</p>
+                          <span style={S.badge}>{TIP_CAT_LABEL[t.category] || t.category}</span>
                         </div>
                       ))}
                     </div>
                   )}
                 </>
               )}
-            </div>
+            </section>
 
-            {/* ══════════════════════════════════════
-                SECTION 6 — ANALYSES
-            ══════════════════════════════════════ */}
-            <div style={{ marginBottom: 60, opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(20px)', transition: 'opacity .5s ease .4s, transform .5s ease .4s' }}>
-              <SecHeader tag="Analyses" icon="📈" title="Votre" accent="progression." byCoach={false} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 12, marginBottom: 20 }}>
+            {/* ══ SECTION — ANALYSES ══ */}
+            <section style={{ marginBottom: 64 }}>
+              <div style={{ marginBottom: 26 }}>
+                <span style={S.tag}>📈 Progression</span>
+                <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>ANALYSES.</span></h2>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 12, marginBottom: 18 }}>
                 {[
-                  { label: 'Programmes',        val: loading ? '—' : displayPrograms.length,  sub: 'assignés' },
-                  { label: 'Jours de suivi',    val: loading ? '—' : `${displayPrograms[0] ? daysSince(displayPrograms[displayPrograms.length-1]?.assignedAt) : 18}j`, sub: 'depuis le début' },
-                  { label: 'Repas assignés',    val: loading ? '—' : displayMeals.length,     sub: 'par votre coach' },
-                  { label: 'Conseils reçus',    val: loading ? '—' : displayTips.length,      sub: 'publications' },
-                  { label: 'Objectif calorique',val: loading ? '—' : `${displayNut.calories} kcal`, sub: 'par jour' },
+                  { label: 'Programmes assignés',  val: loading ? '—' : displayPrograms.length,  sub: 'total' },
+                  { label: 'Jours de suivi',        val: loading ? '—' : `${displayPrograms[0] ? daysSince(displayPrograms[displayPrograms.length-1]?.assignedAt) : 18}j`, sub: 'depuis le début' },
+                  { label: 'Repas assignés',        val: loading ? '—' : displayMeals.length,     sub: 'par votre coach' },
+                  { label: 'Conseils reçus',        val: loading ? '—' : displayTips.length,      sub: 'publications' },
+                  { label: 'Objectif calorique',    val: loading ? '—' : `${displayNut.calories} kcal`, sub: 'par jour' },
                 ].map(s => (
-                  <div key={s.label} className="stat-box">
-                    <div className="stat-box-val">{s.val}</div>
-                    <div className="stat-box-label">{s.label}</div>
-                    <div style={{ fontSize: '.6rem', color: 'var(--wd)', marginTop: 3 }}>{s.sub}</div>
+                  <div key={s.label} style={{ background: '#1c1b1b', borderRadius: 8, padding: '16px' }}>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,2rem)', letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1, marginBottom: 5 }}>{s.val}</div>
+                    <div style={S.label}>{s.label}</div>
+                    <div style={{ fontSize: '.58rem', color: '#9CA3AF', marginTop: 3, opacity: .7 }}>{s.sub}</div>
                   </div>
                 ))}
               </div>
-
-              <div style={{ background: 'var(--k2)', border: '1px dashed var(--wf)', borderRadius: 'var(--r)', padding: '14px 18px', fontSize: '.75rem', color: 'var(--wd)', textAlign: 'center', marginBottom: 20 }}>
-                <span style={{ color: 'var(--gold)' }}>📈 Prochainement :</span> Graphiques de progression, suivi du poids, taux d&apos;adhérence, historique des séances.
+              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '12px 16px', fontSize: '.73rem', color: '#9CA3AF', textAlign: 'center', borderLeft: '2px solid rgba(178,42,39,0.3)' }}>
+                <span style={{ color: '#b22a27' }}>📈 Prochainement :</span> Graphiques de progression, suivi du poids, taux d&apos;adhérence, historique des séances.
               </div>
+            </section>
 
-              <div className="g3">
-                {[
-                  { icon: '🎬', title: 'Vidéos d\'exercices',  desc: 'Accédez aux démonstrations vidéo de chaque exercice de votre programme, directement depuis l\'app.' },
-                  { icon: '📄', title: 'Documents PDF',         desc: 'Téléchargez vos plans d\'entraînement, fiches nutrition et ressources partagées par votre coach.' },
-                  { icon: '📊', title: 'Suivi de progression',  desc: 'Visualisez votre évolution semaine par semaine avec des graphiques et indicateurs clés.' },
-                ].map(item => (
-                  <div key={item.title} className="feat-card" style={{ opacity: .6, cursor: 'default', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: 14, right: 14, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: 'var(--gold)', background: 'var(--gold-glow)', border: '1px solid rgba(158,27,27,.2)', borderRadius: 100, padding: '2px 8px' }}>Bientôt</div>
-                    <div className="feat-icon" style={{ fontSize: '1.4rem' }}>{item.icon}</div>
-                    <h3 style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-.02em', marginBottom: 8 }}>{item.title}</h3>
-                    <p style={{ fontSize: '.8rem', color: 'var(--wd)', lineHeight: 1.72 }}>{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* ══ CTA → /client ══ */}
-            <div style={{ background: 'linear-gradient(135deg,rgba(158,27,27,.08),rgba(158,27,27,.02))', border: '1px solid rgba(158,27,27,.18)', borderRadius: 'var(--rxl)', padding: 'clamp(30px,5vw,50px)', textAlign: 'center', opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .5s' }}>
-              <div className="tag" style={{ marginBottom: 16 }}>📂 Espace personnel</div>
-              <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,3vw,2.3rem)', fontWeight: 900, letterSpacing: '-.03em', marginBottom: 12 }}>
-                Tous vos programmes en <span style={{ color: '#9E1B1B' }}>un seul endroit.</span>
+            {/* ══ CTA ══ */}
+            <div style={{ background: 'linear-gradient(135deg,#89070e 0%,#0e0e0e 100%)', borderRadius: 16, padding: 'clamp(30px,5vw,52px)', textAlign: 'center' }}>
+              <span style={{ ...S.tag, color: '#e3beb8', display: 'inline-block', marginBottom: 16 }}>📂 Espace personnel</span>
+              <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.6rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .92, marginBottom: 16, color: '#e5e2e1' }}>
+                TOUS VOS PROGRAMMES<br />EN UN SEUL ENDROIT.
               </h2>
-              <p style={{ fontSize: '.9rem', color: 'var(--wd)', marginBottom: 28, maxWidth: 440, margin: '0 auto 28px', lineHeight: 1.8 }}>
-                Accédez à votre dashboard complet pour consulter, filtrer et gérer l&apos;ensemble de vos programmes.
+              <p style={{ fontSize: 'clamp(.82rem,1.4vw,.94rem)', color: 'rgba(227,190,184,.8)', marginBottom: 28, maxWidth: 420, margin: '0 auto 28px', lineHeight: 1.8 }}>
+                Accédez à votre espace personnel pour consulter, filtrer et gérer l&apos;ensemble de vos programmes et ressources.
               </p>
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button className="btn btn-gold" onClick={() => router.push('/client')} style={{ padding: '14px 38px' }}>📂 Voir mes programmes</button>
-                <button className="btn btn-ghost btn-sm" onClick={handleSignOut}>Déconnexion</button>
+                <button style={{ background: 'rgba(229,226,225,0.14)', backdropFilter: 'blur(10px)', border: '1px solid rgba(229,226,225,0.2)', borderRadius: 6, padding: '14px 36px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#e5e2e1', cursor: 'pointer' }} onClick={() => router.push('/client')}>
+                  📂 Voir mes programmes →
+                </button>
+                <button style={{ background: 'transparent', border: '1px solid rgba(229,226,225,0.12)', borderRadius: 6, padding: '14px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.45)', cursor: 'pointer' }} onClick={handleSignOut}>
+                  Déconnexion
+                </button>
               </div>
             </div>
+
           </div>
         </div>
 
         <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
-
-          /* ── Global typography resets scoped to this page ── */
-          .sf-page-root, .sf-page-root * { font-family: 'Inter', sans-serif; }
-
-          /* Headings — extrabold, tight tracking, Lexend */
-          .sf-page-root h1, .sf-page-root h2, .sf-page-root h3 {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 800 !important;
-            letter-spacing: -.03em !important;
-            line-height: 1.05 !important;
-            color: #FFFFFF;
+          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+          .sf-page-root, .sf-page-root * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+          .sf-page-root h1, .sf-page-root h2, .sf-page-root h3 { font-family: 'Lexend', sans-serif !important; font-weight: 900 !important; letter-spacing: -.04em !important; line-height: .95 !important; color: #e5e2e1; margin: 0; }
+          .sf-page-root h4 { font-family: 'Lexend', sans-serif !important; font-weight: 800 !important; letter-spacing: -.02em !important; margin: 0; color: #e5e2e1; }
+          .sf-page-root p { font-family: 'Inter', sans-serif !important; color: #9CA3AF; line-height: 1.7; margin: 0; }
+          .macro-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+          .kpi-row { grid-template-columns: repeat(5,1fr) !important; }
+          .nut-top-grid { grid-template-columns: 1fr 1fr !important; }
+          @keyframes spin { to { transform:rotate(360deg); } }
+          @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+          @media(max-width:960px) {
+            .kpi-row { grid-template-columns: repeat(3,1fr) !important; }
+            .nut-top-grid { grid-template-columns: 1fr !important; }
           }
-          .sf-page-root h4 {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 700 !important;
-            letter-spacing: -.02em !important;
+          @media(max-width:600px) {
+            .macro-grid { grid-template-columns: 1fr 1fr !important; }
+            .kpi-row { grid-template-columns: 1fr 1fr !important; }
           }
-
-          /* Labels — uppercase, wide tracking */
-          .sf-page-root .kpi-label {
-            font-family: 'Inter', sans-serif !important;
-            font-size: .62rem !important;
-            font-weight: 600 !important;
-            letter-spacing: .16em !important;
-            text-transform: uppercase !important;
-            color: #9CA3AF !important;
-          }
-
-          /* KPI values — Lexend heavy */
-          .sf-page-root .kpi-val {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 900 !important;
-            letter-spacing: -.04em !important;
-            color: #FFFFFF;
-          }
-
-          /* Body text */
-          .sf-page-root p {
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 400 !important;
-            color: #D1D5DB;
-          }
-
-          /* Buttons — uppercase Lexend bold */
-          .sf-page-root button,
-          .sf-page-root .btn {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 700 !important;
-            letter-spacing: .08em !important;
-            text-transform: uppercase !important;
-          }
-
-          /* Badges */
-          .sf-page-root .badge {
-            font-family: 'Inter', sans-serif !important;
-            font-size: .6rem !important;
-            font-weight: 700 !important;
-            letter-spacing: .1em !important;
-            text-transform: uppercase !important;
-          }
-
-          /* App-shell titlebar brand */
-          .sf-page-root .atb-brand {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 900 !important;
-            letter-spacing: .04em !important;
-            text-transform: uppercase !important;
-            font-size: .82rem !important;
-          }
-          .sf-page-root .atb-brand span:first-child { color: #9E1B1B; }
-
-          /* Hero elements */
-          .sf-page-root .hero-eyebrow {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 700 !important;
-            font-size: .65rem !important;
-            letter-spacing: .18em !important;
-            text-transform: uppercase !important;
-            color: #9E1B1B !important;
-          }
-
-          /* Stat boxes */
-          .sf-page-root .stat-box-val {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 900 !important;
-            letter-spacing: -.03em !important;
-          }
-          .sf-page-root .stat-box-label {
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 600 !important;
-            letter-spacing: .1em !important;
-            text-transform: uppercase !important;
-            font-size: .6rem !important;
-          }
-
-          /* Card names */
-          .sf-page-root .feat-card h3,
-          .sf-page-root .cp-name {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 700 !important;
-            letter-spacing: -.02em !important;
-          }
-
-          /* Mac values (nutrition) */
-          .sf-page-root .mac-val {
-            font-family: 'Lexend', sans-serif !important;
-            font-weight: 900 !important;
-            letter-spacing: -.03em !important;
-          }
-
-          /* Input fields */
-          .sf-page-root input,
-          .sf-page-root textarea,
-          .sf-page-root select {
-            font-family: 'Inter', sans-serif !important;
-            font-weight: 400 !important;
-            font-size: .85rem !important;
-          }
-
-          @keyframes spin   { to { transform: rotate(360deg); } }
-          @keyframes fadeUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
-          @media (max-width:900px) { .macro-grid { grid-template-columns: 1fr 1fr !important; } }
-          @media (max-width:600px) { .macro-grid { grid-template-columns: 1fr 1fr !important; } .meal-macros-row { flex-wrap:wrap; gap:6px; } }
+          .sf-page-root ::-webkit-scrollbar { width:4px; height:4px; }
+          .sf-page-root ::-webkit-scrollbar-track { background:transparent; }
+          .sf-page-root ::-webkit-scrollbar-thumb { background:rgba(178,42,39,0.35); border-radius:10px; }
         `}</style>
       </>
     </ProtectedRoute>

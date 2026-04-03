@@ -330,7 +330,7 @@ export default function CoachHome() {
 
           {/* ══ HEADER ══ */}
           <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(19,19,19,0.9)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '13px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '.06em', cursor: 'pointer', textTransform: 'uppercase' }} onClick={() => router.push('/')}>
+            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '.06em', cursor: 'pointer', textTransform: 'uppercase' }} onClick={() => router.push('/coach/home')}>
               SUNDARA<span style={{ color: '#b22a27' }}>FLOW</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
