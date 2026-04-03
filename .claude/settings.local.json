@@ -7,7 +7,8 @@
       "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\Gitem\\\\Desktop\\\\sundaraflow && npm run build 2>&1\")",
       "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\Gitem\\\\Desktop\\\\sundaraflow && npm run build\")",
       "Bash(powershell.exe -Command \"Set-Location ''C:\\\\Users\\\\Gitem\\\\Desktop\\\\sundaraflow''; node --version; Get-Command node\")",
-      "WebFetch(domain:sundaraflow-prog1.netlify.app)"
+      "WebFetch(domain:sundaraflow-prog1.netlify.app)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

@@ -475,7 +475,6 @@ export default function CoachDashboard() {
                               animationDelay: `${i * 80}ms`,
                               cursor: 'default',
                             }}
-                            className="prog-card"
                           >
                             {/* PROBLÈME 3 FIX — featured card avec image background */}
                             {isFeatured && (
