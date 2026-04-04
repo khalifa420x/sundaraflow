@@ -12,7 +12,6 @@ import {
 
 interface SidebarProps {
   role: 'coach' | 'client';
-  /* Props legacy (ignorées — gérées en interne) */
   activeTab?: string;
   onNavTo?: (key: string) => void;
   onSignOut?: () => void;
@@ -33,7 +32,6 @@ export default function Sidebar({ role }: SidebarProps) {
       if (!u) { setUnread(0); return; }
 
       if (role === 'coach') {
-        /* Coach : somme de unreadCoach sur toutes ses conversations */
         const q = query(
           collection(db, 'conversations'),
           where('coachId', '==', u.uid),
@@ -46,7 +44,6 @@ export default function Sidebar({ role }: SidebarProps) {
           setUnread(total);
         }, () => setUnread(0));
       } else {
-        /* Client : trouver sa conversation via la collection clients */
         try {
           const cSnap = await getDocs(
             query(collection(db, 'clients'), where('clientUserId', '==', u.uid)),
@@ -69,6 +66,16 @@ export default function Sidebar({ role }: SidebarProps) {
       if (unsub) unsub();
     };
   }, [role]);
+
+  /* ── Bloquer le scroll body quand menu mobile ouvert ── */
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
 
   /* ── Liens de navigation ── */
   const coachLinks = [
@@ -106,7 +113,10 @@ export default function Sidebar({ role }: SidebarProps) {
 
     return (
       <div
-        onClick={() => router.push(href)}
+        onClick={() => {
+          router.push(href);
+          setMobileOpen(false);
+        }}
         style={{
           height: 48,
           minHeight: 48,
@@ -190,6 +200,7 @@ export default function Sidebar({ role }: SidebarProps) {
       <button
         className="sb-hamburger"
         onClick={() => setMobileOpen(o => !o)}
+        aria-label="Menu"
         style={{
           display: 'none',
           position: 'fixed',
@@ -204,25 +215,25 @@ export default function Sidebar({ role }: SidebarProps) {
           borderRadius: 8,
           color: '#e5e2e1',
           cursor: 'pointer',
-          zIndex: 60,
+          zIndex: 200,
           fontSize: '1.2rem',
         }}
       >
-        ☰
+        {mobileOpen ? '✕' : '☰'}
       </button>
 
-      {/* ── Overlay mobile ── */}
-      <div
-        className={`sb-overlay${mobileOpen ? ' sb-visible' : ''}`}
-        onClick={() => setMobileOpen(false)}
-        style={{
-          display: 'none',
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.6)',
-          zIndex: 49,
-        }}
-      />
+      {/* ── Overlay mobile — rendu uniquement si ouvert ── */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            zIndex: 149,
+          }}
+        />
+      )}
 
       {/* ── Panneau sidebar ── */}
       <div
@@ -238,14 +249,14 @@ export default function Sidebar({ role }: SidebarProps) {
           borderRight: '1px solid rgba(255,255,255,0.05)',
           display: 'flex',
           flexDirection: 'column',
-          zIndex: 50,
+          zIndex: 150,
           overflowY: 'auto',
           overflowX: 'hidden',
         }}
       >
-        {/* LOGO — hauteur fixe isolée */}
+        {/* LOGO */}
         <div
-          onClick={() => router.push(homeHref)}
+          onClick={() => { router.push(homeHref); setMobileOpen(false); }}
           style={{
             height: 64,
             minHeight: 64,
@@ -271,14 +282,13 @@ export default function Sidebar({ role }: SidebarProps) {
           </span>
         </div>
 
-        {/* NAV — commence strictement après le logo */}
+        {/* NAV */}
         <div style={{
           flex: 1,
           padding: '12px 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: 2,
-          marginTop: 0,
           overflowY: 'auto',
         }}>
           {links.map(link => (
@@ -331,12 +341,13 @@ export default function Sidebar({ role }: SidebarProps) {
 
         @media (max-width: 767px) {
           .sb-hamburger { display: flex !important; }
-          #sb-panel { transform: translateX(-100%); transition: transform .28s cubic-bezier(.4,0,.2,1); }
+          #sb-panel {
+            transform: translateX(-100%);
+            transition: transform .28s cubic-bezier(.4,0,.2,1);
+          }
           #sb-panel.sb-open { transform: translateX(0); }
-          .sb-overlay { display: block !important; pointer-events: none; }
-          #sb-panel.sb-open ~ .sb-overlay,
-          .sb-overlay.sb-visible { pointer-events: auto; }
         }
+
         @media (min-width: 768px) {
           .sb-hamburger { display: none !important; }
           #sb-panel { transform: none !important; }
