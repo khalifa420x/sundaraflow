@@ -707,7 +707,10 @@ export default function CoachHome() {
             min-height: 100vh; overflow-x: hidden;
           }
           @media (min-width: 768px) { .ch-main { margin-left: 240px; width: calc(100vw - 240px); } }
-          @media (max-width: 767px) { .ch-main { margin-left: 0; width: 100%; } }
+          @media (max-width: 767px) {
+            .ch-root { flex-direction: column !important; }
+            .ch-main { margin-left: 0 !important; width: 100% !important; }
+          }
 
           /* Content grids */
           .ch-kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); }

@@ -831,11 +831,13 @@ export default function ClientHome() {
 
         .cl-root {
           display: flex;
+          flex-direction: row;
           min-height: 100vh;
           background: #131313;
           color: #e5e2e1;
           overflow-x: hidden;
         }
+        @media (max-width: 767px) { .cl-root { flex-direction: column; } }
 
         /* ── Overlay (legacy, kept for safety) ── */
         .cl-overlay {
@@ -853,7 +855,9 @@ export default function ClientHome() {
           overflow-x: hidden;
         }
         @media (min-width: 768px) { .cl-main { margin-left: 240px; width: calc(100vw - 240px); } }
-        @media (max-width: 767px) { .cl-main { margin-left: 0; width: 100%; } }
+        @media (max-width: 767px) {
+          .cl-main { margin-left: 0 !important; width: 100% !important; }
+        }
 
 
         .cl-content {
