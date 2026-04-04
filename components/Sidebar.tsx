@@ -17,7 +17,7 @@ interface SidebarProps {
   onSignOut?: () => void;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, onNavTo }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [unread, setUnread] = useState(0);
@@ -89,12 +89,12 @@ export default function Sidebar({ role }: SidebarProps) {
     { label: 'Messages',        href: '/coach/messages', icon: '💬', badge: true },
   ];
   const clientLinks = [
-    { label: 'Tableau de bord', href: '/client/home',    icon: '⊞' },
-    { label: 'Mes Programmes',  href: '/client',         icon: '📋' },
-    { label: 'Ma Nutrition',    href: '/client',         icon: '🥗' },
-    { label: 'Mon Profil',      href: '/client',         icon: '👤' },
-    { label: 'Mes Statistiques',href: '/client',         icon: '📊' },
-    { label: 'Messages',        href: '/client/messages',icon: '💬', badge: true },
+    { label: 'Tableau de bord',  href: '/client/home',     icon: '⊞' },
+    { label: 'Mes Programmes',   href: '/client/home',     icon: '📋', tab: 'programmes' },
+    { label: 'Ma Nutrition',     href: '/client/home',     icon: '🥗', tab: 'nutrition' },
+    { label: 'Mon Profil',       href: '/client/home',     icon: '👤', tab: 'profil' },
+    { label: 'Mes Statistiques', href: '/client/home',     icon: '📊', tab: 'statistiques' },
+    { label: 'Messages',         href: '/client/messages', icon: '💬', badge: true },
   ];
 
   const links = role === 'coach' ? coachLinks : clientLinks;
@@ -103,14 +103,22 @@ export default function Sidebar({ role }: SidebarProps) {
 
   const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
 
-  const NavLink = ({ label, href, icon, badge }: {
-    label: string; href: string; icon: string; badge?: boolean;
+  const NavLink = ({ label, href, icon, badge, tab }: {
+    label: string; href: string; icon: string; badge?: boolean; tab?: string;
   }) => {
     const isActive = pathname === href || (badge && pathname?.startsWith(href));
     const showBadge = badge && unread > 0;
+    const handleClick = () => {
+      if (tab && onNavTo) {
+        onNavTo(tab);
+      } else {
+        router.push(href);
+      }
+      setMobileOpen(false);
+    };
     return (
       <div
-        onClick={() => { router.push(href); setMobileOpen(false); }}
+        onClick={handleClick}
         style={{
           height: 48, minHeight: 48,
           display: 'flex', alignItems: 'center', gap: 12,
