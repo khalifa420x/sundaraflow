@@ -625,44 +625,48 @@ export default function LandingPage() {
           width: 100%;
           max-width: 100vw;
           overflow: hidden;
-          background: #0e0e0e;
-          border-top: 1px solid rgba(255,255,255,.06);
-          border-bottom: 1px solid rgba(255,255,255,.06);
-          display: flex;
+          background: #1a1a1a !important;
+          border-top: 2px solid #b22a27;
+          border-bottom: 1px solid rgba(255,255,255,.08);
+          display: flex !important;
           flex-direction: column;
-          gap: 4px;
-          padding: 16px 20px 20px;
-          z-index: 300;
+          gap: 0;
+          padding: 8px 0 16px;
+          z-index: 9999;
           box-sizing: border-box;
+          box-shadow: 0 12px 40px rgba(0,0,0,0.8);
         }
 
         .sf-mobile-menu a {
-          font-size: .82rem;
-          color: rgba(255,255,255,.7);
+          font-size: .85rem;
+          color: #e5e2e1 !important;
           text-decoration: none;
-          letter-spacing: .06em;
+          letter-spacing: .08em;
           text-transform: uppercase;
-          padding: 12px 0;
-          border-bottom: 1px solid rgba(255,255,255,.04);
+          padding: 16px 24px;
+          border-bottom: 1px solid rgba(255,255,255,.05);
           display: block;
           width: 100%;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-family: 'Lexend', sans-serif;
+          font-weight: 600;
+        }
+
+        .sf-mobile-menu a:hover {
+          background: rgba(178,42,39,0.1);
+          color: #ffffff !important;
         }
 
         .sf-mobile-menu-divider {
           height: 1px;
-          background: rgba(255,255,255,.06);
-          margin: 8px 0;
-          width: 100%;
+          background: rgba(255,255,255,.08);
+          margin: 8px 16px;
+          width: calc(100% - 32px);
         }
 
         .sf-mobile-btn {
-          width: 100% !important;
-          margin-top: 6px;
+          width: calc(100% - 32px) !important;
+          margin: 6px 16px 0 !important;
           justify-content: center;
-          white-space: nowrap;
         }
 
         /* ── BUTTONS ── */
