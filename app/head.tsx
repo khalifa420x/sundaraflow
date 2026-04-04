@@ -13,6 +13,12 @@ export default function Head() {
       {/* Favicon */}
       <link rel="icon" href="/favicon.ico" />
 
+      {/* ✅ PWA Manifest (AJOUT CRUCIAL) */}
+      <link rel="manifest" href="/manifest.json" />
+
+      {/* ✅ Couleur thème mobile (AJOUT IMPORTANT) */}
+      <meta name="theme-color" content="#FF0000" />
+
       {/* Open Graph pour partage sur réseaux sociaux */}
       <meta property="og:title" content="SundraFlow - Coaching & Gestion Fitness" />
       <meta
