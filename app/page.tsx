@@ -119,7 +119,7 @@ export default function LandingPage() {
     <div className="sf-root">
 
       {/* ── NAV ── */}
-      <nav className="sf-nav" onClick={e => e.stopPropagation()}>
+      <nav className="sf-nav" style={{overflow: 'visible'}} onClick={e => e.stopPropagation()}>
         <div className="sf-nav-inner">
           <div className="sf-logo" onClick={() => router.push('/')}>Sundara<span>Flow</span></div>
           <div className="sf-nav-links">
@@ -538,9 +538,9 @@ export default function LandingPage() {
           right: 0;
           width: 100%;
           max-width: 100vw;
-          overflow: hidden;
-          z-index: 200;
-          background: rgba(18,18,18,.88);
+          overflow: visible;
+          z-index: 99998;
+          background: rgba(18,18,18,.98);
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           border-bottom: 1px solid rgba(255,255,255,.06);
