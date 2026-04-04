@@ -616,57 +616,58 @@ export default function LandingPage() {
           border-radius: 2px;
         }
 
-        /* Menu mobile — dropdown vers le bas, JAMAIS de débordement */
+        /* Menu mobile — FIXED pour éviter tout problème de z-index avec le hero */
         .sf-mobile-menu {
-          position: absolute;
+          position: fixed;
           top: 64px;
           left: 0;
           right: 0;
-          width: 100%;
+          width: 100vw;
           max-width: 100vw;
-          overflow: hidden;
-          background: #1a1a1a !important;
-          border-top: 2px solid #b22a27;
-          border-bottom: 1px solid rgba(255,255,255,.08);
-          display: flex !important;
+          overflow-x: hidden;
+          overflow-y: auto;
+          background: #1a1a1a;
+          border-top: 3px solid #b22a27;
+          border-bottom: 1px solid rgba(255,255,255,.1);
+          display: flex;
           flex-direction: column;
           gap: 0;
-          padding: 8px 0 16px;
-          z-index: 9999;
+          padding: 0 0 20px 0;
+          z-index: 99999;
           box-sizing: border-box;
-          box-shadow: 0 12px 40px rgba(0,0,0,0.8);
+          box-shadow: 0 16px 48px rgba(0,0,0,0.95);
         }
 
         .sf-mobile-menu a {
-          font-size: .85rem;
-          color: #e5e2e1 !important;
+          font-size: .88rem;
+          color: #e5e2e1;
           text-decoration: none;
-          letter-spacing: .08em;
+          letter-spacing: .1em;
           text-transform: uppercase;
-          padding: 16px 24px;
-          border-bottom: 1px solid rgba(255,255,255,.05);
+          padding: 18px 28px;
+          border-bottom: 1px solid rgba(255,255,255,.06);
           display: block;
           width: 100%;
           font-family: 'Lexend', sans-serif;
-          font-weight: 600;
+          font-weight: 700;
+          background: #1a1a1a;
         }
 
-        .sf-mobile-menu a:hover {
-          background: rgba(178,42,39,0.1);
-          color: #ffffff !important;
+        .sf-mobile-menu a:active {
+          background: rgba(178,42,39,0.15);
         }
 
         .sf-mobile-menu-divider {
           height: 1px;
           background: rgba(255,255,255,.08);
-          margin: 8px 16px;
-          width: calc(100% - 32px);
+          margin: 12px 20px;
         }
 
         .sf-mobile-btn {
-          width: calc(100% - 32px) !important;
-          margin: 6px 16px 0 !important;
+          width: calc(100% - 40px) !important;
+          margin: 8px 20px 0 !important;
           justify-content: center;
+          display: flex !important;
         }
 
         /* ── BUTTONS ── */
