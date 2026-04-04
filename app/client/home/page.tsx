@@ -94,6 +94,7 @@ export default function ClientHome() {
   const [loading, setLoading]         = useState(true);
   const [mounted, setMounted]         = useState(false);
   const [activeTab, setActiveTab]     = useState<NavKey>('overview');
+  const [statPeriod, setStatPeriod]   = useState('30J');
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -223,19 +224,6 @@ export default function ClientHome() {
 
         {/* ══ MAIN ══ */}
         <main className="cl-main" style={{ opacity: mounted ? 1 : 0, transition: 'opacity .4s ease' }}>
-
-          {/* Header mobile */}
-          <header className="cl-header">
-            <div className="cl-header-logo" onClick={() => router.push('/')}>
-              <span style={{ color: '#b22a27', fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1rem', letterSpacing: '-.04em' }}>S</span>
-              <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.75rem', letterSpacing: '.12em', color: '#e5e2e1', textTransform: 'uppercase' }}>FLOW</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#89070e,#b22a27)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 800, color: '#e5e2e1' }}>
-                {firstName.slice(0, 2).toUpperCase()}
-              </div>
-            </div>
-          </header>
 
           <div className="cl-content">
 
@@ -645,47 +633,188 @@ export default function ClientHome() {
 
             {/* ══ STATISTIQUES TAB ══ */}
             {activeTab === 'statistiques' && (
-              <div>
-                <div className="cl-page-header">
-                  <h2 className="cl-page-title">MES STATISTIQUES</h2>
-                  <p className="cl-page-sub">Votre progression globale</p>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowX: 'hidden' }}>
 
-                {/* Stats cards */}
-                <div className="cl-stats-grid">
-                  {[
-                    { label: 'Séances complétées', val: '24', sub: 'ce mois', icon: '🏋️' },
-                    { label: 'Calories brûlées', val: '18 240', sub: 'kcal ce mois', icon: '🔥' },
-                    { label: 'Poids perdu', val: '2.8', sub: 'kg ce mois', icon: '📉' },
-                    { label: 'Jours de jeûne', val: '22', sub: 'sur 30', icon: '⏱️' },
-                  ].map(s => (
-                    <div key={s.label} className="cl-stat-card">
-                      <div style={{ fontSize: '1.5rem', marginBottom: 10 }}>{s.icon}</div>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,4vw,2rem)', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{s.val}</div>
-                      <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF', marginTop: 6 }}>{s.label}</div>
-                      <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{s.sub}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Conseils coach */}
-                <div className="cl-card" style={{ marginTop: 24 }}>
-                  <div className="cl-card-label" style={{ marginBottom: 20 }}>CONSEILS DE MON COACH</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    {displayTips.map((tip: any) => (
-                      <div key={tip.id} style={{ display: 'flex', gap: 14, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10 }}>
-                        <div style={{ fontSize: '1.3rem', flexShrink: 0 }}>{CAT_ICON[tip.category] || '💡'}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', color: '#e5e2e1' }}>{tip.title}</span>
-                            <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '2px 7px', borderRadius: 4 }}>{TIP_CAT_LABEL[tip.category] || 'Conseil'}</span>
-                          </div>
-                          <p style={{ fontSize: '.7rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{tip.content}</p>
-                        </div>
-                      </div>
+                {/* ── 1. HERO BANNER ── */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, paddingBottom: 20, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div>
+                    <div style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.4)', marginBottom: 8 }}>STATISTIQUES DÉTAILLÉES</div>
+                    <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,6vw,3rem)', letterSpacing: '-.05em', lineHeight: .92, color: '#e5e2e1', margin: '0 0 6px' }}>MES STATISTIQUES.</h2>
+                    <p style={{ fontSize: '.78rem', color: '#6B7280', fontFamily: 'Inter, sans-serif', margin: 0 }}>Votre progression globale ce mois</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {['7J', '30J', '3M', '1AN'].map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setStatPeriod(p)}
+                        style={{ padding: '7px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', transition: 'all .15s', background: statPeriod === p ? '#b22a27' : 'rgba(255,255,255,0.06)', color: statPeriod === p ? '#fff' : '#6B7280' }}
+                      >
+                        {p}
+                      </button>
                     ))}
                   </div>
                 </div>
+
+                {/* ── 2. ROW KPI ── */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 14 }}>
+                  <style>{`.st-kpi-grid { display: grid; grid-template-columns: 1fr; gap: 14px; } @media(min-width:640px){ .st-kpi-grid { grid-template-columns: 1fr 1fr; } } @media(min-width:900px){ .st-kpi-grid { grid-template-columns: 2fr 1fr 1fr; } }`}</style>
+                  <div className="st-kpi-grid">
+                    {/* Card 1 — Performance */}
+                    <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27' }}>PERFORMANCE ATTEINTE</div>
+                      <p style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem,2.5vw,1.3rem)', color: '#e5e2e1', lineHeight: 1.25, margin: 0 }}>
+                        Votre capacité a progressé de <span style={{ color: '#b22a27' }}>14.2%</span> ce mois.
+                      </p>
+                      <div style={{ padding: '10px 14px', background: 'rgba(178,42,39,0.08)', border: '1px solid rgba(178,42,39,0.15)', borderRadius: 8, fontSize: '.7rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+                        💡 <em>Conseil IA : Vos fenêtres de récupération se raccourcissent. Augmentez l'intensité lors de votre prochain cycle.</em>
+                      </div>
+                    </div>
+                    {/* Card 2 — Record */}
+                    <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>🏆</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>245 <span style={{ fontSize: '.7em', color: '#9CA3AF', fontWeight: 700 }}>kg</span></div>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#b22a27' }}>RECORD PERSONNEL</div>
+                    </div>
+                    {/* Card 3 — Streak */}
+                    <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, textAlign: 'center' }}>
+                      <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>🔥</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,4vw,2.4rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>18</div>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#b22a27' }}>JOURS CONSÉCUTIFS</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── 3+4. GRAPHIQUE + COMPOSITION ── */}
+                <style>{`.st-chart-grid { display: grid; grid-template-columns: 1fr; gap: 14px; } @media(min-width:768px){ .st-chart-grid { grid-template-columns: 1fr 300px; } }`}</style>
+                <div className="st-chart-grid">
+
+                  {/* Graphique barres */}
+                  <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '22px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.9rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>PROGRESSION FORCE</div>
+                      <div style={{ display: 'flex', gap: 14 }}>
+                        {[{ label: 'SQUAT', color: '#b22a27' }, { label: 'SOULEVÉ DE TERRE', color: '#3a3939' }].map(l => (
+                          <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: 2, background: l.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', color: '#6B7280' }}>{l.label}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Bars */}
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', height: 120 }}>
+                      {[
+                        { label: 'SEMAINE 01', squat: 60, sdt: 45 },
+                        { label: 'SEMAINE 02', squat: 72, sdt: 55 },
+                        { label: 'SEMAINE 03', squat: 65, sdt: 70 },
+                        { label: 'SEMAINE 04', squat: 90, sdt: 80 },
+                      ].map(w => (
+                        <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, height: '100%', justifyContent: 'flex-end' }}>
+                          <div style={{ width: '100%', display: 'flex', gap: 3, alignItems: 'flex-end', height: 100 }}>
+                            <div style={{ flex: 1, background: '#b22a27', borderRadius: '3px 3px 0 0', height: `${w.squat}%`, transition: 'height 1s ease' }} />
+                            <div style={{ flex: 1, background: '#3a3939', borderRadius: '3px 3px 0 0', height: `${w.sdt}%`, transition: 'height 1s ease' }} />
+                          </div>
+                          <div style={{ fontSize: '.48rem', fontFamily: 'Lexend, sans-serif', fontWeight: 600, letterSpacing: '.06em', color: '#6B7280', textAlign: 'center', whiteSpace: 'nowrap' }}>{w.label}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Composition corporelle */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '20px', flex: 1 }}>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 18 }}>COMPOSITION CORPORELLE</div>
+                      {[
+                        { label: 'Progression du poids', val: '-2.4kg', pct: 60 },
+                        { label: 'Indice de masse grasse', val: '-1.8%', pct: 45 },
+                      ].map(r => (
+                        <div key={r.label} style={{ marginBottom: 16 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <span style={{ fontSize: '.72rem', fontFamily: 'Inter, sans-serif', color: '#9CA3AF' }}>{r.label}</span>
+                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.8rem', color: '#e5e2e1' }}>{r.val}</span>
+                          </div>
+                          <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${r.pct}%`, background: 'linear-gradient(90deg, #89070e, #b22a27)', borderRadius: 9999, transition: 'width 1.2s ease' }} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Volume total */}
+                    <div style={{ background: 'linear-gradient(135deg, #89070e, #b22a27)', borderRadius: 14, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: -20, right: -10, fontSize: '5rem', opacity: .08, lineHeight: 1 }}>🏋️</div>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', marginBottom: 8, position: 'relative' }}>VOLUME TOTAL</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,1.8rem)', color: '#fff', letterSpacing: '-.04em', lineHeight: 1, position: 'relative' }}>124 500 lbs</div>
+                      <div style={{ fontSize: '.68rem', fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.8)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
+                        <span>↑</span> +8% vs mois dernier
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── 5. FLUX D'ACTIVITÉ (heatmap) ── */}
+                <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '22px', overflowX: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.9rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>FLUX D'ACTIVITÉ</div>
+                    <div style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: '#6B7280' }}>12 DERNIERS MOIS</div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(26, 1fr)', gridTemplateRows: 'repeat(7, 1fr)', gap: 3, width: '100%' }}>
+                    {Array.from({ length: 182 }, (_, i) => {
+                      const seed = (i * 37 + 13) % 100;
+                      const intensity = seed < 30 ? 0 : seed < 50 ? 0.2 : seed < 70 ? 0.45 : seed < 88 ? 0.7 : 1;
+                      return (
+                        <div key={i} style={{ aspectRatio: '1', borderRadius: 2, background: intensity === 0 ? 'rgba(255,255,255,0.04)' : `rgba(178,42,39,${intensity})` }} />
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 14, justifyContent: 'flex-end' }}>
+                    <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', color: '#6B7280' }}>MOINS</span>
+                    {[0.1, 0.3, 0.55, 0.8, 1].map((v, i) => (
+                      <div key={i} style={{ width: 10, height: 10, borderRadius: 2, background: `rgba(178,42,39,${v})` }} />
+                    ))}
+                    <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', color: '#6B7280' }}>PLUS</span>
+                  </div>
+                </div>
+
+                {/* ── 6. CITATION FINALE ── */}
+                <div style={{ position: 'relative', borderRadius: 16, overflow: 'hidden', minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+                  <img
+                    src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=70"
+                    alt=""
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.22) grayscale(0.3)' }}
+                  />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(137,7,14,0.6) 0%, rgba(10,10,10,0.85) 100%)' }} />
+                  <div style={{ position: 'relative', zIndex: 1, padding: 'clamp(28px,6vw,52px) clamp(20px,6vw,52px)' }}>
+                    <div style={{ fontSize: '2.5rem', color: 'rgba(178,42,39,0.3)', fontFamily: 'Lexend, sans-serif', fontWeight: 900, lineHeight: 1, marginBottom: 4 }}>"</div>
+                    <p style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1rem,3.5vw,1.6rem)', letterSpacing: '-.03em', lineHeight: 1.2, color: '#fff', margin: '0 0 16px', fontStyle: 'italic' }}>
+                      LA DISCIPLINE N'EST PAS UNE CONTRAINTE.<br />C'EST UNE LIBERTÉ.
+                    </p>
+                    <div style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                      SUNDARAFLOW | PERFORMANCE ÉLITE
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── CONSEILS COACH ── */}
+                {displayTips.length > 0 && (
+                  <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '22px' }}>
+                    <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 18 }}>CONSEILS DE MON COACH</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {displayTips.map((tip: any) => (
+                        <div key={tip.id} style={{ display: 'flex', gap: 14, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10 }}>
+                          <div style={{ fontSize: '1.3rem', flexShrink: 0 }}>{CAT_ICON[tip.category] || '💡'}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+                              <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', color: '#e5e2e1' }}>{tip.title}</span>
+                              <span style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '2px 7px', borderRadius: 4, flexShrink: 0 }}>{TIP_CAT_LABEL[tip.category] || 'Conseil'}</span>
+                            </div>
+                            <p style={{ fontSize: '.7rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{tip.content}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
               </div>
             )}
 
@@ -708,11 +837,6 @@ export default function ClientHome() {
           overflow-x: hidden;
         }
 
-        @media (min-width: 769px) {
-          .cl-header-logo { display: none !important; }
-          .cl-main { margin-left: 240px; width: calc(100vw - 240px); }
-        }
-
         /* ── Overlay (legacy, kept for safety) ── */
         .cl-overlay {
           position: fixed; inset: 0;
@@ -728,19 +852,9 @@ export default function ClientHome() {
           flex-direction: column;
           overflow-x: hidden;
         }
+        @media (min-width: 768px) { .cl-main { margin-left: 240px; width: calc(100vw - 240px); } }
+        @media (max-width: 767px) { .cl-main { margin-left: 0; width: 100%; } }
 
-        .cl-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 20px;
-          min-height: 56px;
-          max-height: 56px;
-          border-bottom: 1px solid rgba(255,255,255,0.05);
-          background: #1c1b1b;
-          position: sticky; top: 0; z-index: 100;
-        }
-        @media (min-width: 769px) { .cl-header { display: none; } }
 
         .cl-content {
           padding: 24px 20px 40px;

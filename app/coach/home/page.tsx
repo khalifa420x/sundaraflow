@@ -254,16 +254,6 @@ export default function CoachHome() {
           {/* ══ MAIN ══ */}
           <main className="ch-main">
 
-            {/* Top bar */}
-            <header className="ch-topbar" style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(19,19,19,0.96)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '11px 20px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <div className="ch-header-logo" onClick={() => router.push('/coach/home')}>
-                SUNDARA<span style={{ color: '#b22a27' }}>FLOW</span>
-              </div>
-              <div style={{ flex: 1 }} />
-              <span className="ch-clock" style={{ fontSize: '.62rem', color: '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 600 }}>🕐 {clock}</span>
-              <div style={{ background: 'rgba(178,42,39,0.15)', borderRadius: 4, padding: '3px 9px', fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: '#e3beb8' }}>🏆 Coach</div>
-            </header>
-
             {/* ══ OVERVIEW ══ */}
             {activeTab === 'overview' && (
               <>
@@ -712,19 +702,12 @@ export default function CoachHome() {
           .ch-root h4 { font-family: 'Lexend', sans-serif !important; font-weight: 800 !important; margin: 0; color: #e5e2e1; }
           .ch-root p { margin: 0; color: #9CA3AF; }
 
-          .ch-header-logo {
-            font-family: 'Lexend', sans-serif; font-size: .95rem;
-            font-weight: 900; letter-spacing: .06em; text-transform: uppercase; cursor: pointer;
-          }
           .ch-main {
             flex: 1; min-width: 0; display: flex; flex-direction: column;
-            margin-left: 0; min-height: 100vh; overflow-x: hidden;
+            min-height: 100vh; overflow-x: hidden;
           }
-
-          @media (min-width: 769px) {
-            .ch-main { margin-left: 240px; width: calc(100vw - 240px); }
-            .ch-header-logo { display: none !important; }
-          }
+          @media (min-width: 768px) { .ch-main { margin-left: 240px; width: calc(100vw - 240px); } }
+          @media (max-width: 767px) { .ch-main { margin-left: 0; width: 100%; } }
 
           /* Content grids */
           .ch-kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); }
@@ -782,10 +765,6 @@ export default function CoachHome() {
           @media (max-width: 600px) {
             .macro-grid { grid-template-columns: 1fr 1fr !important; }
             .form-row { grid-template-columns: 1fr !important; }
-          }
-          @media (max-width: 768px) {
-            .ch-topbar { padding: 8px 56px 8px 14px; min-height: 56px; max-height: 56px; }
-            .ch-clock { display: none !important; }
           }
           .ch-root ::-webkit-scrollbar { width:4px; height:4px; }
           .ch-root ::-webkit-scrollbar-track { background:transparent; }
