@@ -3,9 +3,9 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  // Activation immédiate
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener("fetch", (event) => {
-  // Pas de cache pour l'instant (safe)
+  // nécessaire pour que Chrome considère le SW actif
 });
