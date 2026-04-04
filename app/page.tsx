@@ -700,11 +700,16 @@ export default function LandingPage() {
           .sf-calc-grid { grid-template-columns: 1fr 1fr; }
         }
         @media (max-width: 600px) {
-          .sf-hero-title { letter-spacing: -.03em; }
+          .sf-hero-title { letter-spacing: -.03em; font-size: clamp(1.6rem, 7vw, 2.2rem) !important; }
+          .sf-hero-btns { flex-direction: column; width: 100%; }
+          .sf-btn-lg { width: 100%; padding: 14px 20px; }
+          .sf-cta-btns { flex-direction: column; align-items: stretch; padding: 0 20px; }
           .sf-features-grid, .sf-plans-grid, .sf-testi-grid, .sf-calc-grid { grid-template-columns: 1fr; }
           .sf-footer-inner { grid-template-columns: 1fr; }
           .sf-stats-inner { grid-template-columns: 1fr 1fr; }
           .sf-calc-toggles { flex-direction: column; }
+          .sf-eyebrow { font-size: .6rem; }
+          .sf-hero-sub { font-size: .85rem; }
         }
       `}</style>
     </div>

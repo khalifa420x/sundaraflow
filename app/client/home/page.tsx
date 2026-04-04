@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Toast, { fireToast } from '@/components/Toast';
 import CalorieCalculator from '@/components/CalorieCalculator';
+import Sidebar from '@/components/Sidebar';
 
 /* ══════════════════════════════════════════════════
    MOCK DATA  — affichés si Firestore est vide
@@ -46,15 +47,30 @@ const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }
 const CAT_ICON: Record<string, string> = { nutrition: '🥗', training: '🏋️', lifestyle: '🌿', mindset: '🧠' };
 const TIP_CAT_LABEL: Record<string, string> = { nutrition: 'Nutrition', training: 'Entraînement', lifestyle: 'Lifestyle', mindset: 'Mindset' };
 
+const CHART_BARS = [
+  { label: 'Lun', h: 55, deficit: -380 },
+  { label: 'Mar', h: 70, deficit: -520 },
+  { label: 'Mer', h: 45, deficit: -290 },
+  { label: 'Jeu', h: 80, deficit: -610 },
+  { label: 'Ven', h: 65, deficit: -450 },
+  { label: 'Sam', h: 30, deficit: -180 },
+  { label: 'Dim', h: 50, deficit: -320 },
+];
+
 const daysSince = (ts: Timestamp | null | undefined): number => {
   if (!ts) return 0;
   const d = ts.toDate ? ts.toDate() : new Date(ts as unknown as number);
   return Math.floor((Date.now() - d.getTime()) / 86_400_000);
 };
-const greeting = () => {
-  const h = new Date().getHours();
-  return h < 12 ? 'Bonjour' : h < 18 ? 'Bon après-midi' : 'Bonsoir';
-};
+
+const NAV_ITEMS = [
+  { key: 'overview',     icon: '🏠', label: 'Tableau de bord' },
+  { key: 'programmes',   icon: '📋', label: 'Mes Programmes' },
+  { key: 'nutrition',    icon: '🥗', label: 'Ma Nutrition' },
+  { key: 'statistiques', icon: '📈', label: 'Mes Statistiques' },
+] as const;
+
+type NavKey = typeof NAV_ITEMS[number]['key'];
 
 /* ════════════════════════════════════════
    CLIENT HOME
@@ -75,8 +91,9 @@ export default function ClientHome() {
   const [coachName, setCoachName]         = useState('');
 
   /* UI */
-  const [loading, setLoading] = useState(true);
-  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading]         = useState(true);
+  const [mounted, setMounted]         = useState(false);
+  const [activeTab, setActiveTab]     = useState<NavKey>('overview');
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -86,9 +103,8 @@ export default function ClientHome() {
 
   /* Deficit */
   const deficit  = (displayNut.maintenanceCalories || 2500) - (displayNut.calories || 2000);
-  const weeklyKg = (deficit * 7 / 7700).toFixed(2);
-  const defColor = deficit > 0 ? '#16a34a' : deficit < 0 ? '#f87171' : '#9CA3AF';
-  const defLabel = deficit > 0 ? `−${deficit} kcal` : deficit < 0 ? `+${Math.abs(deficit)} kcal surplus` : 'Équilibre';
+  const defColor = deficit > 0 ? '#b22a27' : deficit < 0 ? '#f87171' : '#9CA3AF';
+  const defLabel = deficit > 0 ? `−${deficit} KCAL` : deficit < 0 ? `+${Math.abs(deficit)} KCAL` : 'ÉQUILIBRE';
 
   /* Fasting status */
   const getFastingStatus = () => {
@@ -101,9 +117,20 @@ export default function ClientHome() {
     const nowMin   = now.getHours() * 60 + now.getMinutes();
     const inWindow = nowMin >= startMin && nowMin < endMin;
     const pct = inWindow ? Math.round(((nowMin - startMin) / (endMin - startMin)) * 100) : 0;
-    return { inWindow, pct };
+    const totalFastMins = 1440 - (endMin - startMin);
+    const elapsedFastMins = inWindow ? 0 : nowMin < startMin ? (1440 - endMin + nowMin) : (nowMin - endMin);
+    const elapsedH = Math.floor(elapsedFastMins / 60);
+    const elapsedM = elapsedFastMins % 60;
+    const fastPct = Math.min(100, Math.round((elapsedFastMins / totalFastMins) * 100));
+    return { inWindow, pct, elapsedH, elapsedM, fastPct, totalFastMins, elapsedFastMins };
   };
   const fastStatus = getFastingStatus();
+
+  /* SVG circle */
+  const CIRCLE_R = 70;
+  const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_R; // ≈ 439.8
+  const fastPctVal = fastStatus?.fastPct ?? 0;
+  const dashOffset = CIRCUMFERENCE - (CIRCUMFERENCE * fastPctVal) / 100;
 
   /* Mount */
   useEffect(() => {
@@ -182,401 +209,866 @@ export default function ClientHome() {
   useEffect(() => { if (user) fetchAll(user); }, [user]);
   const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
 
-  /* ── Helpers ── */
-  const Spinner = () => (
-    <div style={{ textAlign: 'center', padding: '40px 0' }}>
-      <div style={{ width: 30, height: 30, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', animation: 'spin .8s linear infinite', margin: '0 auto 12px' }} />
-      <p style={{ fontSize: '.73rem', color: '#9CA3AF' }}>Chargement…</p>
-    </div>
-  );
+  const navTo = (key: string) => { setActiveTab(key as NavKey); };
 
-  /* ─── shared inline style atoms ─── */
-  const S = {
-    tag: { fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase' as const, color: '#b22a27', marginBottom: 10, display: 'block' },
-    sectionTitle: { fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.8rem,4vw,3rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .92, color: '#e5e2e1' },
-    card: { background: '#2a2a2a', borderRadius: 10, padding: '20px' },
-    surface: { background: '#1c1b1b', borderRadius: 10, padding: '20px' },
-    label: { fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF' },
-    badge: { fontSize: '.58rem', background: 'rgba(255,255,255,0.06)', borderRadius: 4, padding: '2px 8px', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase' as const },
-    gradBtn: { background: 'linear-gradient(135deg,#89070e,#0e0e0e)', color: '#e5e2e1', border: 'none', borderRadius: 6, padding: '11px 22px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase' as const, cursor: 'pointer' },
-    ghostBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '9px 18px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#9CA3AF', cursor: 'pointer' },
-  };
+  const firstName = userName.split(' ')[0] || userName;
 
+  /* ─────────────────────────────────────────────────────── */
   return (
     <ProtectedRoute role="client">
-      <>
-        <Toast />
-        <div className="sf-page-root" style={{
-          minHeight: '100vh', background: '#131313', color: '#e5e2e1', fontFamily: 'Inter, sans-serif',
-          ['--gold' as any]: '#b22a27', ['--gold-d' as any]: '#89070e', ['--gold-glow' as any]: 'rgba(178,42,39,0.12)',
-          ['--green' as any]: '#16a34a', ['--k0' as any]: '#131313', ['--k2' as any]: '#1c1b1b',
-          ['--k3' as any]: '#232222', ['--k4' as any]: '#2a2a2a', ['--k5' as any]: '#353534',
-          ['--wf' as any]: 'rgba(255,255,255,0.06)', ['--w' as any]: '#e5e2e1', ['--wd' as any]: '#9CA3AF',
-          ['--fd' as any]: 'Lexend, sans-serif', ['--fb' as any]: 'Inter, sans-serif',
-          ['--r' as any]: '8px', ['--rl' as any]: '12px', ['--rxl' as any]: '20px',
-          ['--tr' as any]: 'all .2s ease',
-        }}>
+      <Toast />
+      <div className="cl-root">
 
-          {/* ══ HEADER ══ */}
-          <header style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(19,19,19,0.9)', backdropFilter: 'blur(24px)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '13px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.1rem', fontWeight: 900, letterSpacing: '.06em', cursor: 'pointer', textTransform: 'uppercase' }} onClick={() => router.push('/client/home')}>
-              SUNDARA<span style={{ color: '#b22a27' }}>FLOW</span>
+        <Sidebar role="client" activeTab={activeTab} onNavTo={navTo} onSignOut={handleSignOut} />
+
+        {/* ══ MAIN ══ */}
+        <main className="cl-main" style={{ opacity: mounted ? 1 : 0, transition: 'opacity .4s ease' }}>
+
+          {/* Header mobile */}
+          <header className="cl-header">
+            <div className="cl-header-logo" onClick={() => router.push('/')}>
+              <span style={{ color: '#b22a27', fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1rem', letterSpacing: '-.04em' }}>S</span>
+              <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.75rem', letterSpacing: '.12em', color: '#e5e2e1', textTransform: 'uppercase' }}>FLOW</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ background: 'rgba(178,42,39,0.15)', borderRadius: 4, padding: '4px 12px', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#e3beb8' }}>👤 Membre</div>
-              <span style={{ fontSize: '.72rem', color: '#9CA3AF' }}>{userName || user?.email}</span>
-              {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Coach : <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
-              <button style={S.ghostBtn} onClick={() => router.push('/client')}>Mes programmes →</button>
-              <button style={{ ...S.ghostBtn, borderColor: 'rgba(255,255,255,0.06)', color: '#6B7280' }} onClick={handleSignOut}>Déconnexion</button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg,#89070e,#b22a27)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 800, color: '#e5e2e1' }}>
+                {firstName.slice(0, 2).toUpperCase()}
+              </div>
             </div>
           </header>
 
-          {/* ══ HERO ══ */}
-          <section style={{ position: 'relative', height: 'clamp(400px,52vh,660px)', overflow: 'hidden' }}>
-            <img
-              src="https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1920&q=80"
-              alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.28) saturate(0.7)' }}
-            />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(19,19,19,0.96) 0%, rgba(19,19,19,0.6) 55%, transparent 100%)' }} />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to top, #131313, transparent)' }} />
-            <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: 'linear-gradient(to bottom, #b22a27, #89070e, transparent)' }} />
-            <div style={{
-              position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-              padding: 'clamp(24px,5vw,60px)', maxWidth: 1200, margin: '0 auto',
-              opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(28px)', transition: 'opacity .65s ease, transform .65s ease',
-            }}>
-              <span style={S.tag}>{greeting()}, {userName || 'athlète'} — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-              <h1 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(2.6rem,6.5vw,5.2rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .88, marginBottom: 18, color: '#e5e2e1' }}>
-                VOTRE PARCOURS<br /><span style={{ color: '#b22a27' }}>COMMENCE ICI.</span>
-              </h1>
-              <p style={{ fontSize: 'clamp(.85rem,1.5vw,.98rem)', color: '#9CA3AF', marginBottom: 26, maxWidth: 500, lineHeight: 1.8 }}>
-                {loading ? 'Chargement de vos données…' : `${displayPrograms.length} programme${displayPrograms.length !== 1 ? 's' : ''} · Nutrition active · ${displayMeals.length} repas · ${displayTips.length} conseil${displayTips.length !== 1 ? 's' : ''}`}
-              </p>
-              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                <button style={{ ...S.gradBtn, padding: '14px 32px', fontSize: '.78rem' }} onClick={() => router.push('/client')}>Voir mes programmes →</button>
-                <button style={{ background: 'transparent', color: '#e3beb8', border: '1px solid rgba(227,190,184,0.2)', borderRadius: 6, padding: '14px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', letterSpacing: '.12em', textTransform: 'uppercase', cursor: 'pointer' }}
-                  onClick={() => document.getElementById('prog-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                  Aperçu ↓
-                </button>
-              </div>
-            </div>
-          </section>
+          <div className="cl-content">
 
-          {/* ══ KPI BAR ══ */}
-          <section style={{ background: '#1c1b1b', borderBottom: '1px solid rgba(255,255,255,0.04)', opacity: mounted ? 1 : 0, transition: 'opacity .5s ease .1s' }}>
-            <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(5,1fr)' }} className="kpi-row">
-              {[
-                { icon: '📋', label: 'Programmes',      val: loading ? '—' : displayPrograms.length,          sub: 'assignés' },
-                { icon: '🔥', label: 'Objectif kcal',   val: loading ? '—' : `${displayNut.calories}`,        sub: 'kcal / jour' },
-                { icon: '🍽️', label: 'Repas assignés',  val: loading ? '—' : displayMeals.length,            sub: 'par votre coach' },
-                { icon: '💡', label: 'Conseils',         val: loading ? '—' : displayTips.length,             sub: 'disponibles' },
-                { icon: '⏱️', label: 'Jeûne',            val: loading ? '—' : displayNut.fastingType || '—',  sub: 'protocole actif' },
-              ].map((k, i) => (
-                <div key={k.label} style={{ padding: '22px 20px', borderRight: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <div style={{ ...S.label, marginBottom: 7 }}>{k.icon} {k.label}</div>
-                  <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.4rem,2.5vw,2.2rem)', fontWeight: 900, letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1 }}>{k.val}</div>
-                  <div style={{ fontSize: '.58rem', color: '#9CA3AF', marginTop: 5 }}>{k.sub}</div>
-                </div>
-              ))}
-            </div>
-          </section>
+            {/* ══ OVERVIEW TAB ══ */}
+            {activeTab === 'overview' && (
+              <>
+                {/* HERO */}
+                <section className="cl-hero">
+                  <div className="cl-hero-overlay" />
+                  <div className="cl-hero-content">
+                    <div className="cl-hero-badge">TABLEAU DE BORD</div>
+                    <h1 className="cl-hero-title">
+                      BONJOUR, <span style={{ color: '#b22a27' }}>{firstName.toUpperCase()}.</span><br />
+                      CONTINUEZ À PROGRESSER.
+                    </h1>
+                    <p className="cl-hero-quote">
+                      <em>« Le succès, c'est la somme de petits efforts répétés jour après jour. »</em>
+                    </p>
+                  </div>
+                </section>
 
-          {/* ══ MAIN CONTENT ══ */}
-          <div style={{ maxWidth: 1200, margin: '0 auto', padding: 'clamp(24px,4vw,56px) clamp(16px,4vw,48px) 80px', opacity: mounted ? 1 : 0, transform: mounted ? 'none' : 'translateY(16px)', transition: 'opacity .5s ease .2s, transform .5s ease .2s' }}>
+                {/* ROW 1 — Bilan énergétique + Séance du jour */}
+                <div className="cl-row2">
 
-            {/* ══ SECTION — PROGRAMMES ══ */}
-            <section id="prog-section" style={{ marginBottom: 64 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
-                <div>
-                  <span style={S.tag}>🏋️ Entraînement</span>
-                  <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>PROGRAMMES.</span></h2>
-                </div>
-                <button style={S.ghostBtn} onClick={() => router.push('/client')}>Voir tout →</button>
-              </div>
-              {loading ? <Spinner /> : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
-                  {displayPrograms.slice(0, 4).map((p: any, i: number) => {
-                    const cfg = TYPE_CONFIG[p.type] || { icon: '📄', label: p.type || 'Programme', color: '#9CA3AF' };
-                    const days = p.assignedAt ? daysSince(p.assignedAt) : (p.days || 0);
-                    const prog = p.progress || 0;
-                    return (
-                      <div key={p.id} onClick={() => router.push('/client')}
-                        style={{ position: 'relative', background: '#1c1b1b', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', transition: 'background .2s', minHeight: 175 }}
-                      >
-                        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 3, background: `linear-gradient(to bottom, ${cfg.color}, transparent)` }} />
-                        <div style={{ padding: '20px 20px 16px 24px' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-                            <div style={{ fontSize: '1.7rem' }}>{cfg.icon}</div>
-                            <span style={{ ...S.badge, background: `${cfg.color}18`, color: cfg.color }}>{cfg.label}</span>
-                          </div>
-                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2vw,1.05rem)', letterSpacing: '-.03em', lineHeight: 1.15, marginBottom: 10, color: '#e5e2e1' }}>{p.title}</div>
-                          <div style={{ ...S.label, marginBottom: 7 }}>{days === 0 ? "Assigné aujourd'hui" : `Démarré il y a ${days}j`}{p.coachName ? ` · ${p.coachName}` : ''}</div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <div style={{ flex: 1, height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${prog}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10, transition: 'width 1.4s ease' }} />
-                            </div>
-                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', color: prog > 0 ? '#b22a27' : '#6B7280', flexShrink: 0 }}>
-                              {prog > 0 ? `${prog}%` : 'À démarrer'}
-                            </span>
-                          </div>
-                        </div>
+                  {/* Bilan énergétique */}
+                  <div className="cl-card cl-energy-card">
+                    <div className="cl-card-head">
+                      <div>
+                        <div className="cl-card-label">BILAN ÉNERGÉTIQUE</div>
+                        <div className="cl-card-sub">7 derniers jours</div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-
-            {/* ══ SECTION — JEÛNE & NUTRITION ══ */}
-            <section style={{ marginBottom: 64 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
-                <div>
-                  <span style={S.tag}>📊 Nutrition & Jeûne</span>
-                  <h2 style={S.sectionTitle}>MA <span style={{ color: '#b22a27' }}>NUTRITION.</span></h2>
-                </div>
-                {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Par <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
-              </div>
-
-              {loading ? <Spinner /> : (
-                <>
-                  {/* Fasting + deficit row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }} className="nut-top-grid">
-
-                    {/* Fasting widget */}
-                    <div style={{ background: '#1c1b1b', borderRadius: 12, padding: '20px', display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: '2.6rem', fontWeight: 900, letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1, flexShrink: 0 }}>
-                        {displayNut.fastingType || '—'}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', letterSpacing: '-.02em', marginBottom: 5, color: '#e5e2e1' }}>
-                          Jeûne Intermittent {displayNut.fastingType}
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,1.8rem)', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>
+                          {defLabel}
                         </div>
-                        <p style={{ fontSize: '.74rem', color: '#9CA3AF', marginBottom: 10 }}>
-                          Fenêtre alimentaire : <strong style={{ color: '#e3beb8' }}>{displayNut.windowStart} – {displayNut.windowEnd}</strong>
-                          {fastStatus?.inWindow
-                            ? <span style={{ marginLeft: 10, color: '#16a34a' }}>✓ Fenêtre ouverte</span>
-                            : <span style={{ marginLeft: 10, color: '#9CA3AF' }}>Hors fenêtre</span>
-                          }
-                        </p>
-                        <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: fastStatus ? `${fastStatus.pct}%` : '0%', background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10, transition: 'width 1s ease' }} />
+                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 4, fontFamily: 'Inter, sans-serif', letterSpacing: '.08em' }}>
+                          AUJOURD'HUI
                         </div>
                       </div>
                     </div>
 
-                    {/* Deficit banner */}
-                    <div style={{ background: deficit > 0 ? 'rgba(22,163,74,0.07)' : 'rgba(220,38,38,0.07)', borderRadius: 12, padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                      <div style={S.label}>{deficit > 0 ? 'Déficit calorique' : 'Surplus calorique'}</div>
+                    {/* Bar chart */}
+                    <div className="cl-chart">
+                      {CHART_BARS.map((bar, i) => {
+                        const isToday = i === 4; // Ven = today mock
+                        return (
+                          <div key={bar.label} className="cl-chart-col">
+                            <div className="cl-chart-bar-wrap">
+                              <div
+                                className="cl-chart-bar"
+                                style={{
+                                  height: `${bar.h}%`,
+                                  background: isToday
+                                    ? 'linear-gradient(to top, #89070e, #b22a27)'
+                                    : 'rgba(178,42,39,0.22)',
+                                  ['--target-h' as any]: `${bar.h}%`,
+                                }}
+                              />
+                            </div>
+                            <div className={`cl-chart-label${isToday ? ' today' : ''}`}>{bar.label}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Séance du jour */}
+                  <div className="cl-card cl-seance-card">
+                    <div className="cl-seance-bg" />
+                    <div className="cl-seance-overlay" />
+                    <div className="cl-seance-content">
+                      <div className="cl-seance-badge">HAUTE INTENSITÉ</div>
                       <div>
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.6rem,3.5vw,2.4rem)', fontWeight: 900, letterSpacing: '-.04em', color: defColor, lineHeight: 1, marginBottom: 5, marginTop: 8 }}>{defLabel}</div>
-                        <div style={{ fontSize: '.68rem', color: '#9CA3AF', marginBottom: 14 }}>
-                          Maintenance {(displayNut.maintenanceCalories || 2500).toLocaleString('fr-FR')} → Objectif {(displayNut.calories || 2000).toLocaleString('fr-FR')} kcal/j
+                        <div className="cl-card-label" style={{ marginBottom: 6 }}>SÉANCE DU JOUR</div>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.1rem,2.5vw,1.4rem)', color: '#e5e2e1', letterSpacing: '-.03em', lineHeight: 1.2 }}>
+                          {displayPrograms[0]?.title || 'Force & Hypertrophie'}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6 }}>
-                          <span style={{ fontFamily: 'Lexend, sans-serif', fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-.04em', color: defColor }}>{deficit > 0 ? '−' : '+'}{Math.abs(parseFloat(weeklyKg))} kg</span>
-                          <span style={{ fontSize: '.62rem', color: '#9CA3AF', marginBottom: 4 }}>/ semaine estimé</span>
+                        <div style={{ fontSize: '.65rem', color: '#9CA3AF', marginTop: 8, fontFamily: 'Inter, sans-serif', letterSpacing: '.1em' }}>
+                          45 MIN · 420 KCAL
                         </div>
+                      </div>
+                      <button className="cl-seance-btn">DÉMARRER MA SÉANCE ▶</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROW 2 — Protocole de jeûne + Nutrition du jour */}
+                <div className="cl-row2">
+
+                  {/* Protocole de jeûne */}
+                  <div className="cl-card cl-fasting-card">
+                    <div className="cl-card-label" style={{ marginBottom: 20 }}>PROTOCOLE DE JEÛNE</div>
+                    <div className="cl-fasting-circle-wrap">
+                      <svg width="160" height="160" viewBox="0 0 160 160">
+                        {/* Background track */}
+                        <circle
+                          cx="80" cy="80" r={CIRCLE_R}
+                          fill="none"
+                          stroke="rgba(255,255,255,0.06)"
+                          strokeWidth="8"
+                        />
+                        {/* Progress arc */}
+                        <circle
+                          cx="80" cy="80" r={CIRCLE_R}
+                          fill="none"
+                          stroke="url(#fastGrad)"
+                          strokeWidth="8"
+                          strokeLinecap="round"
+                          strokeDasharray={CIRCUMFERENCE}
+                          strokeDashoffset={dashOffset}
+                          transform="rotate(-90 80 80)"
+                          style={{ transition: 'stroke-dashoffset 1s ease' }}
+                        />
+                        <defs>
+                          <linearGradient id="fastGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#89070e" />
+                            <stop offset="100%" stopColor="#b22a27" />
+                          </linearGradient>
+                        </defs>
+                        {/* Center text */}
+                        <text x="80" y="72" textAnchor="middle" fill="#e5e2e1" fontFamily="Lexend, sans-serif" fontWeight="900" fontSize="22" letterSpacing="-1">
+                          {fastStatus ? `${fastStatus.elapsedH}:${String(fastStatus.elapsedM).padStart(2, '0')}` : '16:00'}
+                        </text>
+                        <text x="80" y="92" textAnchor="middle" fill="#9CA3AF" fontFamily="Inter, sans-serif" fontSize="9" letterSpacing="2">
+                          ÉCOULÉ
+                        </text>
+                        <text x="80" y="108" textAnchor="middle" fill="#b22a27" fontFamily="Lexend, sans-serif" fontWeight="700" fontSize="10" letterSpacing="1">
+                          {fastStatus?.inWindow ? 'FENÊTRE' : 'EN JEÛNE'}
+                        </text>
+                      </svg>
+                    </div>
+                    <div className="cl-fasting-info">
+                      <div className="cl-fasting-row">
+                        <span className="cl-card-label">Protocole</span>
+                        <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: '#b22a27' }}>{displayNut.fastingType || '16/8'}</span>
+                      </div>
+                      <div className="cl-fasting-row">
+                        <span className="cl-card-label">Fenêtre alimentaire</span>
+                        <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.82rem', color: '#e5e2e1' }}>{displayNut.windowStart} – {displayNut.windowEnd}</span>
+                      </div>
+                      <div className="cl-fasting-row">
+                        <span className="cl-card-label">État actuel</span>
+                        <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: fastStatus?.inWindow ? '#16a34a' : '#b22a27', letterSpacing: '.06em' }}>
+                          {fastStatus?.inWindow ? '● FENÊTRE OUVERTE' : '● EN COURS DE JEÛNE'}
+                        </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Macro cards */}
-                  <div className="macro-grid" style={{ marginBottom: 14 }}>
+                  {/* Ma Nutrition du Jour */}
+                  <div className="cl-card cl-nut-card">
+                    <div className="cl-card-head" style={{ marginBottom: 20 }}>
+                      <div>
+                        <div className="cl-card-label">MA NUTRITION DU JOUR</div>
+                        <div className="cl-card-sub">Objectif : {displayNut.calories?.toLocaleString('fr-FR')} kcal</div>
+                      </div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.1rem', color: '#b22a27' }}>
+                        {Math.round((displayNut.calories || 2000) * 0.72).toLocaleString('fr-FR')}
+                        <span style={{ fontSize: '.55rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginLeft: 4 }}>kcal</span>
+                      </div>
+                    </div>
+
+                    {/* Macro bars */}
                     {[
-                      { icon: '🔥', label: 'Objectif calorique', val: displayNut.calories?.toLocaleString('fr-FR'), unit: 'kcal/j', pct: 100 },
-                      { icon: '🥩', label: 'Protéines', val: displayNut.protein, unit: 'g', pct: Math.round(((displayNut.protein || 0) * 4 / (displayNut.calories || 2000)) * 100) },
-                      { icon: '🌾', label: 'Glucides',  val: displayNut.carbs,   unit: 'g', pct: Math.round(((displayNut.carbs || 0) * 4 / (displayNut.calories || 2000)) * 100) },
-                      { icon: '🥑', label: 'Lipides',   val: displayNut.fat,     unit: 'g', pct: Math.round(((displayNut.fat || 0) * 9 / (displayNut.calories || 2000)) * 100) },
+                      { label: 'Protéines', current: Math.round((displayNut.protein || 150) * 0.8), target: displayNut.protein || 150, unit: 'g', color: '#b22a27' },
+                      { label: 'Glucides',  current: Math.round((displayNut.carbs   || 200) * 0.66), target: displayNut.carbs   || 200, unit: 'g', color: '#89070e' },
+                      { label: 'Lipides',   current: Math.round((displayNut.fat     || 65)  * 0.65), target: displayNut.fat     || 65,  unit: 'g', color: '#5c0509' },
                     ].map(m => (
-                      <div key={m.label} style={{ background: '#1c1b1b', borderRadius: 8, padding: '16px' }}>
-                        <div style={{ fontSize: '1.2rem', marginBottom: 7 }}>{m.icon}</div>
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.45rem', letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1 }}>{m.val}</div>
-                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2, marginBottom: 8 }}>{m.unit} · {m.label}</div>
-                        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 10, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${Math.min(m.pct, 100)}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 10 }} />
+                      <div key={m.label} style={{ marginBottom: 14 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                          <span style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF' }}>{m.label}</span>
+                          <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', color: '#b22a27' }}>
+                            {m.current}{m.unit} / {m.target}{m.unit}
+                          </span>
+                        </div>
+                        <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                          <div style={{
+                            height: 5,
+                            width: `${Math.min(100, Math.round((m.current / m.target) * 100))}%`,
+                            background: `linear-gradient(to right, ${m.color}, #b22a27)`,
+                            borderRadius: 9999,
+                            transition: 'width 1s ease',
+                          }} />
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Repas */}
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: 16, marginTop: 8, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {displayMeals.slice(0, 2).map(meal => (
+                        <div key={meal.id} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                          <div style={{ width: 40, height: 40, borderRadius: 8, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>
+                            {meal.emoji || '🍽️'}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', color: '#e5e2e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{meal.name}</div>
+                            <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{meal.time} · {meal.calories} kcal</div>
+                          </div>
+                          <div style={{ fontSize: '.6rem', color: '#b22a27', fontFamily: 'Lexend, sans-serif', fontWeight: 700, flexShrink: 0 }}>+{meal.protein}g P</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROW 3 — 3 blocks bas */}
+                <div className="cl-row3">
+
+                  {/* Progression du poids */}
+                  <div className="cl-card cl-weight-card">
+                    <div className="cl-card-label" style={{ marginBottom: 12 }}>PROGRESSION DU POIDS</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.6rem)', color: '#e5e2e1', letterSpacing: '-.06em', lineHeight: 1 }}>78.4</div>
+                      <div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 500, fontSize: '.7rem', color: '#9CA3AF', lineHeight: 1 }}>kg</div>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.65rem', color: '#b22a27', letterSpacing: '.04em', marginTop: 3 }}>−0.6 cette semaine</div>
+                      </div>
+                    </div>
+                    <div className="cl-weight-trend">
+                      {[62, 55, 70, 48, 65, 58, 72].map((h, i) => (
+                        <div key={i} className="cl-weight-bar" style={{ height: `${h}%`, background: i === 6 ? '#b22a27' : 'rgba(178,42,39,0.2)' }} />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', letterSpacing: '.06em', marginTop: 10 }}>
+                      OBJECTIF : 75.0 KG · {Math.round(((78.4 - 75) / 0.6))} SEMAINES RESTANTES
+                    </div>
+                  </div>
+
+                  {/* Points d'activité */}
+                  <div className="cl-card cl-activity-card">
+                    <div className="cl-card-label" style={{ marginBottom: 12 }}>POINTS D'ACTIVITÉ</div>
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.6rem)', color: '#b22a27', letterSpacing: '-.06em', lineHeight: 1 }}>1 840</div>
+                      <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.6rem', color: '#9CA3AF', marginBottom: 6 }}>pts ce mois</div>
+                    </div>
+                    <div style={{ marginTop: 16, marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                        <span style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF' }}>Objectif mensuel</span>
+                        <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: '#b22a27' }}>74%</span>
+                      </div>
+                      <div style={{ height: 5, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                        <div style={{ height: 5, width: '74%', background: 'linear-gradient(to right, #89070e, #b22a27)', borderRadius: 9999 }} />
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                      +240 pts cette semaine · Objectif : 2 500 pts
+                    </div>
+                  </div>
+
+                  {/* Habitudes Élite */}
+                  <div className="cl-card cl-habits-card">
+                    <div className="cl-card-label" style={{ marginBottom: 16 }}>HABITUDES ÉLITE</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {displayTips.slice(0, 2).map((tip: any) => (
+                        <div key={tip.id} style={{ background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: '1rem' }}>{CAT_ICON[tip.category] || '💡'}</span>
+                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', color: '#e5e2e1', letterSpacing: '.02em' }}>{tip.title}</span>
+                          </div>
+                          <p style={{ fontSize: '.65rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.55, margin: 0 }}>
+                            {tip.content.length > 100 ? tip.content.slice(0, 100) + '…' : tip.content}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ══ CALCULATEUR CALORIQUE ══ */}
+                <div className="cl-card" style={{ marginTop: 24 }}>
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 10 }}>⚡ Outil personnel</div>
+                    <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,2rem)', letterSpacing: '-.05em', color: '#e5e2e1', margin: '0 0 8px' }}>
+                      MON CALCULATEUR <span style={{ color: '#b22a27' }}>CALORIQUE.</span>
+                    </h2>
+                    <p style={{ fontSize: '.78rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', margin: 0 }}>
+                      Calculez vos besoins caloriques selon votre profil.
+                    </p>
+                  </div>
+                  <CalorieCalculator mode="membre" />
+                  <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, fontSize: '.72rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+                    💡 Votre coach peut ajuster ces valeurs dans votre plan nutritionnel.
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ══ PROGRAMMES TAB ══ */}
+            {activeTab === 'programmes' && (
+              <div>
+                <div className="cl-page-header">
+                  <h2 className="cl-page-title">MES PROGRAMMES</h2>
+                  <p className="cl-page-sub">Programmes assignés par votre coach</p>
+                </div>
+                {loading ? (
+                  <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                    <div className="cl-spinner" />
+                    <p style={{ fontSize: '.73rem', color: '#9CA3AF', marginTop: 12 }}>Chargement…</p>
+                  </div>
+                ) : (
+                  <div className="cl-prog-grid">
+                    {displayPrograms.map((prog: any) => {
+                      const cfg = TYPE_CONFIG[prog.type] || TYPE_CONFIG.sport;
+                      const days = daysSince(prog.assignedAt);
+                      return (
+                        <div key={prog.id} className="cl-prog-card">
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                            <div style={{ fontSize: '1.5rem' }}>{cfg.icon}</div>
+                            <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: cfg.color, background: `${cfg.color}18`, padding: '3px 8px', borderRadius: 4, border: `1px solid ${cfg.color}30` }}>
+                              {cfg.label}
+                            </span>
+                          </div>
+                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: 'clamp(.85rem,2vw,1rem)', color: '#e5e2e1', letterSpacing: '-.02em', marginBottom: 6 }}>{prog.title}</div>
+                          <div style={{ fontSize: '.62rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginBottom: 16 }}>
+                            {prog.coachName || 'Votre coach'} · Commencé il y a {days} jours
+                          </div>
+                          {typeof prog.progress === 'number' && (
+                            <div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                <span style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>Progression</span>
+                                <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: '#b22a27' }}>{prog.progress}%</span>
+                              </div>
+                              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 9999 }}>
+                                <div style={{ height: 4, width: `${prog.progress}%`, background: 'linear-gradient(to right, #89070e, #b22a27)', borderRadius: 9999 }} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ══ NUTRITION TAB ══ */}
+            {activeTab === 'nutrition' && (
+              <div>
+                <div className="cl-page-header">
+                  <h2 className="cl-page-title">MA NUTRITION</h2>
+                  <p className="cl-page-sub">Plan nutritionnel et repas du jour</p>
+                </div>
+
+                {/* Calculateur */}
+                <div className="cl-card" style={{ marginBottom: 24 }}>
+                  <div style={{ marginBottom: 22 }}>
+                    <div style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 10 }}>⚡ Outil personnel</div>
+                    <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.2rem,3vw,1.6rem)', letterSpacing: '-.05em', color: '#e5e2e1', margin: '0 0 8px' }}>
+                      MON CALCULATEUR <span style={{ color: '#b22a27' }}>CALORIQUE.</span>
+                    </h2>
+                    <p style={{ fontSize: '.75rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', margin: 0 }}>Calculez vos besoins caloriques selon votre profil.</p>
+                  </div>
+                  <CalorieCalculator mode="membre" />
+                  <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, fontSize: '.72rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
+                    💡 Votre coach peut ajuster ces valeurs dans votre plan nutritionnel.
+                  </div>
+                </div>
+
+                {/* Plan nutrition */}
+                <div className="cl-card" style={{ marginBottom: 24 }}>
+                  <div className="cl-card-label" style={{ marginBottom: 20 }}>MON PLAN NUTRITIONNEL</div>
+                  <div className="cl-nut-stats">
+                    {[
+                      { label: 'Calories cible', val: displayNut.calories, unit: 'kcal' },
+                      { label: 'Protéines', val: displayNut.protein, unit: 'g' },
+                      { label: 'Glucides', val: displayNut.carbs, unit: 'g' },
+                      { label: 'Lipides', val: displayNut.fat, unit: 'g' },
+                    ].map(s => (
+                      <div key={s.label} className="cl-nut-stat">
+                        <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>{s.label}</div>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.4rem', color: '#b22a27', letterSpacing: '-.04em' }}>{s.val}</div>
+                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>{s.unit}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {displayNut.notes && (
+                    <div style={{ background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '14px 16px', marginTop: 20 }}>
+                      <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 8 }}>NOTES DU COACH</div>
+                      <p style={{ fontSize: '.75rem', color: '#e5e2e1', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{displayNut.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Repas */}
+                <div className="cl-card">
+                  <div className="cl-card-label" style={{ marginBottom: 20 }}>MES REPAS</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {displayMeals.map((meal: any) => (
+                      <div key={meal.id} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
+                        <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>
+                          {meal.emoji || '🍽️'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.85rem', color: '#e5e2e1' }}>{meal.name}</div>
+                          <div style={{ fontSize: '.62rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 3 }}>{meal.time} · {meal.description}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', color: '#b22a27' }}>{meal.calories} kcal</div>
+                          <div style={{ fontSize: '.58rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>P {meal.protein}g · G {meal.carbs}g · L {meal.fat}g</div>
                         </div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Coach note */}
-                  {displayNut.notes && (
-                    <div style={{ background: '#1c1b1b', borderRadius: 8, padding: '14px 18px', fontSize: '.8rem', color: '#9CA3AF', borderLeft: '3px solid rgba(178,42,39,0.4)' }}>
-                      📝 <strong style={{ color: '#e5e2e1' }}>Note de {coachName || 'votre coach'} :</strong> {displayNut.notes}
-                    </div>
-                  )}
-                </>
-              )}
-            </section>
-
-            {/* ══ SECTION — CALCULATEUR CALORIQUE ══ */}
-            <section style={{ marginBottom: 64 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
-                <div>
-                  <span style={S.tag}>⚡ Outil personnel</span>
-                  <h2 style={S.sectionTitle}>MON CALCULATEUR <span style={{ color: '#b22a27' }}>CALORIQUE.</span></h2>
                 </div>
               </div>
-              <p style={{ fontSize: '.85rem', color: '#9CA3AF', lineHeight: 1.75, marginBottom: 24, maxWidth: 520 }}>
-                Calculez vos besoins caloriques et vos macronutriments en fonction de votre profil.
-              </p>
-              <div style={{ background: '#1c1b1b', borderRadius: 12, padding: 28 }}>
-                <CalorieCalculator mode="membre" />
-              </div>
-              <div style={{ marginTop: 14, background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '12px 16px', fontSize: '.78rem', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 10 }}>
-                💡 Votre coach peut ajuster ces valeurs directement dans votre plan nutritionnel.
-              </div>
-            </section>
+            )}
 
-            {/* ══ SECTION — REPAS ══ */}
-            <section style={{ marginBottom: 64 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
-                <div>
-                  <span style={S.tag}>🍽️ Plan alimentaire</span>
-                  <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>REPAS.</span></h2>
+            {/* ══ STATISTIQUES TAB ══ */}
+            {activeTab === 'statistiques' && (
+              <div>
+                <div className="cl-page-header">
+                  <h2 className="cl-page-title">MES STATISTIQUES</h2>
+                  <p className="cl-page-sub">Votre progression globale</p>
                 </div>
-                {coachName && <span style={{ fontSize: '.68rem', color: '#9CA3AF' }}>Par <strong style={{ color: '#b22a27' }}>{coachName}</strong></span>}
-              </div>
-              {loading ? <Spinner /> : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {displayMeals.map((m: any, i: number) => (
-                    <div key={m.id} style={{ background: '#1c1b1b', borderRadius: 10, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ fontSize: '1.6rem', flexShrink: 0, width: 44, height: 44, background: '#2a2a2a', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {m.emoji || '🍽️'}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.9rem', letterSpacing: '-.02em', marginBottom: 3, color: '#e5e2e1' }}>{m.name}</div>
-                        {m.description && <div style={{ fontSize: '.7rem', color: '#9CA3AF', marginBottom: 6, lineHeight: 1.5 }}>{m.description}</div>}
-                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                          {m.calories && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🔥 <strong>{m.calories}</strong> kcal</span>}
-                          {m.protein  && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🥩 <strong>{m.protein}g</strong> prot</span>}
-                          {m.carbs    && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🌾 <strong>{m.carbs}g</strong> gluc</span>}
-                          {m.fat      && <span style={{ fontSize: '.64rem', color: '#e3beb8' }}>🥑 <strong>{m.fat}g</strong> lip</span>}
-                        </div>
-                      </div>
-                      {m.time && (
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', color: '#b22a27', flexShrink: 0, background: 'rgba(178,42,39,0.1)', borderRadius: 6, padding: '5px 10px' }}>
-                          {m.time}
-                        </div>
-                      )}
+
+                {/* Stats cards */}
+                <div className="cl-stats-grid">
+                  {[
+                    { label: 'Séances complétées', val: '24', sub: 'ce mois', icon: '🏋️' },
+                    { label: 'Calories brûlées', val: '18 240', sub: 'kcal ce mois', icon: '🔥' },
+                    { label: 'Poids perdu', val: '2.8', sub: 'kg ce mois', icon: '📉' },
+                    { label: 'Jours de jeûne', val: '22', sub: 'sur 30', icon: '⏱️' },
+                  ].map(s => (
+                    <div key={s.label} className="cl-stat-card">
+                      <div style={{ fontSize: '1.5rem', marginBottom: 10 }}>{s.icon}</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,4vw,2rem)', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{s.val}</div>
+                      <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF', marginTop: 6 }}>{s.label}</div>
+                      <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>{s.sub}</div>
                     </div>
                   ))}
                 </div>
-              )}
-            </section>
 
-            {/* ══ SECTION — CONSEILS DU COACH ══ */}
-            <section style={{ marginBottom: 64 }}>
-              <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 26 }}>
-                <div>
-                  <span style={S.tag}>💡 Lifestyle & Mindset</span>
-                  <h2 style={S.sectionTitle}>CONSEILS DU <span style={{ color: '#b22a27' }}>COACH.</span></h2>
+                {/* Conseils coach */}
+                <div className="cl-card" style={{ marginTop: 24 }}>
+                  <div className="cl-card-label" style={{ marginBottom: 20 }}>CONSEILS DE MON COACH</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {displayTips.map((tip: any) => (
+                      <div key={tip.id} style={{ display: 'flex', gap: 14, padding: '14px 16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10 }}>
+                        <div style={{ fontSize: '1.3rem', flexShrink: 0 }}>{CAT_ICON[tip.category] || '💡'}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', color: '#e5e2e1' }}>{tip.title}</span>
+                            <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '2px 7px', borderRadius: 4 }}>{TIP_CAT_LABEL[tip.category] || 'Conseil'}</span>
+                          </div>
+                          <p style={{ fontSize: '.7rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{tip.content}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-              {loading ? <Spinner /> : (
-                <>
-                  {/* Featured tip */}
-                  {displayTips.length > 0 && (
-                    <div style={{ background: 'linear-gradient(135deg,rgba(137,7,14,0.12),rgba(20,18,18,0.95))', borderRadius: 12, padding: '24px', marginBottom: 18, borderLeft: '3px solid #b22a27' }}>
-                      <div style={{ fontSize: '2.5rem', color: 'rgba(178,42,39,0.35)', fontFamily: 'Georgia, serif', lineHeight: 1, marginBottom: 6 }}>"</div>
-                      <div style={{ ...S.label, color: '#b22a27', marginBottom: 10 }}>
-                        {CAT_ICON[displayTips[0]?.category] || '💡'} {TIP_CAT_LABEL[displayTips[0]?.category] || displayTips[0]?.category} — Conseil du moment
-                      </div>
-                      <p style={{ fontSize: '.92rem', color: '#e5e2e1', lineHeight: 1.8, marginBottom: 12 }}>{displayTips[0]?.content}</p>
-                      <div style={{ fontSize: '.7rem', color: '#9CA3AF' }}>— {displayTips[0]?.title} · <span style={{ color: '#b22a27' }}>{coachName || 'Votre coach'}</span></div>
-                    </div>
-                  )}
-
-                  {/* Tips grid */}
-                  {displayTips.length > 1 && (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 12 }}>
-                      {displayTips.slice(1).map((t: any, i: number) => (
-                        <div key={t.id} style={{ background: '#1c1b1b', borderRadius: 10, padding: '18px' }}>
-                          <div style={{ fontSize: '1.4rem', marginBottom: 9 }}>{CAT_ICON[t.category] || '💡'}</div>
-                          <h4 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', letterSpacing: '-.02em', marginBottom: 7, color: '#e5e2e1' }}>{t.title}</h4>
-                          <p style={{ fontSize: '.76rem', color: '#9CA3AF', lineHeight: 1.7, marginBottom: 10 }}>{t.content}</p>
-                          <span style={S.badge}>{TIP_CAT_LABEL[t.category] || t.category}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </section>
-
-            {/* ══ SECTION — ANALYSES ══ */}
-            <section style={{ marginBottom: 64 }}>
-              <div style={{ marginBottom: 26 }}>
-                <span style={S.tag}>📈 Progression</span>
-                <h2 style={S.sectionTitle}>MES <span style={{ color: '#b22a27' }}>ANALYSES.</span></h2>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 12, marginBottom: 18 }}>
-                {[
-                  { label: 'Programmes assignés',  val: loading ? '—' : displayPrograms.length,  sub: 'total' },
-                  { label: 'Jours de suivi',        val: loading ? '—' : `${displayPrograms[0] ? daysSince(displayPrograms[displayPrograms.length-1]?.assignedAt) : 18}j`, sub: 'depuis le début' },
-                  { label: 'Repas assignés',        val: loading ? '—' : displayMeals.length,     sub: 'par votre coach' },
-                  { label: 'Conseils reçus',        val: loading ? '—' : displayTips.length,      sub: 'publications' },
-                  { label: 'Objectif calorique',    val: loading ? '—' : `${displayNut.calories} kcal`, sub: 'par jour' },
-                ].map(s => (
-                  <div key={s.label} style={{ background: '#1c1b1b', borderRadius: 8, padding: '16px' }}>
-                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,3vw,2rem)', letterSpacing: '-.04em', color: '#b22a27', lineHeight: 1, marginBottom: 5 }}>{s.val}</div>
-                    <div style={S.label}>{s.label}</div>
-                    <div style={{ fontSize: '.58rem', color: '#9CA3AF', marginTop: 3, opacity: .7 }}>{s.sub}</div>
-                  </div>
-                ))}
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '12px 16px', fontSize: '.73rem', color: '#9CA3AF', textAlign: 'center', borderLeft: '2px solid rgba(178,42,39,0.3)' }}>
-                <span style={{ color: '#b22a27' }}>📈 Prochainement :</span> Graphiques de progression, suivi du poids, taux d&apos;adhérence, historique des séances.
-              </div>
-            </section>
-
-            {/* ══ CTA ══ */}
-            <div style={{ background: 'linear-gradient(135deg,#89070e 0%,#0e0e0e 100%)', borderRadius: 16, padding: 'clamp(30px,5vw,52px)', textAlign: 'center' }}>
-              <span style={{ ...S.tag, color: '#e3beb8', display: 'inline-block', marginBottom: 16 }}>📂 Espace personnel</span>
-              <h2 style={{ fontFamily: 'Lexend, sans-serif', fontSize: 'clamp(1.6rem,4vw,2.8rem)', fontWeight: 900, letterSpacing: '-.04em', lineHeight: .92, marginBottom: 16, color: '#e5e2e1' }}>
-                TOUS VOS PROGRAMMES<br />EN UN SEUL ENDROIT.
-              </h2>
-              <p style={{ fontSize: 'clamp(.82rem,1.4vw,.94rem)', color: 'rgba(227,190,184,.8)', marginBottom: 28, maxWidth: 420, margin: '0 auto 28px', lineHeight: 1.8 }}>
-                Accédez à votre espace personnel pour consulter, filtrer et gérer l&apos;ensemble de vos programmes et ressources.
-              </p>
-              <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <button style={{ background: 'rgba(229,226,225,0.14)', backdropFilter: 'blur(10px)', border: '1px solid rgba(229,226,225,0.2)', borderRadius: 6, padding: '14px 36px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#e5e2e1', cursor: 'pointer' }} onClick={() => router.push('/client')}>
-                  📂 Voir mes programmes →
-                </button>
-                <button style={{ background: 'transparent', border: '1px solid rgba(229,226,225,0.12)', borderRadius: 6, padding: '14px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.8rem', letterSpacing: '.12em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.45)', cursor: 'pointer' }} onClick={handleSignOut}>
-                  Déconnexion
-                </button>
-              </div>
-            </div>
+            )}
 
           </div>
-        </div>
+        </main>
 
-        <style>{`
-          @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
-          .sf-page-root, .sf-page-root * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-          .sf-page-root h1, .sf-page-root h2, .sf-page-root h3 { font-family: 'Lexend', sans-serif !important; font-weight: 900 !important; letter-spacing: -.04em !important; line-height: .95 !important; color: #e5e2e1; margin: 0; }
-          .sf-page-root h4 { font-family: 'Lexend', sans-serif !important; font-weight: 800 !important; letter-spacing: -.02em !important; margin: 0; color: #e5e2e1; }
-          .sf-page-root p { font-family: 'Inter', sans-serif !important; color: #9CA3AF; line-height: 1.7; margin: 0; }
-          .macro-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
-          .kpi-row { grid-template-columns: repeat(5,1fr) !important; }
-          .nut-top-grid { grid-template-columns: 1fr 1fr !important; }
-          @keyframes spin { to { transform:rotate(360deg); } }
-          @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
-          @media(max-width:960px) {
-            .kpi-row { grid-template-columns: repeat(3,1fr) !important; }
-            .nut-top-grid { grid-template-columns: 1fr !important; }
-          }
-          @media(max-width:600px) {
-            .macro-grid { grid-template-columns: 1fr 1fr !important; }
-            .kpi-row { grid-template-columns: 1fr 1fr !important; }
-          }
-          .sf-page-root ::-webkit-scrollbar { width:4px; height:4px; }
-          .sf-page-root ::-webkit-scrollbar-track { background:transparent; }
-          .sf-page-root ::-webkit-scrollbar-thumb { background:rgba(178,42,39,0.35); border-radius:10px; }
-        `}</style>
-      </>
+      </div>
+
+      {/* ══ STYLES ══ */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        .cl-root {
+          display: flex;
+          min-height: 100vh;
+          background: #131313;
+          color: #e5e2e1;
+          overflow-x: hidden;
+        }
+
+        @media (min-width: 769px) {
+          .cl-header-logo { display: none !important; }
+          .cl-main { margin-left: 240px; width: calc(100vw - 240px); }
+        }
+
+        /* ── Overlay (legacy, kept for safety) ── */
+        .cl-overlay {
+          position: fixed; inset: 0;
+          background: rgba(0,0,0,0.55);
+          z-index: 49;
+        }
+
+        /* ── Main ── */
+        .cl-main {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          overflow-x: hidden;
+        }
+
+        .cl-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 20px;
+          min-height: 56px;
+          max-height: 56px;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+          background: #1c1b1b;
+          position: sticky; top: 0; z-index: 100;
+        }
+        @media (min-width: 769px) { .cl-header { display: none; } }
+
+        .cl-content {
+          padding: 24px 20px 40px;
+          max-width: 1100px;
+          width: 100%;
+        }
+        @media (min-width: 769px) { .cl-content { padding: 32px 32px 60px; } }
+
+        /* ── Hero ── */
+        .cl-hero {
+          position: relative;
+          border-radius: 16px;
+          overflow: hidden;
+          margin-bottom: 24px;
+          min-height: 220px;
+          display: flex;
+          align-items: flex-end;
+          background: #2a2a2a;
+        }
+        .cl-hero-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(135deg, rgba(137,7,14,0.82) 0%, rgba(19,19,19,0.7) 60%, rgba(19,19,19,0.95) 100%);
+          z-index: 1;
+        }
+        .cl-hero-content {
+          position: relative; z-index: 2;
+          padding: clamp(20px,4vw,36px);
+        }
+        .cl-hero-badge {
+          font-size: .55rem;
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          letter-spacing: .2em;
+          text-transform: uppercase;
+          color: rgba(229,226,225,0.5);
+          margin-bottom: 12px;
+        }
+        .cl-hero-title {
+          font-family: 'Lexend', sans-serif;
+          font-weight: 900;
+          font-size: clamp(1.5rem, 4vw, 2.4rem);
+          letter-spacing: -.05em;
+          line-height: 1.05;
+          color: #e5e2e1;
+          margin: 0 0 14px;
+        }
+        .cl-hero-quote {
+          font-family: 'Inter', sans-serif;
+          font-size: clamp(.65rem, 1.5vw, .78rem);
+          color: rgba(229,226,225,0.55);
+          font-style: italic;
+          margin: 0;
+          max-width: 400px;
+          line-height: 1.6;
+        }
+
+        /* ── 2-col rows ── */
+        .cl-row2 {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+          margin-bottom: 16px;
+        }
+        @media (min-width: 700px) {
+          .cl-row2 { grid-template-columns: 60fr 38fr; }
+        }
+
+        /* ── 3-col row ── */
+        .cl-row3 {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        @media (min-width: 700px) {
+          .cl-row3 { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        /* ── Cards ── */
+        .cl-card {
+          background: rgba(28,27,27,0.9);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 14px;
+          padding: 22px;
+        }
+        .cl-card-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 14px;
+        }
+        .cl-card-label {
+          font-size: .58rem;
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          color: #9CA3AF;
+        }
+        .cl-card-sub {
+          font-size: .62rem;
+          color: #6B7280;
+          font-family: 'Inter', sans-serif;
+          margin-top: 3px;
+        }
+
+        /* ── Energy chart ── */
+        .cl-energy-card { display: flex; flex-direction: column; }
+        .cl-chart {
+          display: flex;
+          align-items: flex-end;
+          gap: 6px;
+          height: 110px;
+          flex: 1;
+          margin-top: 12px;
+        }
+        .cl-chart-col {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          height: 100%;
+          gap: 6px;
+        }
+        .cl-chart-bar-wrap {
+          flex: 1;
+          width: 100%;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+        }
+        .cl-chart-bar {
+          width: 100%;
+          border-radius: 4px 4px 0 0;
+          min-height: 4px;
+          animation: barGrow .9s ease forwards;
+          transform-origin: bottom;
+        }
+        @keyframes barGrow {
+          from { height: 0 !important; }
+          to { height: var(--target-h, 50%); }
+        }
+        .cl-chart-label {
+          font-size: .52rem;
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: #6B7280;
+        }
+        .cl-chart-label.today { color: #b22a27; }
+
+        /* ── Seance card ── */
+        .cl-seance-card {
+          position: relative;
+          overflow: hidden;
+          min-height: 220px;
+          display: flex;
+          flex-direction: column;
+          padding: 0;
+        }
+        .cl-seance-bg {
+          position: absolute; inset: 0;
+          background: url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=80') center/cover no-repeat;
+        }
+        .cl-seance-overlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(to top, rgba(19,19,19,0.97) 0%, rgba(19,19,19,0.6) 50%, rgba(19,19,19,0.3) 100%);
+        }
+        .cl-seance-content {
+          position: relative; z-index: 2;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          height: 100%;
+          padding: 22px;
+          gap: 16px;
+        }
+        .cl-seance-badge {
+          align-self: flex-start;
+          font-size: .5rem;
+          font-family: 'Lexend', sans-serif;
+          font-weight: 800;
+          letter-spacing: .16em;
+          text-transform: uppercase;
+          color: #b22a27;
+          background: rgba(178,42,39,0.12);
+          border: 1px solid rgba(178,42,39,0.25);
+          padding: 4px 10px;
+          border-radius: 4px;
+        }
+        .cl-seance-btn {
+          width: 100%;
+          padding: 13px;
+          background: linear-gradient(135deg, #89070e, #b22a27);
+          border: none;
+          border-radius: 8px;
+          color: #e5e2e1;
+          font-family: 'Lexend', sans-serif;
+          font-weight: 800;
+          font-size: .65rem;
+          letter-spacing: .14em;
+          text-transform: uppercase;
+          cursor: pointer;
+          transition: transform .2s, box-shadow .2s;
+        }
+        .cl-seance-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px rgba(178,42,39,0.4); }
+
+        /* ── Fasting card ── */
+        .cl-fasting-card { display: flex; flex-direction: column; }
+        .cl-fasting-circle-wrap {
+          display: flex;
+          justify-content: center;
+          margin-bottom: 20px;
+        }
+        .cl-fasting-info { display: flex; flex-direction: column; gap: 10px; }
+        .cl-fasting-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 8px 0;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .cl-fasting-row:last-child { border-bottom: none; }
+
+        /* ── Nutrition card ── */
+        .cl-nut-card { display: flex; flex-direction: column; }
+
+        /* ── Weight trend mini bars ── */
+        .cl-weight-card { display: flex; flex-direction: column; }
+        .cl-weight-trend {
+          display: flex;
+          align-items: flex-end;
+          gap: 4px;
+          height: 44px;
+          margin-top: 16px;
+        }
+        .cl-weight-bar {
+          flex: 1;
+          border-radius: 3px 3px 0 0;
+          min-height: 4px;
+        }
+
+        /* ── Activity card ── */
+        .cl-activity-card {}
+
+        /* ── Habits card ── */
+        .cl-habits-card {}
+
+        /* ── Page header ── */
+        .cl-page-header { margin-bottom: 24px; }
+        .cl-page-title {
+          font-family: 'Lexend', sans-serif;
+          font-weight: 900;
+          font-size: clamp(1.4rem, 3.5vw, 2rem);
+          letter-spacing: -.05em;
+          color: #e5e2e1;
+          margin: 0 0 6px;
+        }
+        .cl-page-sub {
+          font-size: .72rem;
+          color: #9CA3AF;
+          font-family: 'Inter', sans-serif;
+          margin: 0;
+        }
+
+        /* ── Programmes grid ── */
+        .cl-prog-grid {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+        @media (min-width: 600px) { .cl-prog-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .cl-prog-card {
+          background: rgba(28,27,27,0.9);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 14px;
+          padding: 20px;
+          transition: border-color .2s, transform .2s, box-shadow .2s;
+          cursor: pointer;
+        }
+        .cl-prog-card:hover {
+          border-color: rgba(178,42,39,0.35);
+          transform: scale(1.02);
+          box-shadow: 0 0 24px rgba(178,42,39,0.12);
+        }
+
+        /* ── Nutrition stats ── */
+        .cl-nut-stats {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 14px;
+        }
+        @media (min-width: 600px) { .cl-nut-stats { grid-template-columns: repeat(4, 1fr); } }
+        .cl-nut-stat {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 10px;
+          padding: 14px;
+          text-align: center;
+        }
+
+        /* ── Stats grid ── */
+        .cl-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 14px;
+        }
+        @media (min-width: 600px) { .cl-stats-grid { grid-template-columns: repeat(4, 1fr); } }
+        .cl-stat-card {
+          background: rgba(28,27,27,0.9);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 14px;
+          padding: 20px;
+          text-align: center;
+        }
+
+        /* ── Spinner ── */
+        .cl-spinner {
+          width: 30px; height: 30px;
+          border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.07);
+          border-top-color: #b22a27;
+          animation: spin .8s linear infinite;
+          margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </ProtectedRoute>
   );
 }
