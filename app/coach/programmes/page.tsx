@@ -49,6 +49,14 @@ interface ManualSession { label: string; exercises: ManualExercise[]; }
 const defaultManualEx = (): ManualExercise => ({ name: '', sets: 3, reps: '12', rest: '60s', notes: '' });
 const defaultManualSession = (i: number): ManualSession => ({ label: `Séance ${i + 1}`, exercises: [defaultManualEx()] });
 
+function getProgramPhoto(goal: string): string {
+  if (goal === 'Perte de poids') return 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=50';
+  if (goal === 'Prise de masse') return 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50';
+  if (goal === 'Force') return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=50';
+  if (goal === 'Endurance') return 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&q=50';
+  return 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50';
+}
+
 /* ════════════════════════════════════════════════════════
    PROGRAMME CARD (sub-component)
 ════════════════════════════════════════════════════════ */
@@ -66,11 +74,17 @@ function ProgramCard({
         background: '#1c1b1b', borderRadius: 14, padding: 22,
         border: `1px solid ${hovered ? 'rgba(178,42,39,0.35)' : 'rgba(255,255,255,0.06)'}`,
         display: 'flex', flexDirection: 'column', position: 'relative',
-        transition: 'all .2s',
+        transition: 'all .2s', overflow: 'hidden',
         transform: hovered ? 'scale(1.015)' : 'scale(1)',
         boxShadow: hovered ? '0 0 24px rgba(178,42,39,0.12)' : 'none',
       }}
     >
+      {/* Photo header */}
+      <div style={{ position: 'relative', height: 80, overflow: 'hidden', borderRadius: '10px 10px 0 0', margin: '-22px -22px 16px -22px' }}>
+        <img src={getProgramPhoto(p.goal)} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.25)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top,#1c1b1b 0%,transparent 70%)' }} />
+      </div>
+
       {/* Top row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

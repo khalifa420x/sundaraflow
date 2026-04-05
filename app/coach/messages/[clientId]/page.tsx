@@ -18,8 +18,6 @@ function initials(name: string): string {
 
 export default function CoachConversationPage() {
   const params = useParams();
-  if (!params) return null;
-  const clientId = params.clientId as string;
   const router = useRouter();
 
   const [uid, setUid] = useState<string | null>(null);
@@ -30,6 +28,8 @@ export default function CoachConversationPage() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const coachIdRef = useRef<string>('');
+
+  const clientId = (params?.clientId as string) ?? '';
 
   /* Auth */
   useEffect(() => {

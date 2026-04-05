@@ -63,6 +63,43 @@ const daysSince = (ts: Timestamp | null | undefined): number => {
   return Math.floor((Date.now() - d.getTime()) / 86_400_000);
 };
 
+const MUSCLE_PHOTO: Record<string, string> = {
+  'pectoraux': 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50',
+  'épaules':   'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50',
+  'triceps':   'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50',
+  'dos':       'https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=400&q=50',
+  'biceps':    'https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=400&q=50',
+  'dorsaux':   'https://images.unsplash.com/photo-1534367610401-9f5ed68180aa?w=400&q=50',
+  'quadriceps':'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50',
+  'fessiers':  'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50',
+  'mollets':   'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50',
+  'abdominaux':'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=50',
+  'core':      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=50',
+};
+
+function getMusclePhoto(muscle: string): string {
+  const m = (muscle || '').toLowerCase();
+  for (const [key, url] of Object.entries(MUSCLE_PHOTO)) {
+    if (m.includes(key)) return url;
+  }
+  return 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=50';
+}
+
+function getSessionPhoto(label: string, focus: string): string {
+  const text = `${label} ${focus}`.toLowerCase();
+  if (text.includes('cardio') || text.includes('hiit') || text.includes('endurance'))
+    return 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=50';
+  if (text.includes('push') || text.includes('pectoraux') || text.includes('épaules') || text.includes('triceps'))
+    return 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50';
+  if (text.includes('pull') || text.includes('dos') || text.includes('biceps') || text.includes('tirage'))
+    return 'https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=400&q=50';
+  if (text.includes('leg') || text.includes('jambes') || text.includes('fessiers') || text.includes('cuisses'))
+    return 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50';
+  if (text.includes('core') || text.includes('abdo') || text.includes('gainage'))
+    return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=50';
+  return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=50';
+}
+
 const NAV_ITEMS = [
   { key: 'overview',     icon: '🏠', label: 'Tableau de bord' },
   { key: 'programmes',   icon: '📋', label: 'Mes Programmes' },
@@ -96,7 +133,8 @@ export default function ClientHome() {
   const [activeTab, setActiveTab]     = useState<NavKey>('overview');
   const [statPeriod, setStatPeriod]   = useState('30J');
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null);
-  const [expandedProgSession, setExpandedProgSession] = useState<number | null>(null);
+  const [expandedProgSession, setExpandedProgSession] = useState<string | null>(null);
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -548,9 +586,6 @@ export default function ClientHome() {
                               <div style={{ flex: 1, minWidth: 200 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                                   <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>LECTURE SEULE</span>
-                                  {prog.generatedBy === 'ai' && (
-                                    <span style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(178,42,39,0.2)' }}>⚡ IA</span>
-                                  )}
                                 </div>
                                 <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2.5vw,1.1rem)', color: '#e5e2e1', letterSpacing: '-.03em', marginBottom: 6 }}>{prog.title}</div>
                                 <div style={{ fontSize: '.64rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
@@ -617,47 +652,163 @@ export default function ClientHome() {
                               {/* Sessions accordion */}
                               {prog.sessions?.length > 0 && (
                                 <div style={{ padding: '18px 22px' }}>
-                                  <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 12 }}>📅 Sessions d'entraînement</div>
+                                  <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 16 }}>📅 Sessions d'entraînement</div>
+
+                                  {/* ── BARRE DE PROGRESSION SÉANCES ── */}
+                                  <div style={{ overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', minWidth: 'max-content' }}>
+                                      {prog.sessions.map((session: any, si: number) => {
+                                        const status = si === 0 ? 'done' : si === 1 ? 'current' : 'todo';
+                                        return (
+                                          <div key={si} style={{ display: 'flex', alignItems: 'center' }}>
+                                            {si > 0 && <div style={{ width: 18, height: 2, background: si === 1 ? '#b22a27' : 'rgba(255,255,255,0.1)', flexShrink: 0 }} />}
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                                              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: status === 'done' ? '#b22a27' : 'transparent', border: status === 'done' ? 'none' : status === 'current' ? '2px solid #b22a27' : '2px solid rgba(255,255,255,0.18)', fontSize: '.72rem', color: status === 'done' ? '#fff' : status === 'current' ? '#b22a27' : '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 900, transition: 'all .2s' }}>
+                                                {status === 'done' ? '✓' : status === 'current' ? '→' : String(si + 1)}
+                                              </div>
+                                              <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.06em', color: status === 'done' ? '#b22a27' : status === 'current' ? '#e5e2e1' : '#6B7280', textAlign: 'center', maxWidth: 44, lineHeight: 1.2 }}>S{si + 1}</div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
+                                  {/* ── SESSION ACCORDIONS ── */}
                                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     {prog.sessions.map((session: any, si: number) => {
-                                      const sessOpen = expandedProgSession === si;
+                                      const sessKey = `${prog.id}-${si}`;
+                                      const sessOpen = expandedProgSession === sessKey;
+                                      const sessionPhoto = getSessionPhoto(session.label || '', session.focus || '');
                                       return (
-                                        <div key={si} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden' }}>
+                                        <div key={si} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${sessOpen ? 'rgba(178,42,39,0.22)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color .2s' }}>
+                                          {/* Session header */}
                                           <div
-                                            onClick={() => setExpandedProgSession(sessOpen ? null : si)}
-                                            style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' as const }}
+                                            onClick={() => { setExpandedProgSession(sessOpen ? null : sessKey); setExpandedExercise(null); }}
+                                            style={{ display: 'flex', alignItems: 'stretch', cursor: 'pointer', userSelect: 'none' as const, minHeight: 58 }}
                                           >
-                                            <div>
-                                              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>
-                                                JOUR {session.day} — {session.label}
+                                            <div style={{ flex: 1, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+                                              <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                  JOUR {session.day} — {session.label}
+                                                </div>
+                                                {session.focus && <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>{session.focus}</div>}
+                                                <div style={{ fontSize: '.58rem', color: '#6B7280', marginTop: 2 }}>{session.exercises?.length || 0} exercice{(session.exercises?.length || 0) !== 1 ? 's' : ''}</div>
                                               </div>
-                                              {session.focus && <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>{session.focus}</div>}
-                                              <div style={{ fontSize: '.58rem', color: '#6B7280', marginTop: 2 }}>{session.exercises?.length || 0} exercice{session.exercises?.length !== 1 ? 's' : ''}</div>
+                                              <span style={{ color: '#b22a27', fontSize: '.78rem', transition: 'transform .2s', transform: sessOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▼</span>
                                             </div>
-                                            <span style={{ color: '#b22a27', fontSize: '.8rem', transition: 'transform .2s', transform: sessOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▼</span>
+                                            {/* Photo strip — hidden < 400px via CSS */}
+                                            <div className="cl-sess-photo" style={{ width: 60, flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                                              <img src={sessionPhoto} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.28) saturate(0.65)' }} />
+                                            </div>
                                           </div>
+
+                                          {/* Exercises */}
                                           {sessOpen && session.exercises?.length > 0 && (
-                                            <div style={{ padding: '0 16px 16px', overflowX: 'auto' }}>
-                                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.7rem', minWidth: 420 }}>
-                                                <thead>
-                                                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                                                    {['Exercice', 'Muscle', 'Séries', 'Reps', 'Repos'].map(h => (
-                                                      <th key={h} style={{ padding: '7px 8px', textAlign: 'left', fontSize: '.54rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280' }}>{h}</th>
-                                                    ))}
-                                                  </tr>
-                                                </thead>
-                                                <tbody>
-                                                  {session.exercises.map((ex: any, ei: number) => (
-                                                    <tr key={ei} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#e5e2e1', fontSize: '.74rem', maxWidth: 140 }}>{ex.name}</td>
-                                                      <td style={{ padding: '8px', color: '#9CA3AF', fontSize: '.68rem' }}>{ex.primary_muscle || '—'}</td>
-                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27' }}>{ex.sets}</td>
-                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27' }}>{ex.reps}</td>
-                                                      <td style={{ padding: '8px', color: '#9CA3AF', fontSize: '.68rem' }}>{ex.rest}</td>
-                                                    </tr>
-                                                  ))}
-                                                </tbody>
-                                              </table>
+                                            <div style={{ padding: '0 12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                              {session.exercises.map((ex: any, ei: number) => {
+                                                const exKey = `${prog.id}-${si}-${ei}`;
+                                                const exOpen = expandedExercise === exKey;
+                                                const musclePhoto = getMusclePhoto(ex.primary_muscle || '');
+                                                return (
+                                                  <div key={ei} style={{ background: '#1c1b1b', borderRadius: 12, border: `1px solid ${exOpen ? 'rgba(178,42,39,0.3)' : 'rgba(255,255,255,0.06)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>
+                                                    {/* Closed row */}
+                                                    <div
+                                                      onClick={() => setExpandedExercise(exOpen ? null : exKey)}
+                                                      style={{ padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' as const }}
+                                                    >
+                                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
+                                                        <div style={{ fontSize: '.66rem', color: '#9CA3AF', marginTop: 2 }}>{ex.primary_muscle || '—'}</div>
+                                                      </div>
+                                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.78rem', color: '#b22a27' }}>{ex.sets} × {ex.reps}</div>
+                                                          <div style={{ fontSize: '.6rem', color: '#6B7280' }}>{ex.rest}</div>
+                                                        </div>
+                                                        <span style={{ color: '#b22a27', fontSize: '.72rem', transition: 'transform .2s', transform: exOpen ? 'rotate(180deg)' : 'none' }}>▼</span>
+                                                      </div>
+                                                    </div>
+
+                                                    {/* Expanded detail */}
+                                                    {exOpen && (
+                                                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                                        {/* Muscle photo */}
+                                                        <div style={{ height: 120, position: 'relative', overflow: 'hidden', borderRadius: '10px 10px 0 0' }}>
+                                                          <img src={musclePhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.25) saturate(0.6)' }} />
+                                                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, #1c1b1b 100%)' }} />
+                                                          <div style={{ position: 'absolute', bottom: 10, left: 14, fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.95rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>{ex.name}</div>
+                                                        </div>
+
+                                                        <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                                          {/* Prescription */}
+                                                          <div>
+                                                            <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 10 }}>Prescription</div>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
+                                                              {[
+                                                                { label: 'Séries', val: String(ex.sets ?? '—') },
+                                                                { label: ex.mode === 'time' ? 'Durée' : 'Reps', val: String(ex.reps ?? '—') },
+                                                                { label: 'Repos', val: ex.rest || '—' },
+                                                                { label: 'Muscle', val: ex.primary_muscle || '—' },
+                                                              ].map(s => (
+                                                                <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '8px 4px', textAlign: 'center' }}>
+                                                                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.82rem', color: '#b22a27', letterSpacing: '-.02em', lineHeight: 1, wordBreak: 'break-word' as const }}>{s.val}</div>
+                                                                  <div style={{ fontSize: '.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#6B7280', marginTop: 4 }}>{s.label}</div>
+                                                                </div>
+                                                              ))}
+                                                            </div>
+                                                          </div>
+
+                                                          {/* Exécution */}
+                                                          {(ex.instructions?.setup || ex.instructions?.execution) && (
+                                                            <div>
+                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 10 }}>Exécution</div>
+                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                                {[ex.instructions?.setup, ex.instructions?.execution].filter(Boolean).map((text: string, i: number) => (
+                                                                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                                                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#b22a27', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 900, color: '#fff', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                                                                    <p style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{text}</p>
+                                                                  </div>
+                                                                ))}
+                                                              </div>
+                                                            </div>
+                                                          )}
+
+                                                          {/* Conseils */}
+                                                          {(ex.instructions?.tips?.length ?? 0) > 0 && (
+                                                            <div>
+                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 8 }}>Conseils du coach</div>
+                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                                {ex.instructions.tips.map((tip: string, i: number) => (
+                                                                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                                    <span style={{ color: '#16a34a', fontSize: '.8rem', flexShrink: 0, lineHeight: 1.4 }}>✓</span>
+                                                                    <span style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.55 }}>{tip}</span>
+                                                                  </div>
+                                                                ))}
+                                                              </div>
+                                                            </div>
+                                                          )}
+
+                                                          {/* Erreurs */}
+                                                          {(ex.instructions?.common_mistakes?.length ?? 0) > 0 && (
+                                                            <div>
+                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 8 }}>Erreurs à éviter</div>
+                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                                {ex.instructions.common_mistakes.map((m: string, i: number) => (
+                                                                  <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                                                                    <span style={{ color: '#b22a27', fontSize: '.8rem', flexShrink: 0, lineHeight: 1.4 }}>✗</span>
+                                                                    <span style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.55 }}>{m}</span>
+                                                                  </div>
+                                                                ))}
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })}
                                             </div>
                                           )}
                                         </div>
