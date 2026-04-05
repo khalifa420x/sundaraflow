@@ -229,7 +229,7 @@ export default function ClientHome() {
         if (pDoc.exists()) progData.push({ id: docSnap.id, assignedAt, ...pDoc.data() });
       }
       setAssignments(progData);
-      await fetchCompletions(u);
+      await fetchCompletions(u, progData);
 
       /* Find coach */
       const clientSnap = await getDocs(query(collection(db, 'clients'), where('clientUserId', '==', u.uid)));
@@ -264,47 +264,73 @@ export default function ClientHome() {
     setLoading(false);
   };
 
-  const fetchCompletions = async (u = user) => {
+  const fetchCompletions = async (u = user, progData?: any[]) => {
     if (!u) return;
+    const progsToCheck = progData ?? assignments;
     try {
-      const snap = await getDocs(query(
-        collection(db, 'exercise_completions'),
-        where('userId', '==', u.uid)
-      ));
       const map: Record<string, boolean> = {};
-      snap.docs.forEach(d => {
-        const data = d.data();
-        // key: assignmentId_sessionIdx_exerciseIdx
-        const key = `${data.programAssignmentId}_${data.sessionIdx}_${data.exerciseIdx}`;
-        map[key] = true;
-      });
+      for (const prog of progsToCheck) {
+        for (let si = 0; si < (prog.sessions?.length || 0); si++) {
+          const session = prog.sessions[si];
+          if (!session?.exercises?.length) continue;
+          const exSnap = await getDocs(
+            collection(db, 'users', u.uid, 'assignments', prog.id, 'sessions', `s${si}`, 'exercises')
+          );
+          exSnap.docs.forEach(d => {
+            const data = d.data();
+            if (data.done) {
+              const ei = parseInt(d.id.replace('e', ''));
+              if (!isNaN(ei)) map[`${prog.id}_${si}_${ei}`] = true;
+            }
+          });
+        }
+      }
       setCompletions(map);
-    } catch {}
+    } catch (err) {
+      console.error('fetchCompletions error:', err);
+    }
   };
 
   const toggleExercise = async (assignmentId: string, si: number, ei: number) => {
     if (!user) return;
     const key = `${assignmentId}_${si}_${ei}`;
     if (savingCompletion === key) return;
+
+    // Optimistic update before write
+    const wasDone = !!completions[key];
+    setCompletions(prev => {
+      const n = { ...prev };
+      if (wasDone) delete n[key]; else n[key] = true;
+      return n;
+    });
     setSavingCompletion(key);
-    const docId = `${user.uid}_${assignmentId}_${si}_${ei}`;
-    const ref = doc(db, 'exercise_completions', docId);
+
+    const ref = doc(db, 'users', user.uid, 'assignments', assignmentId, 'sessions', `s${si}`, 'exercises', `e${ei}`);
     try {
-      if (completions[key]) {
+      if (wasDone) {
         await deleteDoc(ref);
-        setCompletions(prev => { const n = { ...prev }; delete n[key]; return n; });
       } else {
         await setDoc(ref, {
-          userId: user.uid,
-          coachId,
-          programAssignmentId: assignmentId,
-          sessionIdx: si,
-          exerciseIdx: ei,
+          done: true,
           completedAt: Timestamp.now(),
+          coachId,
+          userId: user.uid,
+          assignmentId,
+          si,
+          ei,
         });
-        setCompletions(prev => ({ ...prev, [key]: true }));
+        fireToast('✅', 'Exercice validé', '');
       }
-    } catch {}
+    } catch (err) {
+      console.error('toggleExercise error:', err);
+      // Rollback optimistic update
+      setCompletions(prev => {
+        const n = { ...prev };
+        if (wasDone) n[key] = true; else delete n[key];
+        return n;
+      });
+      fireToast('❌', 'Erreur de synchro', 'Vérifiez votre connexion.');
+    }
     setSavingCompletion(null);
   };
 
@@ -809,13 +835,10 @@ export default function ClientHome() {
                                                         <button
                                                           onClick={e => { e.stopPropagation(); toggleExercise(prog.id, si, ei); }}
                                                           disabled={isSaving}
-                                                          style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${isDone ? '#16a34a' : 'rgba(178,42,39,0.5)'}`, background: isDone ? 'rgba(22,163,74,0.15)' : 'rgba(178,42,39,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', opacity: isSaving ? 0.5 : 1 }}
+                                                          style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${isDone ? '#16a34a' : 'rgba(178,42,39,0.5)'}`, background: isDone ? 'rgba(22,163,74,0.15)' : 'rgba(178,42,39,0.1)', cursor: isSaving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .15s', opacity: isSaving ? 0.6 : 1 }}
                                                           title={isDone ? 'Marquer non fait' : 'Valider'}
                                                         >
-                                                          {isSaving
-                                                            ? <span style={{ width: 12, height: 12, border: '2px solid rgba(255,255,255,.15)', borderTopColor: '#b22a27', borderRadius: '50%', animation: 'spin .7s linear infinite', display: 'inline-block' }} />
-                                                            : <span style={{ color: isDone ? '#16a34a' : '#b22a27', fontSize: '0.85rem', fontWeight: 700 }}>{isDone ? '✓' : '+'}</span>
-                                                          }
+                                                          <span style={{ color: isDone ? '#16a34a' : '#b22a27', fontSize: '0.85rem', fontWeight: 700, transition: 'color .15s' }}>{isDone ? '✓' : '+'}</span>
                                                         </button>
                                                         <span onClick={() => setExpandedEx(exIsOpen ? null : exKey)} style={{ color: '#b22a27', fontSize: '0.75rem', transition: 'transform .2s', transform: exIsOpen ? 'rotate(180deg)' : 'none', cursor: 'pointer' }}>▼</span>
                                                       </div>

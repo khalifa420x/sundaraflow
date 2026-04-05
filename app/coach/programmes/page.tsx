@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { db, auth } from '@/lib/firebase';
 import {
-  collection, query, where, getDocs, addDoc, deleteDoc,
+  collection, collectionGroup, query, where, getDocs, addDoc, deleteDoc,
   doc, getDoc, Timestamp,
 } from 'firebase/firestore';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -199,7 +199,12 @@ export default function CoachProgrammes() {
   const [deletingId, setDeletingId] = useState('');
 
   /* Tracking state */
-  const [trackingData, setTrackingData] = useState<{ name: string; uid: string; completed: number; lastAt: Date | null }[]>([]);
+  const [trackingData, setTrackingData] = useState<{
+    name: string; uid: string;
+    completed: number; totalExercises: number;
+    totalSessions: number; completionRate: number;
+    lastAt: Date | null;
+  }[]>([]);
   const [trackingLoading, setTrackingLoading] = useState(false);
 
   /* Mount */
@@ -374,25 +379,65 @@ export default function CoachProgrammes() {
     if (!u) return;
     setTrackingLoading(true);
     try {
-      const snap = await getDocs(query(collection(db, 'exercise_completions'), where('coachId', '==', u.uid)));
-      const byUser: Record<string, { count: number; lastAt: Date | null }> = {};
-      snap.docs.forEach(d => {
+      // 1. Get all assignments for this coach's clients → build total exercise/session counts per client
+      const aSnap = await getDocs(query(
+        collection(db, 'program_assignments'),
+        where('coachId', '==', u.uid)
+      ));
+      const totalsByClient: Record<string, { exercises: number; sessions: number }> = {};
+      for (const aDoc of aSnap.docs) {
+        const { clientId, programId } = aDoc.data();
+        if (!clientId || !programId) continue;
+        try {
+          const pDoc = await getDoc(doc(db, 'programs', programId));
+          if (!pDoc.exists()) continue;
+          const sessions: any[] = pDoc.data().sessions || [];
+          if (!totalsByClient[clientId]) totalsByClient[clientId] = { exercises: 0, sessions: 0 };
+          sessions.forEach(s => {
+            totalsByClient[clientId].sessions += 1;
+            totalsByClient[clientId].exercises += s.exercises?.length || 0;
+          });
+        } catch {}
+      }
+
+      // 2. Get all exercise completions for this coach via collectionGroup
+      const compSnap = await getDocs(query(
+        collectionGroup(db, 'exercises'),
+        where('coachId', '==', u.uid)
+      ));
+      const compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
+      compSnap.docs.forEach(d => {
         const data = d.data();
+        if (!data.done) return;
         const uid = data.userId as string;
         if (!uid) return;
         const at: Date = data.completedAt?.toDate?.() ?? new Date(0);
-        if (!byUser[uid]) byUser[uid] = { count: 0, lastAt: null };
-        byUser[uid].count += 1;
-        if (!byUser[uid].lastAt || at > byUser[uid].lastAt!) byUser[uid].lastAt = at;
+        if (!compByUser[uid]) compByUser[uid] = { count: 0, lastAt: null };
+        compByUser[uid].count += 1;
+        if (!compByUser[uid].lastAt || at > compByUser[uid].lastAt!) compByUser[uid].lastAt = at;
       });
-      const entries = clients.map(c => ({
-        name: c.name,
-        uid: c.clientUserId || '',
-        completed: byUser[c.clientUserId]?.count ?? 0,
-        lastAt: byUser[c.clientUserId]?.lastAt ?? null,
-      }));
+
+      // 3. Build per-client entries
+      const entries = clients.map(c => {
+        const uid = c.clientUserId || '';
+        const totals = totalsByClient[uid] || { exercises: 0, sessions: 0 };
+        const comp = compByUser[uid] || { count: 0, lastAt: null };
+        const completionRate = totals.exercises > 0 ? Math.min(100, Math.round((comp.count / totals.exercises) * 100)) : 0;
+        return {
+          name: c.name,
+          uid,
+          completed: comp.count,
+          totalExercises: totals.exercises,
+          totalSessions: totals.sessions,
+          completionRate,
+          lastAt: comp.lastAt,
+        };
+      });
       setTrackingData(entries);
-    } catch {}
+    } catch (err) {
+      console.error('fetchTracking error:', err);
+      fireToast('❌', 'Erreur', 'Impossible de charger le suivi clients.');
+    }
     setTrackingLoading(false);
   };
 
@@ -901,43 +946,82 @@ export default function CoachProgrammes() {
                     <p style={{ fontSize: '.78rem', color: '#6B7280' }}>Ajoutez des clients depuis votre tableau de bord pour voir leur progression.</p>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {/* Summary row */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px,1fr))', gap: 10, marginBottom: 8 }}>
-                      {[
-                        { label: 'Clients actifs', val: String(clients.length) },
-                        { label: 'Exercices complétés', val: String(trackingData.reduce((a, c) => a + c.completed, 0)) },
-                        { label: 'Actifs (7 jours)', val: String(trackingData.filter(c => c.lastAt && (Date.now() - c.lastAt.getTime()) < 7 * 86400000).length) },
-                      ].map(s => (
-                        <div key={s.label} style={{ ...S.card, textAlign: 'center', padding: '16px 14px' }}>
-                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.6rem', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{s.val}</div>
-                          <div style={{ ...S.label, marginTop: 6 }}>{s.label}</div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Client rows */}
-                    {trackingData.map((c, i) => {
-                      const daysSince = c.lastAt ? Math.floor((Date.now() - c.lastAt.getTime()) / 86400000) : null;
-                      const isActive = daysSince !== null && daysSince <= 7;
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {/* ── Global summary stats ── */}
+                    {(() => {
+                      const totalEx = trackingData.reduce((a, c) => a + c.totalExercises, 0);
+                      const doneEx  = trackingData.reduce((a, c) => a + c.completed, 0);
+                      const globalRate = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
+                      const active7d = trackingData.filter(c => c.lastAt && (Date.now() - c.lastAt.getTime()) < 7 * 86400000).length;
                       return (
-                        <div key={i} style={{ ...S.card, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                          <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#9E1B1B,#b91c1c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.68rem', fontWeight: 700, color: '#fff', flexShrink: 0, fontFamily: 'Lexend, sans-serif' }}>
-                            {c.name.split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase() || 'CL'}
+                        <>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px,1fr))', gap: 10, marginBottom: 4 }}>
+                            {[
+                              { label: 'Clients', val: String(clients.length) },
+                              { label: 'Exercices faits', val: String(doneEx) },
+                              { label: 'Actifs (7j)', val: String(active7d) },
+                              { label: 'Taux global', val: `${globalRate}%` },
+                            ].map(s => (
+                              <div key={s.label} style={{ ...S.card, textAlign: 'center', padding: '14px 12px' }}>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.5rem', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{s.val}</div>
+                                <div style={{ ...S.label, marginTop: 6 }}>{s.label}</div>
+                              </div>
+                            ))}
                           </div>
-                          <div style={{ flex: 1, minWidth: 120 }}>
-                            <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.9rem', color: '#e5e2e1' }}>{c.name}</div>
-                            <div style={{ fontSize: '.62rem', color: '#9CA3AF', marginTop: 2 }}>
-                              {daysSince === null ? 'Aucune activité' : `Dernière activité : il y a ${daysSince} jour${daysSince !== 1 ? 's' : ''}`}
+                          {/* Global progress bar */}
+                          {totalEx > 0 && (
+                            <div style={{ ...S.card, padding: '14px 18px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                <span style={{ ...S.label }}>Progression globale</span>
+                                <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.78rem', color: globalRate >= 80 ? '#16a34a' : '#b22a27' }}>{doneEx} / {totalEx} exercices</span>
+                              </div>
+                              <div style={{ height: 6, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${globalRate}%`, background: globalRate >= 80 ? 'linear-gradient(90deg,#14532d,#16a34a)' : 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 999, transition: 'width .8s ease' }} />
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+
+                    {/* ── Per-client cards ── */}
+                    {trackingData.map((c, i) => {
+                      const daysAgo = c.lastAt ? Math.floor((Date.now() - c.lastAt.getTime()) / 86400000) : null;
+                      const isActive = daysAgo !== null && daysAgo <= 7;
+                      const rateColor = c.completionRate >= 80 ? '#16a34a' : c.completionRate >= 40 ? '#b22a27' : '#6B7280';
+                      return (
+                        <div key={i} style={{ ...S.card, padding: '16px 18px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                            <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#9E1B1B,#b91c1c)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.65rem', fontWeight: 700, color: '#fff', flexShrink: 0, fontFamily: 'Lexend, sans-serif' }}>
+                              {c.name.split(' ').map((w: string) => w[0] || '').join('').slice(0, 2).toUpperCase() || 'CL'}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 100 }}>
+                              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.9rem', color: '#e5e2e1' }}>{c.name}</div>
+                              <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>
+                                {daysAgo === null ? 'Aucune activité' : daysAgo === 0 ? "Actif aujourd'hui" : `Dernière activité il y a ${daysAgo} jour${daysAgo !== 1 ? 's' : ''}`}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.3rem', color: rateColor, letterSpacing: '-.04em', lineHeight: 1 }}>{c.completionRate}%</div>
+                                <div style={{ fontSize: '.54rem', color: '#9CA3AF', marginTop: 2, letterSpacing: '.08em', textTransform: 'uppercase' as const }}>complété</div>
+                              </div>
+                              <span style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, padding: '4px 9px', borderRadius: 20, background: isActive ? 'rgba(22,163,74,0.12)' : 'rgba(255,255,255,0.05)', color: isActive ? '#16a34a' : '#6B7280', border: `1px solid ${isActive ? 'rgba(22,163,74,0.25)' : 'rgba(255,255,255,0.07)'}` }}>
+                                {isActive ? '● ACTIF' : '● INACTIF'}
+                              </span>
                             </div>
                           </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.2rem', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{c.completed}</div>
-                            <div style={{ fontSize: '.56rem', color: '#9CA3AF', marginTop: 2, letterSpacing: '.08em', textTransform: 'uppercase' as const }}>exercices</div>
-                          </div>
-                          <span style={{ fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, padding: '4px 10px', borderRadius: 20, background: isActive ? 'rgba(22,163,74,0.12)' : 'rgba(255,255,255,0.05)', color: isActive ? '#16a34a' : '#6B7280', border: `1px solid ${isActive ? 'rgba(22,163,74,0.25)' : 'rgba(255,255,255,0.07)'}`, flexShrink: 0 }}>
-                            {isActive ? '● ACTIF' : '● INACTIF'}
-                          </span>
+                          {/* Progress bar */}
+                          {c.totalExercises > 0 && (
+                            <>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+                                <span style={{ fontSize: '.58rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', letterSpacing: '.06em' }}>{c.completed} / {c.totalExercises} exercices · {c.totalSessions} séance{c.totalSessions !== 1 ? 's' : ''}</span>
+                              </div>
+                              <div style={{ height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 999, overflow: 'hidden' }}>
+                                <div style={{ height: '100%', width: `${c.completionRate}%`, background: c.completionRate >= 80 ? 'linear-gradient(90deg,#14532d,#16a34a)' : 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 999, transition: 'width .8s ease' }} />
+                              </div>
+                            </>
+                          )}
                         </div>
                       );
                     })}
