@@ -1,0 +1,952 @@
+[
+  {
+    "id": "ex001", "name": "Pompes classiques", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Pectoraux", "secondary_muscle": ["Triceps", "Épaules"],
+    "equipment": ["Rien"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Position de planche, mains légèrement plus larges que les épaules, corps aligné.",
+      "execution": "Descends jusqu'à 2-3 cm du sol, remonte en expirant.",
+      "tips": ["Dos droit et abdos contractés", "Genoux ne touchent pas le sol", "Inspire en descendant, expire en remontant"],
+      "common_mistakes": ["Hanches qui tombent", "Coudes trop écartés", "Tête plonge vers le sol"]
+    },
+    "difficulty_score": 3, "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + pain complet + fruit"},
+      {"meal": "Déjeuner", "recipe": "Poulet grillé 150g + quinoa 100g + légumes vapeur"},
+      {"meal": "Dîner", "recipe": "Saumon 120g + patate douce + salade verte"}
+    ]
+  },
+  {
+    "id": "ex002", "name": "Squats avec haltères", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Mollets"],
+    "equipment": ["Haltères"], "mode": "reps", "value": 15,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Pieds écartés à largeur d'épaules, haltères dans chaque main.",
+      "execution": "Descends jusqu'aux cuisses parallèles, remonte en poussant avec les talons.",
+      "tips": ["Dos droit et regard vers l'avant", "Contracte les fessiers en montant", "Genoux dans l'axe des orteils"],
+      "common_mistakes": ["Dos arrondi", "Genoux qui s'affaissent", "Talons qui se soulèvent"]
+    },
+    "difficulty_score": 4, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie protéiné + 30g flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Steak 150g + riz complet 100g + brocolis"},
+      {"meal": "Dîner", "recipe": "Saumon 150g + quinoa 80g + salade mixte"}
+    ]
+  },
+  {
+    "id": "ex003", "name": "Planche abdominale", "type": "Renfo-Core", "level": "Débutant",
+    "primary_muscle": "Abdominaux", "secondary_muscle": ["Épaules", "Dos"],
+    "equipment": ["Tapis"], "mode": "time", "value": 60,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Appui sur les avant-bras et les pieds, corps aligné tête-talons.",
+      "execution": "Tiens la position sans laisser les hanches bouger.",
+      "tips": ["Regarde le sol", "Contracte les fessiers", "Respire régulièrement"],
+      "common_mistakes": ["Hanches trop hautes ou basses", "Dos cambré", "Apnée"]
+    },
+    "difficulty_score": 2, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt grec 200g + fruits rouges + miel"},
+      {"meal": "Déjeuner", "recipe": "Poulet 120g + patate douce + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poisson blanc 120g + riz complet + légumes vapeur"}
+    ]
+  },
+  {
+    "id": "ex004", "name": "Burpees", "type": "Cardio", "level": "Avancé",
+    "primary_muscle": "Full body", "secondary_muscle": ["Bras", "Quadriceps", "Fessiers"],
+    "equipment": ["Rien"], "mode": "reps", "value": 12,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Debout, pieds écartés à largeur d'épaules.",
+      "execution": "Squat → mains au sol → planche → pompe → remonte → saut vertical.",
+      "tips": ["Absorbe l'impact à l'atterrissage", "Rythme constant", "Abdos contractés"],
+      "common_mistakes": ["Dos rond en atterrissant", "Saut faible", "Pompes incomplètes"]
+    },
+    "difficulty_score": 5, "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie banane + protéines + avoine"},
+      {"meal": "Déjeuner", "recipe": "Dinde 150g + pâtes complètes 100g + salade"},
+      {"meal": "Dîner", "recipe": "Saumon 150g + légumes vapeur + riz 80g"}
+    ]
+  },
+  {
+    "id": "ex005", "name": "Fentes avant", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Ischio-jambiers"],
+    "equipment": ["Rien"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, pieds à largeur d'épaules, mains sur les hanches.",
+      "execution": "Avance une jambe, descends genou arrière vers le sol, remonte et alterne.",
+      "tips": ["Genou avant aligné avec la cheville", "Dos droit", "Contracte fessiers en remontant"],
+      "common_mistakes": ["Genou avant dépasse les orteils", "Dos penché", "Talons qui se soulèvent"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Prise de masse", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + avocat + pain complet"},
+      {"meal": "Déjeuner", "recipe": "Poulet grillé 150g + riz brun 100g + brocolis"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + quinoa + légumes vapeur"}
+    ]
+  },
+  {
+    "id": "ex006", "name": "Mountain climbers", "type": "Cardio", "level": "Intermédiaire",
+    "primary_muscle": "Abdominaux", "secondary_muscle": ["Épaules", "Quadriceps"],
+    "equipment": ["Rien"], "mode": "time", "value": 45,
+    "sets": 4, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Position de planche haute, mains sous les épaules.",
+      "execution": "Ramène alternativement les genoux vers la poitrine à rythme soutenu.",
+      "tips": ["Abdos et fessiers contractés", "Dos droit", "Rythme régulier"],
+      "common_mistakes": ["Hanches qui montent", "Bras trop fléchis", "Mauvaise respiration"]
+    },
+    "difficulty_score": 4, "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie protéiné + flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Saumon 150g + riz complet + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poulet 120g + patate douce + salade verte"}
+    ]
+  },
+  {
+    "id": "ex007", "name": "Crunchs abdominaux", "type": "Renfo-Core", "level": "Débutant",
+    "primary_muscle": "Abdominaux", "secondary_muscle": ["Obliques"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 20,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Allongé sur le dos, genoux fléchis, mains derrière la tête.",
+      "execution": "Remonte le buste en contractant les abdos, redescends doucement.",
+      "tips": ["Ne tire pas sur la nuque", "Contracte les abdos tout le long", "Contrôle la descente"],
+      "common_mistakes": ["Tirer sur la nuque", "Dos décollé du sol", "Mouvement trop rapide"]
+    },
+    "difficulty_score": 2, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + fruits rouges + flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Dinde 150g + quinoa + légumes vapeur"},
+      {"meal": "Dîner", "recipe": "Poisson blanc 120g + riz complet + salade verte"}
+    ]
+  },
+  {
+    "id": "ex008", "name": "Pont fessier", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Fessiers", "secondary_muscle": ["Ischio-jambiers", "Abdominaux"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 15,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Allongé sur le dos, genoux fléchis, pieds au sol, bras le long du corps.",
+      "execution": "Contracte les fessiers, soulève le bassin, tiens 2s, redescends lentement.",
+      "tips": ["Contracte bien les fessiers", "Ne cambre pas le dos", "Montée lente et descente contrôlée"],
+      "common_mistakes": ["Dos cambré", "Épaules décollent", "Mouvement trop rapide"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Prise de masse", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + légumes sautés"},
+      {"meal": "Déjeuner", "recipe": "Poulet 120g + patate douce + brocolis"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + riz complet + salade verte"}
+    ]
+  },
+  {
+    "id": "ex009", "name": "Superman", "type": "Renfo-Core", "level": "Intermédiaire",
+    "primary_muscle": "Dos", "secondary_muscle": ["Fessiers", "Épaules"],
+    "equipment": ["Tapis"], "mode": "time", "value": 45,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Allongé sur le ventre, bras tendus devant, jambes tendues.",
+      "execution": "Soulève simultanément bras et jambes, contracte dos et fessiers, tiens.",
+      "tips": ["Respire normalement", "Ne balance pas le corps", "Contracte les fessiers"],
+      "common_mistakes": ["Cambrer trop le bas du dos", "Bras qui s'affaissent", "Balancement latéral"]
+    },
+    "difficulty_score": 3, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + fruits + flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Dinde 150g + quinoa + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + riz complet + salade verte"}
+    ]
+  },
+  {
+    "id": "ex010", "name": "Développé couché haltères", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Pectoraux", "secondary_muscle": ["Triceps", "Épaules antérieures"],
+    "equipment": ["Haltères", "Banc"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Allongé sur un banc, haltères au niveau de la poitrine, coudes à 45°.",
+      "execution": "Pousse les haltères vers le haut jusqu'à l'extension, redescends contrôlé.",
+      "tips": ["Omoplates serrées contre le banc", "Ne verrouille pas les coudes", "Trajectoire légèrement en arc"],
+      "common_mistakes": ["Coudes trop écartés", "Rebond sur la poitrine", "Fesses décollées"]
+    },
+    "difficulty_score": 4, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "4 œufs brouillés + avoine + banane"},
+      {"meal": "Déjeuner", "recipe": "Steak haché 180g + riz 120g + légumes"},
+      {"meal": "Dîner", "recipe": "Poulet 200g + patate douce + brocolis"}
+    ]
+  },
+  {
+    "id": "ex011", "name": "Tractions assistées", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Dorsaux", "secondary_muscle": ["Biceps", "Trapèzes"],
+    "equipment": ["Barre de traction"], "mode": "reps", "value": 8,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Suspendu à la barre, prise pronation légèrement plus large que les épaules.",
+      "execution": "Tire les coudes vers le bas, amène le menton au-dessus de la barre, redescends lentement.",
+      "tips": ["Omoplates vers le bas et l'arrière", "Pas de balancement", "Descente contrôlée 3 secondes"],
+      "common_mistakes": ["Se balancer", "Coudes trop écartés", "Descente trop rapide"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie protéiné + avoine + beurre d'amande"},
+      {"meal": "Déjeuner", "recipe": "Thon 180g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 180g + quinoa + épinards"}
+    ]
+  },
+  {
+    "id": "ex012", "name": "Curl biceps haltères", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Biceps", "secondary_muscle": ["Avant-bras"],
+    "equipment": ["Haltères"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, haltères dans chaque main, paumes vers l'avant, coudes collés au corps.",
+      "execution": "Fléchis les coudes pour amener les haltères aux épaules, redescends lentement.",
+      "tips": ["Ne balance pas le buste", "Coudes immobiles", "Supination en montant"],
+      "common_mistakes": ["Balancement du corps", "Coudes qui avancent", "Descente trop rapide"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Flocons d'avoine + protéines + fruits"},
+      {"meal": "Déjeuner", "recipe": "Poulet 160g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Poisson blanc 150g + quinoa + salade"}
+    ]
+  },
+  {
+    "id": "ex013", "name": "Extensions triceps poulie", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Triceps", "secondary_muscle": ["Épaules postérieures"],
+    "equipment": ["Bande élastique", "Haltères"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, haltère ou élastique au-dessus de la tête, coudes fléchis.",
+      "execution": "Étends les bras vers le haut en gardant les coudes fixes, redescends lentement.",
+      "tips": ["Coudes près des oreilles", "Abdos contractés", "Mouvement lent et contrôlé"],
+      "common_mistakes": ["Coudes qui s'écartent", "Buste qui penche", "Amplitude incomplète"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette + fromage blanc + pain complet"},
+      {"meal": "Déjeuner", "recipe": "Poulet 150g + pâtes complètes + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 150g + riz + brocolis"}
+    ]
+  },
+  {
+    "id": "ex014", "name": "Développé militaire haltères", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Épaules", "secondary_muscle": ["Triceps", "Trapèzes"],
+    "equipment": ["Haltères"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Assis ou debout, haltères à hauteur des épaules, paumes vers l'avant.",
+      "execution": "Pousse les haltères vers le haut jusqu'à l'extension, redescends à hauteur des oreilles.",
+      "tips": ["Abdos contractés", "Ne creuse pas le bas du dos", "Mouvement droit vers le haut"],
+      "common_mistakes": ["Dos cambré", "Amplitude incomplète", "Coudes trop en avant"]
+    },
+    "difficulty_score": 4, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "4 œufs + avoine + jus d'orange"},
+      {"meal": "Déjeuner", "recipe": "Bœuf 180g + riz basmati + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poulet 180g + patate douce + salade"}
+    ]
+  },
+  {
+    "id": "ex015", "name": "Rowing haltère unilatéral", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Dorsaux", "secondary_muscle": ["Biceps", "Rhomboïdes"],
+    "equipment": ["Haltères", "Banc"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Genou et main d'appui sur le banc, haltère dans l'autre main, dos parallèle au sol.",
+      "execution": "Tire le coude vers le haut et l'arrière, amène l'haltère vers la hanche, redescends.",
+      "tips": ["Ne tourne pas le buste", "Coude près du corps", "Concentre sur le dorsal"],
+      "common_mistakes": ["Rotation du torse", "Tirer avec le biceps", "Dos arrondi"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie masse : banane + protéines + lait"},
+      {"meal": "Déjeuner", "recipe": "Saumon 180g + riz 120g + brocolis"},
+      {"meal": "Dîner", "recipe": "Bœuf 150g + quinoa + légumes verts"}
+    ]
+  },
+  {
+    "id": "ex016", "name": "Squat bulgare", "type": "Force", "level": "Avancé",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Ischio-jambiers"],
+    "equipment": ["Haltères", "Banc"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Pied arrière posé sur un banc, pied avant loin devant, haltères dans chaque main.",
+      "execution": "Descends en fléchissant le genou avant jusqu'à 90°, remonte en explosivité.",
+      "tips": ["Genou avant dans l'axe du pied", "Buste légèrement penché en avant", "Contracte les fessiers"],
+      "common_mistakes": ["Genou avant effondré", "Pied avant trop près du banc", "Mauvais équilibre"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette 4 œufs + avocat + pain complet"},
+      {"meal": "Déjeuner", "recipe": "Poulet 200g + riz 150g + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 180g + patate douce + légumes verts"}
+    ]
+  },
+  {
+    "id": "ex017", "name": "Soulevé de terre roumain", "type": "Force", "level": "Avancé",
+    "primary_muscle": "Ischio-jambiers", "secondary_muscle": ["Fessiers", "Bas du dos"],
+    "equipment": ["Haltères"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Debout, haltères devant les cuisses, pieds à largeur d'épaules.",
+      "execution": "Pousse les hanches en arrière, glisse les haltères le long des jambes, reviens en contractant les fessiers.",
+      "tips": ["Dos plat et neutre tout le long", "Genoux légèrement fléchis", "Barre ou haltères proches des jambes"],
+      "common_mistakes": ["Dos arrondi", "Genoux qui fléchissent trop", "Descente trop basse"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "5 œufs + avoine 80g + fruit"},
+      {"meal": "Déjeuner", "recipe": "Bœuf 200g + riz 150g + brocolis"},
+      {"meal": "Dîner", "recipe": "Poulet 200g + quinoa + épinards"}
+    ]
+  },
+  {
+    "id": "ex018", "name": "Dips sur chaise", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Triceps", "secondary_muscle": ["Pectoraux", "Épaules antérieures"],
+    "equipment": ["Chaise"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Mains sur le bord d'une chaise solide, jambes tendues ou fléchies, corps décollé.",
+      "execution": "Descends en fléchissant les coudes jusqu'à 90°, remonte en extension.",
+      "tips": ["Dos proche de la chaise", "Coudes dans l'axe", "Descente contrôlée"],
+      "common_mistakes": ["Coudes trop écartés", "Épaules qui montent", "Descente trop rapide"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Sans matériel"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Fromage blanc + muesli + fruits"},
+      {"meal": "Déjeuner", "recipe": "Poulet 150g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Thon 150g + quinoa + salade"}
+    ]
+  },
+  {
+    "id": "ex019", "name": "Leg raises allongé", "type": "Renfo-Core", "level": "Intermédiaire",
+    "primary_muscle": "Abdominaux bas", "secondary_muscle": ["Fléchisseurs de hanche"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 15,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Allongé sur le dos, mains sous les fesses, jambes tendues.",
+      "execution": "Lève les jambes à 90° puis redescends sans toucher le sol.",
+      "tips": ["Bas du dos collé au sol", "Abdos contractés en permanence", "Descente lente"],
+      "common_mistakes": ["Bas du dos qui se décolle", "Jambes qui s'effondrent", "Vitesse trop rapide"]
+    },
+    "difficulty_score": 4, "tags": ["Core", "Sans matériel"],
+    "goals": ["Perte de poids", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt grec + granola + fruits"},
+      {"meal": "Déjeuner", "recipe": "Poulet 130g + quinoa + légumes"},
+      {"meal": "Dîner", "recipe": "Poisson 130g + salade composée + pain complet"}
+    ]
+  },
+  {
+    "id": "ex020", "name": "Gainage latéral", "type": "Renfo-Core", "level": "Débutant",
+    "primary_muscle": "Obliques", "secondary_muscle": ["Abdominaux", "Épaules"],
+    "equipment": ["Tapis"], "mode": "time", "value": 45,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Allongé sur le côté, appui sur l'avant-bras et le pied, corps aligné.",
+      "execution": "Tiens la position en gardant les hanches hautes, ne laisse pas tomber.",
+      "tips": ["Abdos contractés", "Hanche haute et stable", "Regard vers l'avant"],
+      "common_mistakes": ["Hanches qui s'affaissent", "Rotation du bassin", "Appui sur genou"]
+    },
+    "difficulty_score": 2, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + légumes + yaourt"},
+      {"meal": "Déjeuner", "recipe": "Saumon 130g + riz complet + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poulet 120g + quinoa + salade verte"}
+    ]
+  },
+  {
+    "id": "ex021", "name": "Corde à sauter", "type": "Cardio", "level": "Débutant",
+    "primary_muscle": "Mollets", "secondary_muscle": ["Épaules", "Cardio global"],
+    "equipment": ["Corde à sauter"], "mode": "time", "value": 120,
+    "sets": 4, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Pieds légèrement écartés, corde derrière les talons.",
+      "execution": "Saute légèrement et fais passer la corde sous les pieds à chaque saut.",
+      "tips": ["Sauts bas, économiques", "Poignets qui font le travail", "Abdos contractés"],
+      "common_mistakes": ["Sauts trop hauts", "Bras qui bougent trop", "Dos voûté"]
+    },
+    "difficulty_score": 2, "tags": ["Cardio", "HIIT"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie vert + flocons d'avoine 40g"},
+      {"meal": "Déjeuner", "recipe": "Poulet 130g + légumes vapeur + pain complet"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + salade composée"}
+    ]
+  },
+  {
+    "id": "ex022", "name": "Sprint sur place", "type": "Cardio", "level": "Débutant",
+    "primary_muscle": "Jambes", "secondary_muscle": ["Cardio global"],
+    "equipment": ["Rien"], "mode": "time", "value": 30,
+    "sets": 6, "rest_seconds": 30,
+    "instructions": {
+      "setup": "Debout, légèrement penché en avant.",
+      "execution": "Cours sur place à vitesse maximale en levant les genoux hauts.",
+      "tips": ["Bras actifs pour aider le rythme", "Genoux hauts", "Talons vers les fessiers"],
+      "common_mistakes": ["Genoux trop bas", "Buste trop droit", "Rythme irrégulier"]
+    },
+    "difficulty_score": 3, "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Toast complet + beurre d'amande + banane"},
+      {"meal": "Déjeuner", "recipe": "Poulet 140g + riz brun + légumes verts"},
+      {"meal": "Dîner", "recipe": "Saumon 130g + salade verte + quinoa"}
+    ]
+  },
+  {
+    "id": "ex023", "name": "Step-ups sur banc", "type": "Cardio", "level": "Débutant",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Cardio"],
+    "equipment": ["Banc", "Chaise"], "mode": "reps", "value": 20,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout face à un banc ou une chaise solide.",
+      "execution": "Monte un pied, puis l'autre, redescends et alterne le pied de départ.",
+      "tips": ["Pied entier sur le banc", "Dos droit", "Rythme régulier"],
+      "common_mistakes": ["Genou avant effondré", "Se pencher trop en avant", "Vitesse aléatoire"]
+    },
+    "difficulty_score": 2, "tags": ["Cardio", "Sans matériel"],
+    "goals": ["Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + granola + fruits de saison"},
+      {"meal": "Déjeuner", "recipe": "Poulet 130g + légumes sautés + pain complet"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + riz complet + salade"}
+    ]
+  },
+  {
+    "id": "ex024", "name": "Jumping jacks", "type": "Cardio", "level": "Débutant",
+    "primary_muscle": "Cardio global", "secondary_muscle": ["Épaules", "Mollets"],
+    "equipment": ["Rien"], "mode": "time", "value": 60,
+    "sets": 3, "rest_seconds": 30,
+    "instructions": {
+      "setup": "Debout, pieds joints, bras le long du corps.",
+      "execution": "Saute en écartant pieds et bras simultanément, reviens position départ.",
+      "tips": ["Atterrissage doux", "Rythme constant", "Respire régulièrement"],
+      "common_mistakes": ["Atterrissage dur", "Rythme irrégulier", "Bras incomplets"]
+    },
+    "difficulty_score": 1, "tags": ["Cardio", "Sans matériel"],
+    "goals": ["Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Thé vert + toast complet + œuf poché"},
+      {"meal": "Déjeuner", "recipe": "Salade poulet 150g + légumes + huile d'olive"},
+      {"meal": "Dîner", "recipe": "Soupe légumes + poisson 100g + pain complet"}
+    ]
+  },
+  {
+    "id": "ex025", "name": "Box jump", "type": "Cardio", "level": "Avancé",
+    "primary_muscle": "Jambes", "secondary_muscle": ["Fessiers", "Cardio"],
+    "equipment": ["Box", "Banc"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Debout face à une box ou un banc solide, pieds à largeur d'épaules.",
+      "execution": "Saute avec les deux pieds simultanément sur la box, atterris en souplesse, redescends.",
+      "tips": ["Genoux fléchis à l'atterrissage", "Bras pour aider l'élan", "Dos droit"],
+      "common_mistakes": ["Atterrissage dur sur les talons", "Genoux effondrés", "Saut trop faible"]
+    },
+    "difficulty_score": 5, "tags": ["HIIT", "Athletisme"],
+    "goals": ["Endurance", "Perte de poids"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie banane + protéines + beurre d'amande"},
+      {"meal": "Déjeuner", "recipe": "Dinde 160g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 160g + patate douce + épinards"}
+    ]
+  },
+  {
+    "id": "ex026", "name": "Étirement quadriceps debout", "type": "Mobility", "level": "Débutant",
+    "primary_muscle": "Quadriceps", "secondary_muscle": [],
+    "equipment": ["Rien"], "mode": "time", "value": 30,
+    "sets": 2, "rest_seconds": 15,
+    "instructions": {
+      "setup": "Debout sur une jambe, l'autre fléchie derrière, tenu par la main.",
+      "execution": "Tiens 30 secondes par côté, pousse la hanche vers l'avant.",
+      "tips": ["Reste stable", "Hanche vers l'avant", "Respire lentement"],
+      "common_mistakes": ["Dos cambré", "Genou d'appui trop tendu", "Corps de travers"]
+    },
+    "difficulty_score": 1, "tags": ["Mobility", "Étirement"],
+    "goals": ["Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Tisane + bol de fruits + yaourt"},
+      {"meal": "Déjeuner", "recipe": "Salade composée + filet de poulet 120g"},
+      {"meal": "Dîner", "recipe": "Soupe légumes + pain complet + fromage blanc"}
+    ]
+  },
+  {
+    "id": "ex027", "name": "Chat-vache (Cat-cow)", "type": "Mobility", "level": "Débutant",
+    "primary_muscle": "Colonne vertébrale", "secondary_muscle": ["Abdominaux", "Dos"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 10,
+    "sets": 2, "rest_seconds": 30,
+    "instructions": {
+      "setup": "À 4 pattes, mains sous les épaules, genoux sous les hanches.",
+      "execution": "Alterne entre creuser le dos (vache) et l'arrondir (chat) en synchronisant avec la respiration.",
+      "tips": ["Mouvement lent et fluide", "Inspire en creusant, expire en arrondissant", "Tête suit le mouvement"],
+      "common_mistakes": ["Mouvement trop rapide", "Mauvaise synchronisation respiratoire", "Bras tendus trop fort"]
+    },
+    "difficulty_score": 1, "tags": ["Mobility", "Récupération"],
+    "goals": ["Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Thé + fromage blanc + fruits"},
+      {"meal": "Déjeuner", "recipe": "Soupe + pain complet + salade"},
+      {"meal": "Dîner", "recipe": "Légumes vapeur + riz complet + yaourt"}
+    ]
+  },
+  {
+    "id": "ex028", "name": "Fente hip flexor", "type": "Mobility", "level": "Débutant",
+    "primary_muscle": "Fléchisseurs de hanche", "secondary_muscle": ["Quadriceps"],
+    "equipment": ["Tapis"], "mode": "time", "value": 30,
+    "sets": 2, "rest_seconds": 20,
+    "instructions": {
+      "setup": "En fente basse, genou arrière au sol, buste droit.",
+      "execution": "Pousse la hanche vers l'avant et le bas, tiens 30 secondes par côté.",
+      "tips": ["Hanche basse", "Buste droit", "Respire profondément"],
+      "common_mistakes": ["Genou avant dépasse les orteils", "Dos cambré", "Tension dans les épaules"]
+    },
+    "difficulty_score": 2, "tags": ["Mobility", "Étirement"],
+    "goals": ["Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + noix + fruits secs"},
+      {"meal": "Déjeuner", "recipe": "Légumes rôtis + quinoa + poulet 100g"},
+      {"meal": "Dîner", "recipe": "Poisson 100g + légumes vapeur + salade"}
+    ]
+  },
+  {
+    "id": "ex029", "name": "Rotation thoracique", "type": "Mobility", "level": "Débutant",
+    "primary_muscle": "Thorax", "secondary_muscle": ["Obliques"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 8,
+    "sets": 2, "rest_seconds": 30,
+    "instructions": {
+      "setup": "À 4 pattes, une main derrière la tête.",
+      "execution": "Tourne le coude vers le haut en ouvrant la poitrine, reviens, alterne.",
+      "tips": ["Hanches immobiles", "Rotation maximale vers le haut", "Lent et contrôlé"],
+      "common_mistakes": ["Hanches qui bougent", "Amplitude trop petite", "Vitesse trop rapide"]
+    },
+    "difficulty_score": 2, "tags": ["Mobility", "Récupération"],
+    "goals": ["Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Tisane + flocons d'avoine + fruits"},
+      {"meal": "Déjeuner", "recipe": "Salade verte + thon 100g + pain complet"},
+      {"meal": "Dîner", "recipe": "Soupe légumes + omelette 2 œufs"}
+    ]
+  },
+  {
+    "id": "ex030", "name": "Pigeon yoga", "type": "Mobility", "level": "Intermédiaire",
+    "primary_muscle": "Fessiers", "secondary_muscle": ["Fléchisseurs de hanche"],
+    "equipment": ["Tapis"], "mode": "time", "value": 45,
+    "sets": 2, "rest_seconds": 20,
+    "instructions": {
+      "setup": "Depuis planche, ramène un genou vers la main du même côté, jambe arrière tendue.",
+      "execution": "Pose le buste progressivement vers le sol, tiens 45 secondes par côté.",
+      "tips": ["Hanche du côté replié vers le sol", "Respire profondément", "Progression progressive"],
+      "common_mistakes": ["Hanche qui monte d'un côté", "Douleur vive (stop si douleur)", "Forcer trop vite"]
+    },
+    "difficulty_score": 4, "tags": ["Mobility", "Yoga"],
+    "goals": ["Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie vert + graines de chia + fruits"},
+      {"meal": "Déjeuner", "recipe": "Légumes rôtis + quinoa + houmous"},
+      {"meal": "Dîner", "recipe": "Soupe détox + pain complet + fromage blanc"}
+    ]
+  },
+  {
+    "id": "ex031", "name": "Pompes diamant", "type": "Force", "level": "Avancé",
+    "primary_muscle": "Triceps", "secondary_muscle": ["Pectoraux internes"],
+    "equipment": ["Rien"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Position de planche, mains rapprochées formant un diamant sous la poitrine.",
+      "execution": "Descends jusqu'à frôler le sol, remonte en poussant fort sur les triceps.",
+      "tips": ["Coudes proches du corps", "Corps aligné", "Descente lente 3 secondes"],
+      "common_mistakes": ["Coudes trop écartés", "Hanches qui montent", "Amplitude incomplète"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Sans matériel"],
+    "goals": ["Force", "Prise de masse"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "4 œufs + fromage cottage + flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Bœuf 180g + riz 130g + légumes"},
+      {"meal": "Dîner", "recipe": "Poulet 180g + patate douce + brocolis"}
+    ]
+  },
+  {
+    "id": "ex032", "name": "Squat sauté (Jump squat)", "type": "Cardio", "level": "Intermédiaire",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Cardio"],
+    "equipment": ["Rien"], "mode": "reps", "value": 15,
+    "sets": 4, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, pieds à largeur d'épaules.",
+      "execution": "Descends en squat puis explose vers le haut, atterris en souplesse en position squat.",
+      "tips": ["Atterrissage silencieux et souple", "Genoux dans l'axe", "Bras pour aider l'élan"],
+      "common_mistakes": ["Atterrissage rigide", "Genoux effondrés", "Squat incomplet"]
+    },
+    "difficulty_score": 4, "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie protéiné + banane + avoine"},
+      {"meal": "Déjeuner", "recipe": "Poulet 150g + riz brun + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 140g + quinoa + salade verte"}
+    ]
+  },
+  {
+    "id": "ex033", "name": "Pompes inclinées (pieds surélevés)", "type": "Force", "level": "Avancé",
+    "primary_muscle": "Pectoraux supérieurs", "secondary_muscle": ["Épaules", "Triceps"],
+    "equipment": ["Banc", "Chaise"], "mode": "reps", "value": 10,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Pieds posés sur un banc, mains au sol, corps incliné vers le haut.",
+      "execution": "Descends jusqu'à 2-3 cm du sol, remonte en extension.",
+      "tips": ["Corps aligné des talons à la tête", "Coudes à 45°", "Descente contrôlée"],
+      "common_mistakes": ["Hanches qui se lèvent", "Dos arrondi", "Amplitude incomplète"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Sans matériel"],
+    "goals": ["Force", "Prise de masse"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "5 œufs + avoine 80g + fruits"},
+      {"meal": "Déjeuner", "recipe": "Poulet 200g + riz 150g + brocolis"},
+      {"meal": "Dîner", "recipe": "Thon 180g + quinoa + légumes verts"}
+    ]
+  },
+  {
+    "id": "ex034", "name": "Dead bug", "type": "Renfo-Core", "level": "Intermédiaire",
+    "primary_muscle": "Abdominaux profonds", "secondary_muscle": ["Fléchisseurs de hanche"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 10,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Allongé sur le dos, bras vers le plafond, genoux à 90° au-dessus des hanches.",
+      "execution": "Étends simultanément le bras et la jambe opposés vers le sol sans toucher, reviens lentement.",
+      "tips": ["Bas du dos collé au sol", "Mouvement lent et contrôlé", "Expire pendant l'extension"],
+      "common_mistakes": ["Bas du dos qui se soulève", "Mouvement trop rapide", "Amplitude trop grande"]
+    },
+    "difficulty_score": 3, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt grec + muesli + fruits rouges"},
+      {"meal": "Déjeuner", "recipe": "Saumon 130g + légumes vapeur + quinoa"},
+      {"meal": "Dîner", "recipe": "Poulet 120g + salade + pain complet"}
+    ]
+  },
+  {
+    "id": "ex035", "name": "Bird dog", "type": "Renfo-Core", "level": "Débutant",
+    "primary_muscle": "Dos", "secondary_muscle": ["Fessiers", "Abdominaux"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 10,
+    "sets": 3, "rest_seconds": 30,
+    "instructions": {
+      "setup": "À 4 pattes, dos plat, abdos contractés.",
+      "execution": "Étends simultanément le bras droit et la jambe gauche, tiens 2s, alterne.",
+      "tips": ["Dos plat et stable", "Ne pivote pas les hanches", "Mouvement lent et intentionnel"],
+      "common_mistakes": ["Hanches qui basculent", "Dos qui se creuse", "Mouvements brusques"]
+    },
+    "difficulty_score": 2, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien", "Mobilité"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette légumes 2 œufs + thé vert"},
+      {"meal": "Déjeuner", "recipe": "Poisson 120g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Soupe + pain complet + yaourt"}
+    ]
+  },
+  {
+    "id": "ex036", "name": "Hip thrust au sol", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Fessiers", "secondary_muscle": ["Ischio-jambiers"],
+    "equipment": ["Haltères", "Tapis"], "mode": "reps", "value": 12,
+    "sets": 4, "rest_seconds": 75,
+    "instructions": {
+      "setup": "Dos contre un banc, haltère sur les hanches, pieds à plat, genoux à 90°.",
+      "execution": "Pousse les hanches vers le haut jusqu'à l'alignement, contracte les fessiers 2s, redescends.",
+      "tips": ["Contracte fort les fessiers en haut", "Pieds à plat au sol", "Menton vers la poitrine"],
+      "common_mistakes": ["Dos cambré en haut", "Genoux qui s'écartent", "Pieds trop près ou trop loin"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Flocons d'avoine + protéines + fruits"},
+      {"meal": "Déjeuner", "recipe": "Bœuf haché 160g + riz + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poulet 160g + patate douce + salade"}
+    ]
+  },
+  {
+    "id": "ex037", "name": "Écarté latéral haltères", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Épaules latérales", "secondary_muscle": ["Trapèzes supérieurs"],
+    "equipment": ["Haltères"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, haltères le long du corps, légère flexion des coudes.",
+      "execution": "Lève les bras latéralement jusqu'à hauteur des épaules, redescends lentement.",
+      "tips": ["Coudes légèrement fléchis", "Ne monte pas les épaules", "Contrôle la descente"],
+      "common_mistakes": ["Balancement du corps", "Épaules qui montent", "Montée trop haute"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie protéiné + fruits + noix"},
+      {"meal": "Déjeuner", "recipe": "Poulet 140g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Poisson 140g + quinoa + salade"}
+    ]
+  },
+  {
+    "id": "ex038", "name": "Marche rapide inclinée", "type": "Cardio", "level": "Débutant",
+    "primary_muscle": "Cardio global", "secondary_muscle": ["Mollets", "Fessiers"],
+    "equipment": ["Rien"], "mode": "time", "value": 1200,
+    "sets": 1, "rest_seconds": 0,
+    "instructions": {
+      "setup": "Trouver un terrain en pente ou simuler en montant des escaliers.",
+      "execution": "Marche à rythme soutenu en maintenant une bonne posture pendant 20 minutes.",
+      "tips": ["Dos droit", "Bras actifs", "Respiration nasale si possible"],
+      "common_mistakes": ["Trop se pencher en avant", "Foulée trop longue", "Regarder vers le bas"]
+    },
+    "difficulty_score": 1, "tags": ["Cardio", "Outdoor"],
+    "goals": ["Perte de poids", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Thé + pain complet + œuf + fruit"},
+      {"meal": "Déjeuner", "recipe": "Salade composée + poisson 120g + quinoa"},
+      {"meal": "Dîner", "recipe": "Légumes vapeur + poulet 100g + yaourt"}
+    ]
+  },
+  {
+    "id": "ex039", "name": "Kettlebell swing", "type": "Cardio", "level": "Intermédiaire",
+    "primary_muscle": "Fessiers", "secondary_muscle": ["Ischio-jambiers", "Dos", "Cardio"],
+    "equipment": ["Kettlebell"], "mode": "reps", "value": 15,
+    "sets": 4, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Pieds légèrement plus larges que les épaules, kettlebell entre les pieds.",
+      "execution": "Pousse les hanches en arrière, balance la kettlebell entre les jambes, explose avec les hanches pour monter à hauteur des épaules.",
+      "tips": ["C'est un mouvement de hanches, pas de bras", "Dos plat tout le long", "Contracte les fessiers au sommet"],
+      "common_mistakes": ["Plier les genoux comme un squat", "Dos arrondi", "Utiliser les bras pour monter"]
+    },
+    "difficulty_score": 4, "tags": ["Force", "Cardio", "HIIT"],
+    "goals": ["Perte de poids", "Endurance", "Force"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Avoine 60g + banane + protéines"},
+      {"meal": "Déjeuner", "recipe": "Poulet 160g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 160g + quinoa + légumes verts"}
+    ]
+  },
+  {
+    "id": "ex040", "name": "Gainage dynamique (Planche touches épaules)", "type": "Renfo-Core", "level": "Intermédiaire",
+    "primary_muscle": "Abdominaux", "secondary_muscle": ["Épaules", "Obliques"],
+    "equipment": ["Rien"], "mode": "reps", "value": 16,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Position de planche haute, mains sous les épaules.",
+      "execution": "Touche l'épaule opposée avec une main, repose, alterne en stabilisant le bassin.",
+      "tips": ["Bassin immobile", "Abdos contractés", "Pieds légèrement écartés pour plus de stabilité"],
+      "common_mistakes": ["Bassin qui tourne", "Coudes fléchis", "Vitesse trop rapide"]
+    },
+    "difficulty_score": 3, "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt grec + fruits + graines"},
+      {"meal": "Déjeuner", "recipe": "Thon 140g + légumes + pain complet"},
+      {"meal": "Dîner", "recipe": "Poulet 130g + salade composée + quinoa"}
+    ]
+  },
+  {
+    "id": "ex041", "name": "Fentes latérales", "type": "Force", "level": "Intermédiaire",
+    "primary_muscle": "Adducteurs", "secondary_muscle": ["Fessiers", "Quadriceps"],
+    "equipment": ["Rien"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Debout, pieds joints, mains sur les hanches.",
+      "execution": "Grand pas latéral, fléchis le genou de ce côté, reviens et alterne.",
+      "tips": ["Orteils face vers l'avant", "Genou dans l'axe du pied", "Pied d'extension bien à plat"],
+      "common_mistakes": ["Genou en avant du pied", "Dos penché trop en avant", "Pied décollé"]
+    },
+    "difficulty_score": 3, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Omelette + légumes + fruit"},
+      {"meal": "Déjeuner", "recipe": "Saumon 140g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Poulet 130g + quinoa + salade verte"}
+    ]
+  },
+  {
+    "id": "ex042", "name": "L-sit sur chaises", "type": "Renfo-Core", "level": "Avancé",
+    "primary_muscle": "Abdominaux", "secondary_muscle": ["Triceps", "Épaules"],
+    "equipment": ["Chaises"], "mode": "time", "value": 20,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Mains sur deux chaises solides à hauteur des hanches, corps soulevé.",
+      "execution": "Maintiens les jambes parallèles au sol le plus longtemps possible.",
+      "tips": ["Pousse fort sur les paumes", "Épaules vers le bas", "Jambes droites"],
+      "common_mistakes": ["Genoux fléchis", "Épaules qui montent", "Corps qui penche d'un côté"]
+    },
+    "difficulty_score": 5, "tags": ["Core", "Calisthenics"],
+    "goals": ["Force", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "4 œufs + fromage cottage + avoine"},
+      {"meal": "Déjeuner", "recipe": "Poulet 180g + riz 120g + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 160g + quinoa + épinards"}
+    ]
+  },
+  {
+    "id": "ex043", "name": "Squat sumo", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Adducteurs", "secondary_muscle": ["Fessiers", "Quadriceps"],
+    "equipment": ["Rien"], "mode": "reps", "value": 15,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Pieds largement écartés, orteils pointés vers l'extérieur à 45°, mains jointes devant.",
+      "execution": "Descends en gardant le dos droit, genoux dans l'axe des orteils, remonte.",
+      "tips": ["Genoux suivent les orteils", "Dos plat", "Descends profondément"],
+      "common_mistakes": ["Genoux effondrés vers l'intérieur", "Dos arrondi", "Amplitude trop faible"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien", "Perte de poids"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + fruits + flocons d'avoine"},
+      {"meal": "Déjeuner", "recipe": "Poulet 130g + légumes + pain complet"},
+      {"meal": "Dîner", "recipe": "Poisson 120g + riz + salade verte"}
+    ]
+  },
+  {
+    "id": "ex044", "name": "Tirage buste penché bande élastique", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Dorsaux", "secondary_muscle": ["Biceps", "Rhomboïdes"],
+    "equipment": ["Bande élastique"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Élastique fixé à hauteur de poitrine, buste penché à 45°, dos plat.",
+      "execution": "Tire l'élastique vers les hanches en fléchissant les coudes, omoplates serrées.",
+      "tips": ["Dos plat et abdos contractés", "Coudes près du corps", "Omoplates vers le centre"],
+      "common_mistakes": ["Dos arrondi", "Tirer avec les biceps", "Corps qui se redresse"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Flocons d'avoine + lait + fruits"},
+      {"meal": "Déjeuner", "recipe": "Thon 140g + riz complet + légumes"},
+      {"meal": "Dîner", "recipe": "Poulet 130g + légumes vapeur + pain complet"}
+    ]
+  },
+  {
+    "id": "ex045", "name": "Russian twist", "type": "Renfo-Core", "level": "Intermédiaire",
+    "primary_muscle": "Obliques", "secondary_muscle": ["Abdominaux"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 20,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "Assis sur le tapis, jambes à 45° du sol, buste légèrement penché en arrière, mains jointes.",
+      "execution": "Tourne le buste d'un côté puis de l'autre en touchant le sol avec les mains.",
+      "tips": ["Maintiens les jambes stables", "Tourne depuis la poitrine pas les bras", "Abdos contractés"],
+      "common_mistakes": ["Jambes qui bougent", "Rotation trop faible", "Dos arrondi"]
+    },
+    "difficulty_score": 3, "tags": ["Core", "Sans matériel"],
+    "goals": ["Perte de poids", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Smoothie vert + protéines + avoine"},
+      {"meal": "Déjeuner", "recipe": "Saumon 140g + riz + légumes verts"},
+      {"meal": "Dîner", "recipe": "Poulet 130g + salade composée + quinoa"}
+    ]
+  },
+  {
+    "id": "ex046", "name": "Pompes sur genoux", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Pectoraux", "secondary_muscle": ["Triceps", "Épaules"],
+    "equipment": ["Tapis"], "mode": "reps", "value": 15,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "À genoux, mains légèrement plus larges que les épaules, dos aligné.",
+      "execution": "Descends en fléchissant les coudes jusqu'à 90°, remonte.",
+      "tips": ["Dos aligné des genoux à la tête", "Coudes à 45°", "Abdos légèrement contractés"],
+      "common_mistakes": ["Dos qui s'affaisse", "Amplitude trop petite", "Fesses vers l'air"]
+    },
+    "difficulty_score": 1, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt + fruits + céréales complètes"},
+      {"meal": "Déjeuner", "recipe": "Poulet 120g + légumes + riz"},
+      {"meal": "Dîner", "recipe": "Soupe + œufs durs + pain complet"}
+    ]
+  },
+  {
+    "id": "ex047", "name": "Squat sur une jambe assisté", "type": "Force", "level": "Avancé",
+    "primary_muscle": "Quadriceps", "secondary_muscle": ["Fessiers", "Stabilisateurs"],
+    "equipment": ["Chaise"], "mode": "reps", "value": 8,
+    "sets": 4, "rest_seconds": 90,
+    "instructions": {
+      "setup": "Debout sur une jambe, l'autre tendue devant, main légère sur un mur pour équilibre.",
+      "execution": "Descends sur la jambe d'appui aussi bas que possible, remonte.",
+      "tips": ["Genou dans l'axe du pied", "Descente lente 4 secondes", "Progresser graduellement en profondeur"],
+      "common_mistakes": ["Genou effondré", "Aide trop importante du mur", "Profondeur insuffisante"]
+    },
+    "difficulty_score": 5, "tags": ["Force", "Calisthenics"],
+    "goals": ["Force", "Prise de masse"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "5 œufs + avoine + beurre d'amande"},
+      {"meal": "Déjeuner", "recipe": "Bœuf 200g + riz 140g + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 180g + patate douce + brocolis"}
+    ]
+  },
+  {
+    "id": "ex048", "name": "Tirage vertical bande élastique", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Dorsaux", "secondary_muscle": ["Biceps"],
+    "equipment": ["Bande élastique"], "mode": "reps", "value": 12,
+    "sets": 3, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Élastique fixé en hauteur, assis ou debout, prise large.",
+      "execution": "Tire vers la poitrine en ramenant les coudes vers le bas et l'arrière.",
+      "tips": ["Omoplates vers le bas", "Poitrine droite vers le haut", "Descente lente"],
+      "common_mistakes": ["Pencher en arrière", "Hausser les épaules", "Amplitude réduite"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Maison"],
+    "goals": ["Renfo général", "Maintien"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Flocons d'avoine + lait + miel + fruits"},
+      {"meal": "Déjeuner", "recipe": "Poulet 140g + riz + légumes vapeur"},
+      {"meal": "Dîner", "recipe": "Poisson 130g + quinoa + salade"}
+    ]
+  },
+  {
+    "id": "ex049", "name": "Glute kickback", "type": "Force", "level": "Débutant",
+    "primary_muscle": "Fessiers", "secondary_muscle": ["Ischio-jambiers"],
+    "equipment": ["Tapis", "Bande élastique"], "mode": "reps", "value": 15,
+    "sets": 3, "rest_seconds": 45,
+    "instructions": {
+      "setup": "À 4 pattes, élastique autour des chevilles, dos plat.",
+      "execution": "Pousse une jambe vers l'arrière et le haut, contracte le fessier, reviens lentement.",
+      "tips": ["Contracte fort le fessier en haut", "Dos plat", "Ne tords pas le bassin"],
+      "common_mistakes": ["Dos qui se cambre", "Bassin qui pivote", "Amplitude trop faible"]
+    },
+    "difficulty_score": 2, "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Prise de masse"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "Yaourt grec + fruits + graines de lin"},
+      {"meal": "Déjeuner", "recipe": "Poulet 140g + riz brun + légumes"},
+      {"meal": "Dîner", "recipe": "Saumon 140g + quinoa + épinards"}
+    ]
+  },
+  {
+    "id": "ex050", "name": "Hollow body hold", "type": "Renfo-Core", "level": "Avancé",
+    "primary_muscle": "Abdominaux profonds", "secondary_muscle": ["Fléchisseurs de hanche"],
+    "equipment": ["Tapis"], "mode": "time", "value": 30,
+    "sets": 4, "rest_seconds": 60,
+    "instructions": {
+      "setup": "Allongé sur le dos, bras tendus derrière la tête, jambes tendues.",
+      "execution": "Soulève épaules et jambes quelques centimètres du sol, maintiens corps en forme de banane.",
+      "tips": ["Bas du dos collé au sol", "Abdos contractés au maximum", "Respire régulièrement"],
+      "common_mistakes": ["Bas du dos décollé", "Genoux fléchis", "Apnée totale"]
+    },
+    "difficulty_score": 5, "tags": ["Core", "Calisthenics"],
+    "goals": ["Force", "Renfo général"],
+    "meals": [
+      {"meal": "Petit déjeuner", "recipe": "4 œufs + avoine + fruits + café"},
+      {"meal": "Déjeuner", "recipe": "Poulet 160g + riz 120g + légumes verts"},
+      {"meal": "Dîner", "recipe": "Saumon 150g + quinoa + brocolis"}
+    ]
+  }
+]

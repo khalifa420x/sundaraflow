@@ -308,11 +308,11 @@ export default function CoachHome() {
                       {/* Programmes actifs */}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
                         <h2 style={S.sectionHead}>PROGRAMMES <span style={{ color: '#b22a27' }}>ACTIFS.</span></h2>
-                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', display: 'flex', alignItems: 'center', gap: 4 }} onClick={() => router.push('/coach')}>TOUT GÉRER →</button>
+                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', display: 'flex', alignItems: 'center', gap: 4 }} onClick={() => router.push('/coach/programmes')}>TOUT GÉRER →</button>
                       </div>
                       <div className="ch-prog-grid" style={{ marginBottom: 36 }}>
                         {displayPrograms.slice(0, 3).map((p: any, i: number) => (
-                          <div key={p.id} className="ch-prog-card" onClick={() => router.push('/coach')}>
+                          <div key={p.id} className="ch-prog-card" onClick={() => router.push('/coach/programmes')}>
                             <div style={{ width: 44, height: 44, borderRadius: 10, background: 'rgba(178,42,39,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', marginBottom: 14 }}>{p.icon || '📋'}</div>
                             <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.95rem', letterSpacing: '-.02em', marginBottom: 7, color: '#e5e2e1', lineHeight: 1.2 }}>{p.title}</div>
                             <p style={{ fontSize: '.74rem', color: '#9CA3AF', lineHeight: 1.65, marginBottom: 14, flex: 1 }}>{p.desc || 'Programme personnalisé'}</p>
@@ -453,7 +453,7 @@ export default function CoachHome() {
                         </div>
                         <div style={{ display: 'flex', gap: 7 }}>
                           <button style={{ flex: 1, background: 'rgba(178,42,39,0.1)', border: 'none', borderRadius: 6, padding: '8px', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#e3beb8', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); setSelClient(c); navTo('nutrition'); }}>🥗 Nutrition</button>
-                          <button style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: 6, padding: '8px', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9CA3AF', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); router.push('/coach'); }}>📋 Programmes</button>
+                          <button style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: 6, padding: '8px', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: '#9CA3AF', cursor: 'pointer' }} onClick={e => { e.stopPropagation(); router.push('/coach/programmes'); }}>📋 Programmes</button>
                         </div>
                       </div>
                     ))}
