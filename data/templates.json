@@ -1,0 +1,141 @@
+[
+  {
+    "id": "prog001",
+    "name": "Perte de poids Débutant 4 semaines",
+    "goal": "Perte de poids",
+    "duration_weeks": 4,
+    "days_per_week": 3,
+    "level": "Débutant",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Force","count":2}, {"type":"Cardio","count":1}, {"type":"Mobility","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Force","count":1}, {"type":"Renfo-Core","count":2}, {"type":"Cardio","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Force","count":2}, {"type":"Cardio","count":1}, {"type":"Mobility","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog002",
+    "name": "Prise de masse Intermédiaire 6 semaines",
+    "goal": "Prise de masse",
+    "duration_weeks": 6,
+    "days_per_week": 4,
+    "level": "Intermédiaire",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Force","count":3}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Force","count":3}, {"type":"Cardio","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Force","count":3}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 4, "blocks": [ {"type":"Cardio","count":2}, {"type":"Mobility","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog003",
+    "name": "Renfo général Avancé 8 semaines",
+    "goal": "Renfo général",
+    "duration_weeks": 8,
+    "days_per_week": 5,
+    "level": "Avancé",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Force","count":2}, {"type":"Renfo-Core","count":2} ] },
+      { "day": 2, "blocks": [ {"type":"Cardio","count":2}, {"type":"Mobility","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Force","count":3}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 4, "blocks": [ {"type":"Cardio","count":2}, {"type":"Force","count":1} ] },
+      { "day": 5, "blocks": [ {"type":"Mobility","count":2}, {"type":"Renfo-Core","count":2} ] }
+    ]
+  },
+  {
+    "id": "prog004",
+    "name": "HIIT Débutant 4 semaines",
+    "goal": "Perte de poids",
+    "duration_weeks": 4,
+    "days_per_week": 3,
+    "level": "Débutant",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Cardio","count":3}, {"type":"Mobility","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Cardio","count":2}, {"type":"Renfo-Core","count":2} ] },
+      { "day": 3, "blocks": [ {"type":"Cardio","count":3}, {"type":"Mobility","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog005",
+    "name": "Endurance Intermédiaire 6 semaines",
+    "goal": "Endurance",
+    "duration_weeks": 6,
+    "days_per_week": 4,
+    "level": "Intermédiaire",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Cardio","count":2}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Cardio","count":2}, {"type":"Force","count":2} ] },
+      { "day": 3, "blocks": [ {"type":"Cardio","count":3} ] },
+      { "day": 4, "blocks": [ {"type":"Mobility","count":2}, {"type":"Renfo-Core","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog006",
+    "name": "Senior Mobilité 4 semaines",
+    "goal": "Mobilité",
+    "duration_weeks": 4,
+    "days_per_week": 3,
+    "level": "Débutant",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Mobility","count":3} ] },
+      { "day": 2, "blocks": [ {"type":"Mobility","count":2}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Mobility","count":3} ] }
+    ]
+  },
+  {
+    "id": "prog007",
+    "name": "Postpartum Renfo doux 6 semaines",
+    "goal": "Renfo général",
+    "duration_weeks": 6,
+    "days_per_week": 3,
+    "level": "Débutant",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Renfo-Core","count":2}, {"type":"Mobility","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Renfo-Core","count":1}, {"type":"Mobility","count":2} ] },
+      { "day": 3, "blocks": [ {"type":"Renfo-Core","count":2}, {"type":"Mobility","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog008",
+    "name": "Force Avancé 8 semaines",
+    "goal": "Force",
+    "duration_weeks": 8,
+    "days_per_week": 5,
+    "level": "Avancé",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Force","count":3}, {"type":"Renfo-Core","count":2} ] },
+      { "day": 2, "blocks": [ {"type":"Force","count":3} ] },
+      { "day": 3, "blocks": [ {"type":"Force","count":2}, {"type":"Cardio","count":2} ] },
+      { "day": 4, "blocks": [ {"type":"Force","count":3}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 5, "blocks": [ {"type":"Force","count":2}, {"type":"Mobility","count":2} ] }
+    ]
+  },
+  {
+    "id": "prog009",
+    "name": "HIIT Avancé 4 semaines",
+    "goal": "Perte de poids",
+    "duration_weeks": 4,
+    "days_per_week": 4,
+    "level": "Avancé",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Cardio","count":3}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Cardio","count":3}, {"type":"Force","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Cardio","count":3}, {"type":"Mobility","count":1} ] },
+      { "day": 4, "blocks": [ {"type":"Cardio","count":3}, {"type":"Renfo-Core","count":1} ] }
+    ]
+  },
+  {
+    "id": "prog010",
+    "name": "Renfo complet Intermédiaire 6 semaines",
+    "goal": "Renfo général",
+    "duration_weeks": 6,
+    "days_per_week": 5,
+    "level": "Intermédiaire",
+    "day_templates": [
+      { "day": 1, "blocks": [ {"type":"Force","count":2}, {"type":"Renfo-Core","count":1}, {"type":"Cardio","count":1} ] },
+      { "day": 2, "blocks": [ {"type":"Force","count":2}, {"type":"Renfo-Core","count":1}, {"type":"Mobility","count":1} ] },
+      { "day": 3, "blocks": [ {"type":"Cardio","count":2}, {"type":"Renfo-Core","count":1} ] },
+      { "day": 4, "blocks": [ {"type":"Force","count":2}, {"type":"Cardio","count":1}, {"type":"Mobility","count":1} ] },
+      { "day": 5, "blocks": [ {"type":"Renfo-Core","count":2}, {"type":"Mobility","count":2} ] }
+    ]
+  }
+]
