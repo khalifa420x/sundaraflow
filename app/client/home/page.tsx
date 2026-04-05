@@ -79,11 +79,22 @@ const MUSCLE_PHOTO: Record<string, string> = {
 
 function getMusclePhoto(muscle: string): string {
   const m = (muscle || '').toLowerCase();
-  for (const [key, url] of Object.entries(MUSCLE_PHOTO)) {
-    if (m.includes(key)) return url;
-  }
+  if (m.includes('fessier') || m.includes('quadricep') || m.includes('ischio') || m.includes('jambe'))
+    return 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=400&q=50';
+  if (m.includes('pectoral') || m.includes('tricep') || m.includes('épaule') || m.includes('epaule'))
+    return 'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400&q=50';
+  if (m.includes('dorsal') || m.includes('bicep') || m.includes('dos') || m.includes('rhombo'))
+    return 'https://images.unsplash.com/photo-1530822847156-5df684ec5933?w=400&q=50';
+  if (m.includes('abdo') || m.includes('oblique') || m.includes('core'))
+    return 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=50';
   return 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=400&q=50';
 }
+
+const formatReps = (reps: string) => {
+  const num = parseInt(reps);
+  if (!isNaN(num) && num >= 120 && reps.includes('s')) return `${Math.round(num / 60)} min`;
+  return reps;
+};
 
 function getSessionPhoto(label: string, focus: string): string {
   const text = `${label} ${focus}`.toLowerCase();
@@ -134,7 +145,7 @@ export default function ClientHome() {
   const [statPeriod, setStatPeriod]   = useState('30J');
   const [expandedProgram, setExpandedProgram] = useState<string | null>(null);
   const [expandedProgSession, setExpandedProgSession] = useState<string | null>(null);
-  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+  const [expandedEx, setExpandedEx] = useState<string | null>(null);
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -684,7 +695,7 @@ export default function ClientHome() {
                                         <div key={si} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${sessOpen ? 'rgba(178,42,39,0.22)' : 'rgba(255,255,255,0.05)'}`, borderRadius: 10, overflow: 'hidden', transition: 'border-color .2s' }}>
                                           {/* Session header */}
                                           <div
-                                            onClick={() => { setExpandedProgSession(sessOpen ? null : sessKey); setExpandedExercise(null); }}
+                                            onClick={() => { setExpandedProgSession(sessOpen ? null : sessKey); setExpandedEx(null); }}
                                             style={{ display: 'flex', alignItems: 'stretch', cursor: 'pointer', userSelect: 'none' as const, minHeight: 58 }}
                                           >
                                             <div style={{ flex: 1, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
@@ -705,99 +716,109 @@ export default function ClientHome() {
 
                                           {/* Exercises */}
                                           {sessOpen && session.exercises?.length > 0 && (
-                                            <div style={{ padding: '0 12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            <div style={{ padding: '0 12px 14px' }}>
                                               {session.exercises.map((ex: any, ei: number) => {
                                                 const exKey = `${prog.id}-${si}-${ei}`;
-                                                const exOpen = expandedExercise === exKey;
-                                                const musclePhoto = getMusclePhoto(ex.primary_muscle || '');
+                                                const exIsOpen = expandedEx === exKey;
                                                 return (
-                                                  <div key={ei} style={{ background: '#1c1b1b', borderRadius: 12, border: `1px solid ${exOpen ? 'rgba(178,42,39,0.3)' : 'rgba(255,255,255,0.06)'}`, overflow: 'hidden', transition: 'border-color .2s' }}>
-                                                    {/* Closed row */}
+                                                  <div key={ei} style={{ marginBottom: 8 }}>
+                                                    {/* Card FERMÉE */}
                                                     <div
-                                                      onClick={() => setExpandedExercise(exOpen ? null : exKey)}
-                                                      style={{ padding: '11px 14px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' as const }}
+                                                      onClick={() => setExpandedEx(exIsOpen ? null : exKey)}
+                                                      style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: exIsOpen ? '10px 10px 0 0' : 10, padding: '14px 16px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                                                     >
-                                                      <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.01em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
-                                                        <div style={{ fontSize: '.66rem', color: '#9CA3AF', marginTop: 2 }}>{ex.primary_muscle || '—'}</div>
+                                                      <div>
+                                                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '0.88rem', color: '#e5e2e1' }}>{ex.name}</div>
+                                                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '0.72rem', color: '#9CA3AF', marginTop: 4 }}>{ex.primary_muscle || ex.muscle || '—'}</div>
                                                       </div>
-                                                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                                                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                                         <div style={{ textAlign: 'right' }}>
-                                                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.78rem', color: '#b22a27' }}>{ex.sets} × {ex.reps}</div>
-                                                          <div style={{ fontSize: '.6rem', color: '#6B7280' }}>{ex.rest}</div>
+                                                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '0.88rem', color: '#b22a27' }}>{ex.sets} × {formatReps(String(ex.reps ?? ''))}</div>
+                                                          <div style={{ fontSize: '0.65rem', color: '#6B7280' }}>Repos {ex.rest}</div>
                                                         </div>
-                                                        <span style={{ color: '#b22a27', fontSize: '.72rem', transition: 'transform .2s', transform: exOpen ? 'rotate(180deg)' : 'none' }}>▼</span>
+                                                        <span style={{ color: '#b22a27', fontSize: '0.75rem', transition: 'transform .2s', transform: exIsOpen ? 'rotate(180deg)' : 'none' }}>▼</span>
                                                       </div>
                                                     </div>
 
-                                                    {/* Expanded detail */}
-                                                    {exOpen && (
-                                                      <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                                        {/* Muscle photo */}
-                                                        <div style={{ height: 120, position: 'relative', overflow: 'hidden', borderRadius: '10px 10px 0 0' }}>
-                                                          <img src={musclePhoto} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.25) saturate(0.6)' }} />
-                                                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 35%, #1c1b1b 100%)' }} />
-                                                          <div style={{ position: 'absolute', bottom: 10, left: 14, fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.95rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>{ex.name}</div>
+                                                    {/* Card OUVERTE */}
+                                                    {exIsOpen && (
+                                                      <div style={{ background: '#1c1b1b', border: '1px solid rgba(178,42,39,0.25)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
+                                                        {/* Photo */}
+                                                        <div style={{ position: 'relative', overflow: 'hidden' }}>
+                                                          <img
+                                                            src={getMusclePhoto(ex.primary_muscle || ex.muscle || '')}
+                                                            alt=""
+                                                            style={{ width: '100%', height: 90, objectFit: 'cover', filter: 'brightness(0.28)', display: 'block' }}
+                                                          />
+                                                          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1c1b1b 0%, transparent 70%)' }} />
+                                                          <div style={{ position: 'absolute', bottom: 10, left: 14, fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '0.9rem', color: '#fff' }}>{ex.name}</div>
                                                         </div>
 
-                                                        <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                                                          {/* Prescription */}
-                                                          <div>
-                                                            <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 10 }}>Prescription</div>
-                                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}>
-                                                              {[
-                                                                { label: 'Séries', val: String(ex.sets ?? '—') },
-                                                                { label: ex.mode === 'time' ? 'Durée' : 'Reps', val: String(ex.reps ?? '—') },
-                                                                { label: 'Repos', val: ex.rest || '—' },
-                                                                { label: 'Muscle', val: ex.primary_muscle || '—' },
-                                                              ].map(s => (
-                                                                <div key={s.label} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '8px 4px', textAlign: 'center' }}>
-                                                                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.82rem', color: '#b22a27', letterSpacing: '-.02em', lineHeight: 1, wordBreak: 'break-word' as const }}>{s.val}</div>
-                                                                  <div style={{ fontSize: '.5rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#6B7280', marginTop: 4 }}>{s.label}</div>
-                                                                </div>
-                                                              ))}
+                                                        {/* Prescription 3 col */}
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', background: 'rgba(255,255,255,0.03)', padding: 12 }}>
+                                                          {[
+                                                            { label: 'SÉRIES', val: String(ex.sets ?? '—') },
+                                                            { label: 'REPS/DURÉE', val: formatReps(String(ex.reps ?? '—')) },
+                                                            { label: 'REPOS', val: ex.rest || '—' },
+                                                          ].map(s => (
+                                                            <div key={s.label} style={{ textAlign: 'center' }}>
+                                                              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.3rem', color: '#b22a27', lineHeight: 1 }}>{s.val}</div>
+                                                              <div style={{ fontSize: '0.5rem', textTransform: 'uppercase' as const, letterSpacing: '.1em', color: '#9CA3AF', marginTop: 4 }}>{s.label}</div>
                                                             </div>
-                                                          </div>
+                                                          ))}
+                                                        </div>
 
-                                                          {/* Exécution */}
-                                                          {(ex.instructions?.setup || ex.instructions?.execution) && (
+                                                        <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                                          {/* MISE EN PLACE */}
+                                                          {ex.instructions?.setup && (
                                                             <div>
-                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 10 }}>Exécution</div>
+                                                              <div style={{ fontSize: '0.52rem', textTransform: 'uppercase' as const, letterSpacing: '.16em', color: '#9CA3AF', marginBottom: 8 }}>MISE EN PLACE</div>
+                                                              <p style={{ fontSize: '0.78rem', color: '#e5e2e1', lineHeight: 1.65, margin: 0 }}>{ex.instructions.setup}</p>
+                                                            </div>
+                                                          )}
+
+                                                          {/* EXÉCUTION */}
+                                                          {ex.instructions?.execution && (
+                                                            <div>
+                                                              <div style={{ fontSize: '0.52rem', textTransform: 'uppercase' as const, letterSpacing: '.16em', color: '#9CA3AF', marginBottom: 10 }}>EXÉCUTION</div>
                                                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                                                {[ex.instructions?.setup, ex.instructions?.execution].filter(Boolean).map((text: string, i: number) => (
-                                                                  <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-                                                                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#b22a27', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 900, color: '#fff', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
-                                                                    <p style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{text}</p>
-                                                                  </div>
-                                                                ))}
+                                                                {ex.instructions.execution
+                                                                  .split('. ')
+                                                                  .filter((phrase: string) => phrase.trim().length > 3)
+                                                                  .map((phrase: string, i: number) => (
+                                                                    <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                                                                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: '#b22a27', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontFamily: 'Lexend, sans-serif', fontWeight: 900, color: '#fff', flexShrink: 0, marginTop: 1 }}>{i + 1}</div>
+                                                                      <span style={{ fontSize: '0.78rem', color: '#e5e2e1', lineHeight: 1.65 }}>{phrase}</span>
+                                                                    </div>
+                                                                  ))}
                                                               </div>
                                                             </div>
                                                           )}
 
-                                                          {/* Conseils */}
+                                                          {/* CONSEILS */}
                                                           {(ex.instructions?.tips?.length ?? 0) > 0 && (
                                                             <div>
-                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 8 }}>Conseils du coach</div>
-                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                                {ex.instructions.tips.map((tip: string, i: number) => (
+                                                              <div style={{ fontSize: '0.52rem', textTransform: 'uppercase' as const, letterSpacing: '.16em', color: '#9CA3AF', marginBottom: 8 }}>CONSEILS</div>
+                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                                                {ex.instructions!.tips!.map((tip: string, i: number) => (
                                                                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                                                    <span style={{ color: '#16a34a', fontSize: '.8rem', flexShrink: 0, lineHeight: 1.4 }}>✓</span>
-                                                                    <span style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.55 }}>{tip}</span>
+                                                                    <span style={{ color: '#16a34a', fontSize: '0.8rem', flexShrink: 0, lineHeight: 1.4 }}>✓</span>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#9CA3AF', lineHeight: 1.55 }}>{tip}</span>
                                                                   </div>
                                                                 ))}
                                                               </div>
                                                             </div>
                                                           )}
 
-                                                          {/* Erreurs */}
+                                                          {/* ERREURS */}
                                                           {(ex.instructions?.common_mistakes?.length ?? 0) > 0 && (
                                                             <div>
-                                                              <div style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.2em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 8 }}>Erreurs à éviter</div>
-                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                                                {ex.instructions.common_mistakes.map((m: string, i: number) => (
+                                                              <div style={{ fontSize: '0.52rem', textTransform: 'uppercase' as const, letterSpacing: '.16em', color: '#9CA3AF', marginBottom: 8 }}>ERREURS À ÉVITER</div>
+                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                                                                {ex.instructions!.common_mistakes!.map((m: string, i: number) => (
                                                                   <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                                                    <span style={{ color: '#b22a27', fontSize: '.8rem', flexShrink: 0, lineHeight: 1.4 }}>✗</span>
-                                                                    <span style={{ fontSize: '.74rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.55 }}>{m}</span>
+                                                                    <span style={{ color: '#b22a27', fontSize: '0.8rem', flexShrink: 0, lineHeight: 1.4 }}>✗</span>
+                                                                    <span style={{ fontSize: '0.75rem', color: '#9CA3AF', lineHeight: 1.55 }}>{m}</span>
                                                                   </div>
                                                                 ))}
                                                               </div>

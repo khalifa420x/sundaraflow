@@ -61,8 +61,8 @@ function getProgramPhoto(goal: string): string {
    PROGRAMME CARD (sub-component)
 ════════════════════════════════════════════════════════ */
 function ProgramCard({
-  p, onAssign, onDelete, deleting,
-}: { p: any; onAssign: () => void; onDelete: () => void; deleting: boolean }) {
+  p, onAssign, onDelete, deleting, clientCount,
+}: { p: any; onAssign: () => void; onDelete: () => void; deleting: boolean; clientCount: number }) {
   const totalExercises = (p.sessions || []).reduce((acc: number, s: any) => acc + (s.exercises?.length || 0), 0);
   const [hovered, setHovered] = useState(false);
 
@@ -107,6 +107,9 @@ function ProgramCard({
 
       {/* Title + subtitle */}
       <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '1rem', letterSpacing: '-.02em', color: '#e5e2e1', marginBottom: 4, lineHeight: 1.2 }}>{p.title}</div>
+      <span style={{ fontSize: '0.62rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.25)', borderRadius: 5, padding: '3px 9px', color: '#e3beb8', display: 'inline-block', marginTop: 6, marginBottom: 10 }}>
+        👤 {clientCount} client{clientCount !== 1 ? 's' : ''} actif{clientCount !== 1 ? 's' : ''}
+      </span>
       <div style={{ fontSize: '.64rem', color: '#9CA3AF', marginBottom: 16 }}>{p.level} · {p.durationWeeks} semaines</div>
 
       {/* Tabular stats */}
@@ -156,6 +159,7 @@ export default function CoachProgrammes() {
   /* Data */
   const [programs, setPrograms] = useState<any[]>([]);
   const [clients, setClients] = useState<any[]>([]);
+  const [assignCounts, setAssignCounts] = useState<Record<string, number>>({});
 
   /* UI */
   const [mounted, setMounted] = useState(false);
@@ -216,6 +220,16 @@ export default function CoachProgrammes() {
     try {
       const snap = await getDocs(query(collection(db, 'programs'), where('coachId', '==', u.uid)));
       setPrograms(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const aSnap = await getDocs(query(
+        collection(db, 'program_assignments'),
+        where('coachId', '==', u.uid)
+      ));
+      const counts: Record<string, number> = {};
+      aSnap.docs.forEach(d => {
+        const pid = d.data().programId as string;
+        if (pid) counts[pid] = (counts[pid] || 0) + 1;
+      });
+      setAssignCounts(counts);
     } catch { fireToast('❌', 'Erreur', 'Impossible de charger les programmes.'); }
     setLoading(false);
   }, [user]);
@@ -440,6 +454,7 @@ export default function CoachProgrammes() {
                             onAssign={() => { setAssignProgram(p); setAssignClientDocId(clients[0]?.docId || ''); setView('assign'); }}
                             onDelete={() => handleDeleteProgram(p.id)}
                             deleting={deletingId === p.id}
+                            clientCount={assignCounts[p.id] || 0}
                           />
                         ))}
                         {/* Add card */}
