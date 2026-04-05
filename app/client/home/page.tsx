@@ -95,6 +95,8 @@ export default function ClientHome() {
   const [mounted, setMounted]         = useState(false);
   const [activeTab, setActiveTab]     = useState<NavKey>('overview');
   const [statPeriod, setStatPeriod]   = useState('30J');
+  const [expandedProgram, setExpandedProgram] = useState<string | null>(null);
+  const [expandedProgSession, setExpandedProgSession] = useState<number | null>(null);
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -523,32 +525,147 @@ export default function ClientHome() {
                     <div className="cl-spinner" />
                     <p style={{ fontSize: '.73rem', color: '#9CA3AF', marginTop: 12 }}>Chargement…</p>
                   </div>
+                ) : displayPrograms.length === 0 ? (
+                  <div style={{ background: '#1c1b1b', borderRadius: 14, padding: '40px 24px', textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>📋</div>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '1rem', color: '#e5e2e1', marginBottom: 8 }}>Aucun programme assigné</div>
+                    <p style={{ fontSize: '.78rem', color: '#6B7280', lineHeight: 1.6 }}>Votre coach n'a pas encore assigné de programme. Contactez-le via la messagerie.</p>
+                  </div>
                 ) : (
-                  <div className="cl-prog-grid">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {displayPrograms.map((prog: any) => {
-                      const cfg = TYPE_CONFIG[prog.type] || TYPE_CONFIG.sport;
+                      const isOpen = expandedProgram === prog.id;
+                      const startDateStr = prog.startDate
+                        ? new Date(prog.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                        : prog.assignedAt ? new Date((prog.assignedAt.toDate ? prog.assignedAt.toDate() : prog.assignedAt)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
                       const days = daysSince(prog.assignedAt);
+                      const totalEx = (prog.sessions || []).reduce((a: number, s: any) => a + (s.exercises?.length || 0), 0);
                       return (
-                        <div key={prog.id} className="cl-prog-card">
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                            <div style={{ fontSize: '1.5rem' }}>{cfg.icon}</div>
-                            <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: cfg.color, background: `${cfg.color}18`, padding: '3px 8px', borderRadius: 4, border: `1px solid ${cfg.color}30` }}>
-                              {cfg.label}
-                            </span>
-                          </div>
-                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: 'clamp(.85rem,2vw,1rem)', color: '#e5e2e1', letterSpacing: '-.02em', marginBottom: 6 }}>{prog.title}</div>
-                          <div style={{ fontSize: '.62rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginBottom: 16 }}>
-                            {prog.coachName || 'Votre coach'} · Commencé il y a {days} jours
-                          </div>
-                          {typeof prog.progress === 'number' && (
-                            <div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                <span style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>Progression</span>
-                                <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: '#b22a27' }}>{prog.progress}%</span>
+                        <div key={prog.id} style={{ background: '#1c1b1b', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                          {/* Card header */}
+                          <div style={{ padding: '20px 22px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
+                              <div style={{ flex: 1, minWidth: 200 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                  <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>LECTURE SEULE</span>
+                                  {prog.generatedBy === 'ai' && (
+                                    <span style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' as const, color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '3px 8px', borderRadius: 4, border: '1px solid rgba(178,42,39,0.2)' }}>⚡ IA</span>
+                                  )}
+                                </div>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2.5vw,1.1rem)', color: '#e5e2e1', letterSpacing: '-.03em', marginBottom: 6 }}>{prog.title}</div>
+                                <div style={{ fontSize: '.64rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
+                                  {prog.goal && <span>{prog.goal}</span>}
+                                  {prog.level && <span> · {prog.level}</span>}
+                                  {prog.durationWeeks && <span> · {prog.durationWeeks} semaines</span>}
+                                </div>
                               </div>
-                              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 9999 }}>
-                                <div style={{ height: 4, width: `${prog.progress}%`, background: 'linear-gradient(to right, #89070e, #b22a27)', borderRadius: 9999 }} />
+                              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.66rem', color: '#9CA3AF', marginBottom: 2 }}>Début</div>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.78rem', color: '#e5e2e1' }}>{startDateStr}</div>
+                                <div style={{ fontSize: '.6rem', color: '#6B7280', marginTop: 4 }}>{days} jours</div>
                               </div>
+                            </div>
+
+                            {/* Quick stats */}
+                            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 14 }}>
+                              {[
+                                { label: 'Séances/sem', val: `${prog.sessionsPerWeek || '—'} x` },
+                                { label: 'Exercices', val: String(totalEx) },
+                                { label: 'Durée', val: `${prog.durationWeeks || '—'} sem.` },
+                              ].map(s => (
+                                <div key={s.label}>
+                                  <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280', marginBottom: 2 }}>{s.label}</div>
+                                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', color: '#b22a27' }}>{s.val}</div>
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Progress bar */}
+                            <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
+                              <div style={{ height: '100%', width: `${Math.min(100, Math.round((days / ((prog.durationWeeks || 8) * 7)) * 100))}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 999, transition: 'width 1s ease' }} />
+                            </div>
+
+                            {/* Toggle button */}
+                            {(prog.sessions?.length > 0 || prog.weeklyMealPlan?.length > 0) && (
+                              <button
+                                onClick={() => { setExpandedProgram(isOpen ? null : prog.id); setExpandedProgSession(null); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, padding: '7px 14px', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem', letterSpacing: '.08em', textTransform: 'uppercase' as const, color: '#9CA3AF', transition: 'all .15s' }}
+                              >
+                                {isOpen ? '▲ MASQUER LE DÉTAIL' : '▼ VOIR LE DÉTAIL'}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Expanded detail */}
+                          {isOpen && (
+                            <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                              {/* Meal plan */}
+                              {prog.weeklyMealPlan?.length > 0 && (
+                                <div style={{ padding: '18px 22px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                  <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 12 }}>🍽️ Plan repas de la semaine</div>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 10 }}>
+                                    {prog.weeklyMealPlan.map((m: any, i: number) => (
+                                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8, padding: '12px 14px' }}>
+                                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.66rem', color: '#b22a27', letterSpacing: '.06em', textTransform: 'uppercase' as const, marginBottom: 5 }}>{m.meal}</div>
+                                        <div style={{ fontSize: '.72rem', color: '#9CA3AF', lineHeight: 1.6 }}>{m.recipe}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Sessions accordion */}
+                              {prog.sessions?.length > 0 && (
+                                <div style={{ padding: '18px 22px' }}>
+                                  <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 12 }}>📅 Sessions d'entraînement</div>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    {prog.sessions.map((session: any, si: number) => {
+                                      const sessOpen = expandedProgSession === si;
+                                      return (
+                                        <div key={si} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 10, overflow: 'hidden' }}>
+                                          <div
+                                            onClick={() => setExpandedProgSession(sessOpen ? null : si)}
+                                            style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' as const }}
+                                          >
+                                            <div>
+                                              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>
+                                                JOUR {session.day} — {session.label}
+                                              </div>
+                                              {session.focus && <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>{session.focus}</div>}
+                                              <div style={{ fontSize: '.58rem', color: '#6B7280', marginTop: 2 }}>{session.exercises?.length || 0} exercice{session.exercises?.length !== 1 ? 's' : ''}</div>
+                                            </div>
+                                            <span style={{ color: '#b22a27', fontSize: '.8rem', transition: 'transform .2s', transform: sessOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>▼</span>
+                                          </div>
+                                          {sessOpen && session.exercises?.length > 0 && (
+                                            <div style={{ padding: '0 16px 16px', overflowX: 'auto' }}>
+                                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '.7rem', minWidth: 420 }}>
+                                                <thead>
+                                                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+                                                    {['Exercice', 'Muscle', 'Séries', 'Reps', 'Repos'].map(h => (
+                                                      <th key={h} style={{ padding: '7px 8px', textAlign: 'left', fontSize: '.54rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280' }}>{h}</th>
+                                                    ))}
+                                                  </tr>
+                                                </thead>
+                                                <tbody>
+                                                  {session.exercises.map((ex: any, ei: number) => (
+                                                    <tr key={ei} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#e5e2e1', fontSize: '.74rem', maxWidth: 140 }}>{ex.name}</td>
+                                                      <td style={{ padding: '8px', color: '#9CA3AF', fontSize: '.68rem' }}>{ex.primary_muscle || '—'}</td>
+                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27' }}>{ex.sets}</td>
+                                                      <td style={{ padding: '8px', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27' }}>{ex.reps}</td>
+                                                      <td style={{ padding: '8px', color: '#9CA3AF', fontSize: '.68rem' }}>{ex.rest}</td>
+                                                    </tr>
+                                                  ))}
+                                                </tbody>
+                                              </table>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

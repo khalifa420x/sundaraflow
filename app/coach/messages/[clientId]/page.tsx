@@ -18,6 +18,7 @@ function initials(name: string): string {
 
 export default function CoachConversationPage() {
   const params = useParams();
+  if (!params) return null;
   const clientId = params.clientId as string;
   const router = useRouter();
 

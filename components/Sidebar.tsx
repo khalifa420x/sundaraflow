@@ -82,7 +82,7 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
   const coachLinks = [
     { label: 'Tableau de bord', href: '/coach/home',     icon: '⊞' },
     { label: 'Membres',         href: '/coach/page',     icon: '👥' },
-    { label: 'Programmes',      href: '/coach/page',     icon: '📋' },
+    { label: 'Programmes',      href: '/coach/programmes', icon: '📋' },
     { label: 'Nutrition',       href: '/coach/page',     icon: '🥗' },
     { label: 'Conseils',        href: '/coach/page',     icon: '💡' },
     { label: 'Statistiques',    href: '/coach/page',     icon: '📊' },
