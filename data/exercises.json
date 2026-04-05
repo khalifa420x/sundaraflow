@@ -1,0 +1,342 @@
+[
+  {
+    "id": "ex001",
+    "name": "Pompes classiques",
+    "type": "Force",
+    "level": "Débutant",
+    "primary_muscle": "Pecs",
+    "secondary_muscle": ["Triceps", "Épaules"],
+    "equipment": ["Rien"],
+    "mode": "reps",
+    "value": 12,
+    "instructions": {
+      "setup": "Position de planche, mains légèrement plus larges que les épaules, jambes tendues, pieds joints.",
+      "execution": "Descends lentement jusqu'à ce que la poitrine soit à 2-3 cm du sol, puis remonte en expirant.",
+      "tips": [
+        "Garde le dos droit et les abdos contractés.",
+        "Ne laisse pas les hanches s'affaisser ou se lever.",
+        "Respire bien : inspire en descendant, expire en remontant."
+      ],
+      "common_mistakes": [
+        "Hanches qui tombent ou se lèvent trop.",
+        "Coudes trop écartés.",
+        "Tête qui plonge vers le sol."
+      ]
+    },
+    "video_url": "https://lien.demo.com/pompes.mp4",
+    "difficulty_score": 3,
+    "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Renfo général"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + 1 tranche pain complet + 1 fruit" },
+      { "meal": "Déjeuner", "recipe": "Poulet grillé 150g + quinoa 100g + légumes vapeur" },
+      { "meal": "Dîner", "recipe": "Saumon 120g + patate douce + salade verte" }
+    ]
+  },
+  {
+    "id": "ex002",
+    "name": "Squats avec haltères",
+    "type": "Force",
+    "level": "Intermédiaire",
+    "primary_muscle": "Cuisses",
+    "secondary_muscle": ["Fessiers", "Mollets"],
+    "equipment": ["Haltères"],
+    "mode": "reps",
+    "value": 15,
+    "instructions": {
+      "setup": "Pieds écartés à largeur d'épaules, haltères dans chaque main, bras le long du corps.",
+      "execution": "Descends jusqu'à ce que les cuisses soient parallèles au sol, remonte en poussant avec les talons.",
+      "tips": [
+        "Garde le dos droit et le regard vers l'avant.",
+        "Contracte les fessiers en montant.",
+        "Ne laisse pas les genoux dépasser la pointe des pieds."
+      ],
+      "common_mistakes": [
+        "Dos arrondi.",
+        "Genoux qui s'affaissent vers l'intérieur.",
+        "Talons qui se soulèvent."
+      ]
+    },
+    "video_url": "https://lien.demo.com/squats.mp4",
+    "difficulty_score": 4,
+    "tags": ["Force", "Gym"],
+    "goals": ["Prise de masse", "Renfo général"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Smoothie protéiné + 30g flocons d’avoine" },
+      { "meal": "Déjeuner", "recipe": "Steak 150g + riz complet 100g + brocolis vapeur" },
+      { "meal": "Dîner", "recipe": "Saumon 150g + quinoa 80g + salade mixte" }
+    ]
+  },
+  {
+    "id": "ex003",
+    "name": "Planche abdominale",
+    "type": "Renfo-Core",
+    "level": "Débutant",
+    "primary_muscle": "Abdominaux",
+    "secondary_muscle": ["Épaules", "Dos"],
+    "equipment": ["Tapis"],
+    "mode": "time",
+    "value": 60,
+    "instructions": {
+      "setup": "Place-toi en appui sur les avant-bras et les pieds, corps droit, abdos contractés.",
+      "execution": "Tiens la position sans laisser les hanches s'affaisser ou se lever.",
+      "tips": [
+        "Regarde le sol pour garder le cou aligné.",
+        "Contracte les fessiers pour stabiliser.",
+        "Respire régulièrement."
+      ],
+      "common_mistakes": [
+        "Hanches trop hautes ou trop basses.",
+        "Dos cambré.",
+        "Tête relevée ou baissée."
+      ]
+    },
+    "video_url": "https://lien.demo.com/planche.mp4",
+    "difficulty_score": 2,
+    "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Yaourt grec 200g + fruits rouges + 1 cuillère miel" },
+      { "meal": "Déjeuner", "recipe": "Poulet 120g + patate douce + légumes verts" },
+      { "meal": "Dîner", "recipe": "Poisson blanc 120g + riz complet + légumes vapeur" }
+    ]
+  },
+  {
+    "id": "ex004",
+    "name": "Burpees",
+    "type": "Cardio",
+    "level": "Avancé",
+    "primary_muscle": "Full body",
+    "secondary_muscle": ["Bras", "Cuisses", "Fessiers"],
+    "equipment": ["Rien"],
+    "mode": "reps",
+    "value": 12,
+    "instructions": {
+      "setup": "Debout, pieds écartés à largeur d’épaules.",
+      "execution": "Descends en squat, mains au sol, saute en position de pompe, fais une pompe, remonte et saute verticalement.",
+      "tips": [
+        "Absorbe l’impact à l’atterrissage avec les genoux légèrement fléchis.",
+        "Garde le rythme constant.",
+        "Contracte les abdos pendant tout le mouvement."
+      ],
+      "common_mistakes": [
+        "Dos rond en atterrissant.",
+        "Saut trop faible ou désordonné.",
+        "Pompes incomplètes."
+      ]
+    },
+    "video_url": "https://lien.demo.com/burpees.mp4",
+    "difficulty_score": 5,
+    "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Smoothie banane + protéines + avoine" },
+      { "meal": "Déjeuner", "recipe": "Dinde 150g + pâtes complètes 100g + salade verte" },
+      { "meal": "Dîner", "recipe": "Saumon 150g + légumes vapeur + riz complet 80g" }
+    ]
+  },
+  {
+    "id": "ex005",
+    "name": "Fentes avant",
+    "type": "Force",
+    "level": "Intermédiaire",
+    "primary_muscle": "Cuisses",
+    "secondary_muscle": ["Fessiers"],
+    "equipment": ["Rien"],
+    "mode": "reps",
+    "value": 12,
+    "instructions": {
+      "setup": "Debout, pieds à largeur d’épaules, mains sur les hanches ou haltères facultatives.",
+      "execution": "Avance une jambe, descends jusqu’à ce que le genou arrière touche presque le sol, remonte et alterne jambes.",
+      "tips": [
+        "Genou avant aligné avec la cheville.",
+        "Dos droit, regard vers l’avant.",
+        "Contracte fessiers en remontant."
+      ],
+      "common_mistakes": [
+        "Genou avant qui dépasse les orteils.",
+        "Dos penché en avant.",
+        "Talons qui se soulèvent."
+      ]
+    },
+    "video_url": "https://lien.demo.com/fentes.mp4",
+    "difficulty_score": 3,
+    "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Prise de masse"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + avocat + pain complet" },
+      { "meal": "Déjeuner", "recipe": "Poulet grillé 150g + riz brun 100g + brocolis" },
+      { "meal": "Dîner", "recipe": "Poisson 120g + quinoa + légumes vapeur" }
+    ]
+  },
+  {
+    "id": "ex006",
+    "name": "Mountain climbers",
+    "type": "Cardio",
+    "level": "Intermédiaire",
+    "primary_muscle": "Abdominaux",
+    "secondary_muscle": ["Épaules", "Jambes"],
+    "equipment": ["Rien"],
+    "mode": "time",
+    "value": 45,
+    "instructions": {
+      "setup": "Position de planche haute, mains sous les épaules.",
+      "execution": "Ramène alternativement les genoux vers la poitrine rapidement, rythme soutenu.",
+      "tips": [
+        "Absorbés et fessiers contractés.",
+        "Dos droit, ne cambrer pas.",
+        "Rythme régulier pour cardio efficace."
+      ],
+      "common_mistakes": [
+        "Hanches qui montent ou s’affaissent.",
+        "Bras trop fléchis.",
+        "Ne pas respirer correctement."
+      ]
+    },
+    "video_url": "https://lien.demo.com/mountain.mp4",
+    "difficulty_score": 4,
+    "tags": ["HIIT", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Smoothie protéiné + flocons d’avoine" },
+      { "meal": "Déjeuner", "recipe": "Saumon 150g + riz complet + légumes verts" },
+      { "meal": "Dîner", "recipe": "Poulet 120g + patate douce + salade verte" }
+    ]
+  },
+  {
+    "id": "ex007",
+    "name": "Crunchs abdominaux",
+    "type": "Renfo-Core",
+    "level": "Débutant",
+    "primary_muscle": "Abdominaux",
+    "secondary_muscle": ["Obliques"],
+    "equipment": ["Tapis"],
+    "mode": "reps",
+    "value": 20,
+    "instructions": {
+      "setup": "Allongé sur le dos, genoux fléchis, mains derrière la tête ou croisées sur la poitrine.",
+      "execution": "Remonte le buste en contractant les abdos, redescends doucement sans poser la tête au sol.",
+      "tips": [
+        "Ne tire pas sur la nuque.",
+        "Contracte les abdos tout le long du mouvement.",
+        "Contrôle la descente."
+      ],
+      "common_mistakes": [
+        "Tirer sur la nuque.",
+        "Dos qui se décolle complètement du sol.",
+        "Mouvement trop rapide."
+      ]
+    },
+    "video_url": "https://lien.demo.com/crunch.mp4",
+    "difficulty_score": 2,
+    "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Perte de poids"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Yaourt + fruits rouges + flocons d’avoine" },
+      { "meal": "Déjeuner", "recipe": "Dinde 150g + quinoa + légumes vapeur" },
+      { "meal": "Dîner", "recipe": "Poisson blanc 120g + riz complet + salade verte" }
+    ]
+  },
+  {
+    "id": "ex008",
+    "name": "Sauts sur place",
+    "type": "Cardio",
+    "level": "Débutant",
+    "primary_muscle": "Jambes",
+    "secondary_muscle": ["Fessiers"],
+    "equipment": ["Rien"],
+    "mode": "time",
+    "value": 60,
+    "instructions": {
+      "setup": "Debout, pieds écartés à largeur d’épaules.",
+      "execution": "Saute verticalement, absorbe l’impact à l’atterrissage, en rythme constant.",
+      "tips": [
+        "Genoux légèrement fléchis à l’atterrissage.",
+        "Garder le dos droit.",
+        "Rythme régulier."
+      ],
+      "common_mistakes": [
+        "Saut trop faible ou désordonné.",
+        "Dos qui s’affaisse.",
+        "Absence de rythme."
+      ]
+    },
+    "video_url": "https://lien.demo.com/sauts.mp4",
+    "difficulty_score": 2,
+    "tags": ["Cardio", "Sans matériel"],
+    "goals": ["Perte de poids", "Endurance"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Smoothie + 30g flocons d’avoine" },
+      { "meal": "Déjeuner", "recipe": "Poulet 150g + riz complet + légumes verts" },
+      { "meal": "Dîner", "recipe": "Poisson 120g + quinoa + salade verte" }
+    ]
+  },
+  {
+    "id": "ex009",
+    "name": "Pont fessier",
+    "type": "Force",
+    "level": "Débutant",
+    "primary_muscle": "Fessiers",
+    "secondary_muscle": ["Ischio-jambiers"],
+    "equipment": ["Tapis"],
+    "mode": "reps",
+    "value": 15,
+    "instructions": {
+      "setup": "Allongé sur le dos, genoux fléchis, pieds au sol, bras le long du corps.",
+      "execution": "Contracte les fessiers, soulève le bassin jusqu’à aligner genoux-hanches-épaules, redescends lentement.",
+      "tips": [
+        "Contracte bien les fessiers.",
+        "Ne cambrer pas le dos.",
+        "Monter lentement et descendre contrôlé."
+      ],
+      "common_mistakes": [
+        "Dos cambré.",
+        "Épaules décollent.",
+        "Mouvement trop rapide."
+      ]
+    },
+    "video_url": "https://lien.demo.com/pont.mp4",
+    "difficulty_score": 2,
+    "tags": ["Force", "Sans matériel"],
+    "goals": ["Renfo général", "Fessiers"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Omelette 2 œufs + légumes" },
+      { "meal": "Déjeuner", "recipe": "Poulet 120g + patate douce + brocolis" },
+      { "meal": "Dîner", "recipe": "Poisson 120g + riz complet + salade verte" }
+    ]
+  },
+  {
+    "id": "ex010",
+    "name": "Superman",
+    "type": "Renfo-Core",
+    "level": "Intermédiaire",
+    "primary_muscle": "Dos",
+    "secondary_muscle": ["Fessiers", "Épaules"],
+    "equipment": ["Tapis"],
+    "mode": "time",
+    "value": 45,
+    "instructions": {
+      "setup": "Allongé sur le ventre, bras tendus devant la tête, jambes tendues.",
+      "execution": "Soulève simultanément bras et jambes du sol, contracte le dos et les fessiers, tiens la position.",
+      "tips": [
+        "Respire normalement.",
+        "Ne balance pas le corps.",
+        "Contracte les fessiers pour stabiliser."
+      ],
+      "common_mistakes": [
+        "Lever les jambes trop haut et cambrer le bas du dos.",
+        "Bras qui s’affaissent.",
+        "Bouger le corps de gauche à droite."
+      ]
+    },
+    "video_url": "https://lien.demo.com/superman.mp4",
+    "difficulty_score": 3,
+    "tags": ["Core", "Sans matériel"],
+    "goals": ["Renfo général", "Dos"],
+    "meals": [
+      { "meal": "Petit déjeuner", "recipe": "Yaourt + fruits + flocons d’avoine" },
+      { "meal": "Déjeuner", "recipe": "Dinde 150g + quinoa + légumes verts" },
+      { "meal": "Dîner", "recipe": "Poisson 120g + riz complet + salade verte" }
+    ]
+  }
+]
