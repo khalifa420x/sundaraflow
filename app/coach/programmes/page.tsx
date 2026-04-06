@@ -501,8 +501,8 @@ export default function CoachProgrammes() {
                 </section>
 
                 {/* FILTER PILLS */}
-                <div style={{ padding: 'clamp(14px,2vw,22px) clamp(16px,3vw,32px)', borderBottom: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto' }}>
-                  <div style={{ display: 'flex', gap: 8, minWidth: 'max-content' }}>
+                <div style={{ padding: 'clamp(14px,2vw,22px) clamp(16px,3vw,32px)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {['TOUS', ...GOALS].map(g => (
                       <button key={g} onClick={() => setFilterGoal(g)} style={{ padding: '7px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.6rem', letterSpacing: '.1em', textTransform: 'uppercase' as const, background: filterGoal === g ? '#b22a27' : 'rgba(255,255,255,0.06)', color: filterGoal === g ? '#fff' : '#9CA3AF', transition: 'all .2s', whiteSpace: 'nowrap' as const }}>
                         {g}
@@ -636,7 +636,7 @@ export default function CoachProgrammes() {
                     {/* Résumé card */}
                     <div style={{ ...S.card, marginBottom: 20 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 20, flexWrap: 'wrap' }}>
-                        <div style={{ flex: 1, minWidth: 240 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <span style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase' as const, color: '#b22a27', background: 'rgba(178,42,39,0.1)', padding: '3px 9px', borderRadius: 4, border: '1px solid rgba(178,42,39,0.25)', display: 'inline-block', marginBottom: 12 }}>⚡ IA GÉNÉRÉ</span>
                           <h3 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1rem,2.5vw,1.4rem)', letterSpacing: '-.03em', color: '#e5e2e1', margin: '0 0 10px' }}>{genResult.title}</h3>
                           <p style={{ fontSize: '.78rem', color: '#9CA3AF', lineHeight: 1.7, margin: 0 }}>{genResult.summary}</p>
@@ -700,9 +700,8 @@ export default function CoachProgrammes() {
                                       <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', color: '#e5e2e1', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ex.name}</div>
                                       <div style={{ fontSize: '.63rem', color: '#9CA3AF', marginTop: 2 }}>{ex.primary_muscle}</div>
                                     </div>
-                                    {ex.notes && <div style={{ fontSize: '.6rem', color: '#6B7280', fontStyle: 'italic', maxWidth: 130, textAlign: 'right', lineHeight: 1.4, flexShrink: 0 }}>{ex.notes}</div>}
                                   </div>
-                                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
                                     <div>
                                       <div style={{ ...S.label, marginBottom: 5 }}>Séries</div>
                                       <input type="number" value={ex.sets} min={1} max={10} onChange={e => updateEditedEx(si, ei, { sets: +e.target.value })} style={{ width: 64, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '6px 8px', color: '#e5e2e1', fontSize: '.78rem', outline: 'none', fontFamily: 'Lexend, sans-serif', fontWeight: 700 }} />
@@ -716,6 +715,42 @@ export default function CoachProgrammes() {
                                       <input type="text" value={ex.rest} onChange={e => updateEditedEx(si, ei, { rest: e.target.value })} style={{ width: 72, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '6px 8px', color: '#e5e2e1', fontSize: '.78rem', outline: 'none', fontFamily: 'Lexend, sans-serif' }} />
                                     </div>
                                   </div>
+                                  {/* Notes coach */}
+                                  <div style={{ marginBottom: 8 }}>
+                                    <div style={{ ...S.label, marginBottom: 5 }}>Notes / Conseils coach</div>
+                                    <textarea
+                                      value={ex.notes || ''}
+                                      onChange={e => updateEditedEx(si, ei, { notes: e.target.value })}
+                                      placeholder="Ajouter des instructions ou conseils pour le client…"
+                                      rows={2}
+                                      style={{ width: '100%', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', color: '#e5e2e1', fontSize: '.74rem', outline: 'none', fontFamily: 'Inter, sans-serif', resize: 'vertical' as const, lineHeight: 1.5 }}
+                                    />
+                                  </div>
+                                  {/* Instructions (setup + execution) */}
+                                  {ex.instructions && (
+                                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                      <div style={{ flex: 1, minWidth: 140 }}>
+                                        <div style={{ ...S.label, marginBottom: 5 }}>Mise en place</div>
+                                        <textarea
+                                          value={ex.instructions.setup || ''}
+                                          onChange={e => updateEditedEx(si, ei, { instructions: { ...ex.instructions, setup: e.target.value } })}
+                                          placeholder="Position de départ…"
+                                          rows={2}
+                                          style={{ width: '100%', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', color: '#e5e2e1', fontSize: '.72rem', outline: 'none', fontFamily: 'Inter, sans-serif', resize: 'vertical' as const, lineHeight: 1.5 }}
+                                        />
+                                      </div>
+                                      <div style={{ flex: 1, minWidth: 140 }}>
+                                        <div style={{ ...S.label, marginBottom: 5 }}>Exécution</div>
+                                        <textarea
+                                          value={ex.instructions.execution || ''}
+                                          onChange={e => updateEditedEx(si, ei, { instructions: { ...ex.instructions, execution: e.target.value } })}
+                                          placeholder="Mouvement à réaliser…"
+                                          rows={2}
+                                          style={{ width: '100%', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '8px 10px', color: '#e5e2e1', fontSize: '.72rem', outline: 'none', fontFamily: 'Inter, sans-serif', resize: 'vertical' as const, lineHeight: 1.5 }}
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -806,7 +841,7 @@ export default function CoachProgrammes() {
                             type="text" value={session.label}
                             onClick={e => e.stopPropagation()}
                             onChange={e => { const copy = [...createSessions]; copy[si] = { ...copy[si], label: e.target.value }; setCreateSessions(copy); }}
-                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '5px 10px', color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', outline: 'none', width: 220 }}
+                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, padding: '5px 10px', color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', outline: 'none', width: '100%', maxWidth: 220 }}
                           />
                           <span style={{ fontSize: '.64rem', color: '#6B7280' }}>{session.exercises.filter(e => e.name).length} ex.</span>
                         </div>

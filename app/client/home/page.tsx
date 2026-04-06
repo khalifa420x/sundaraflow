@@ -148,6 +148,9 @@ export default function ClientHome() {
   const [expandedProgSession, setExpandedProgSession] = useState<string | null>(null);
   const [expandedEx, setExpandedEx] = useState<string | null>(null);
 
+  /* Programme acceptance */
+  const [acceptedPrograms, setAcceptedPrograms] = useState<Record<string, boolean>>({});
+
   /* Validation exercices */
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
   const [savingCompletion, setSavingCompletion] = useState<string | null>(null);
@@ -223,12 +226,18 @@ export default function ClientHome() {
         orderBy('assignedAt', 'desc')
       ));
       const progData: any[] = [];
+      const acceptedMap: Record<string, boolean> = {};
       for (const docSnap of aSnap.docs) {
-        const { programId, assignedAt } = docSnap.data();
+        const aData = docSnap.data();
+        const { programId, assignedAt, status } = aData;
         const pDoc = await getDoc(doc(db, 'programs', programId));
-        if (pDoc.exists()) progData.push({ id: docSnap.id, assignedAt, ...pDoc.data() });
+        if (pDoc.exists()) {
+          progData.push({ id: docSnap.id, assignedAt, status: status || 'pending', ...pDoc.data() });
+          if (status === 'accepted' || status === 'active') acceptedMap[docSnap.id] = true;
+        }
       }
       setAssignments(progData);
+      setAcceptedPrograms(acceptedMap);
       await fetchCompletions(u, progData);
 
       /* Find coach */
@@ -332,6 +341,19 @@ export default function ClientHome() {
       fireToast('❌', 'Erreur de synchro', 'Vérifiez votre connexion.');
     }
     setSavingCompletion(null);
+  };
+
+  const acceptProgram = async (assignmentId: string) => {
+    if (!user) return;
+    try {
+      const ref = doc(db, 'program_assignments', assignmentId);
+      await setDoc(ref, { status: 'accepted', acceptedAt: Timestamp.now() }, { merge: true });
+      setAcceptedPrograms(prev => ({ ...prev, [assignmentId]: true }));
+      fireToast('✅', 'Défi accepté !', 'C\'est parti, bon courage !');
+    } catch (err) {
+      console.error('acceptProgram error:', err);
+      fireToast('❌', 'Erreur', 'Impossible d\'accepter le programme.');
+    }
   };
 
   useEffect(() => { if (user) fetchAll(user); }, [user]);
@@ -660,19 +682,36 @@ export default function ClientHome() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {displayPrograms.map((prog: any) => {
                       const isOpen = expandedProgram === prog.id;
+                      const isAccepted = !!acceptedPrograms[prog.id] || prog.status === 'accepted' || prog.status === 'active';
                       const startDateStr = prog.startDate
                         ? new Date(prog.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
                         : prog.assignedAt ? new Date((prog.assignedAt.toDate ? prog.assignedAt.toDate() : prog.assignedAt)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
                       const days = daysSince(prog.assignedAt);
                       const totalEx = (prog.sessions || []).reduce((a: number, s: any) => a + (s.exercises?.length || 0), 0);
                       return (
-                        <div key={prog.id} style={{ background: '#1c1b1b', borderRadius: 14, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
+                        <div key={prog.id} style={{ background: '#1c1b1b', borderRadius: 14, border: `1px solid ${isAccepted ? 'rgba(255,255,255,0.06)' : 'rgba(178,42,39,0.3)'}`, overflow: 'hidden' }}>
+                          {/* Accepter le défi banner */}
+                          {!isAccepted && (
+                            <div style={{ background: 'linear-gradient(135deg,rgba(137,7,14,0.15),rgba(178,42,39,0.08))', borderBottom: '1px solid rgba(178,42,39,0.2)', padding: '16px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                              <div>
+                                <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.82rem', color: '#e5e2e1', letterSpacing: '-.02em' }}>Nouveau programme assigné !</div>
+                                <div style={{ fontSize: '.64rem', color: '#9CA3AF', marginTop: 3 }}>Votre coach vous a préparé un programme. Prêt à relever le défi ?</div>
+                              </div>
+                              <button
+                                onClick={() => acceptProgram(prog.id)}
+                                style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.06em', textTransform: 'uppercase' as const, cursor: 'pointer', transition: 'all .2s', whiteSpace: 'nowrap' as const }}
+                              >
+                                ACCEPTER LE DÉFI
+                              </button>
+                            </div>
+                          )}
+
                           {/* Card header */}
                           <div style={{ padding: '20px 22px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: 14 }}>
-                              <div style={{ flex: 1, minWidth: 200 }}>
+                              <div style={{ flex: 1, minWidth: 0 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                                  <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: '#6B7280', background: 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>LECTURE SEULE</span>
+                                  <span style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase' as const, color: isAccepted ? '#16a34a' : '#6B7280', background: isAccepted ? 'rgba(22,163,74,0.1)' : 'rgba(255,255,255,0.05)', padding: '3px 8px', borderRadius: 4 }}>{isAccepted ? '● EN COURS' : 'EN ATTENTE'}</span>
                                 </div>
                                 <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2.5vw,1.1rem)', color: '#e5e2e1', letterSpacing: '-.03em', marginBottom: 6 }}>{prog.title}</div>
                                 <div style={{ fontSize: '.64rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>
@@ -742,18 +781,18 @@ export default function ClientHome() {
                                   <div style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.16em', textTransform: 'uppercase' as const, color: '#9CA3AF', marginBottom: 16 }}>📅 Sessions d'entraînement</div>
 
                                   {/* ── BARRE DE PROGRESSION SÉANCES ── */}
-                                  <div style={{ overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', minWidth: 'max-content' }}>
+                                  <div style={{ marginBottom: 20, paddingBottom: 4 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
                                       {prog.sessions.map((session: any, si: number) => {
                                         const status = si === 0 ? 'done' : si === 1 ? 'current' : 'todo';
                                         return (
                                           <div key={si} style={{ display: 'flex', alignItems: 'center' }}>
-                                            {si > 0 && <div style={{ width: 18, height: 2, background: si === 1 ? '#b22a27' : 'rgba(255,255,255,0.1)', flexShrink: 0 }} />}
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                                              <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: status === 'done' ? '#b22a27' : 'transparent', border: status === 'done' ? 'none' : status === 'current' ? '2px solid #b22a27' : '2px solid rgba(255,255,255,0.18)', fontSize: '.72rem', color: status === 'done' ? '#fff' : status === 'current' ? '#b22a27' : '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 900, transition: 'all .2s' }}>
+                                            {si > 0 && <div style={{ width: 12, height: 2, background: si === 1 ? '#b22a27' : 'rgba(255,255,255,0.1)', flexShrink: 0 }} />}
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                                              <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: status === 'done' ? '#b22a27' : 'transparent', border: status === 'done' ? 'none' : status === 'current' ? '2px solid #b22a27' : '2px solid rgba(255,255,255,0.18)', fontSize: '.62rem', color: status === 'done' ? '#fff' : status === 'current' ? '#b22a27' : '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 900, transition: 'all .2s' }}>
                                                 {status === 'done' ? '✓' : status === 'current' ? '→' : String(si + 1)}
                                               </div>
-                                              <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.06em', color: status === 'done' ? '#b22a27' : status === 'current' ? '#e5e2e1' : '#6B7280', textAlign: 'center', maxWidth: 44, lineHeight: 1.2 }}>S{si + 1}</div>
+                                              <div style={{ fontSize: '.48rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.06em', color: status === 'done' ? '#b22a27' : status === 'current' ? '#e5e2e1' : '#6B7280', textAlign: 'center', lineHeight: 1.2 }}>S{si + 1}</div>
                                             </div>
                                           </div>
                                         );
