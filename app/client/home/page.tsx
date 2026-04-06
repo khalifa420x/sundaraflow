@@ -345,14 +345,20 @@ export default function ClientHome() {
 
   const acceptProgram = async (assignmentId: string) => {
     if (!user) return;
+    // Optimistic UI
+    setAcceptedPrograms(prev => ({ ...prev, [assignmentId]: true }));
     try {
+      console.log('[acceptProgram] writing status=accepted for:', assignmentId);
       const ref = doc(db, 'program_assignments', assignmentId);
       await setDoc(ref, { status: 'accepted', acceptedAt: Timestamp.now() }, { merge: true });
-      setAcceptedPrograms(prev => ({ ...prev, [assignmentId]: true }));
+      // Also update local assignments state so status reflects everywhere
+      setAssignments(prev => prev.map((a: any) => a.id === assignmentId ? { ...a, status: 'accepted' } : a));
       fireToast('✅', 'Défi accepté !', 'C\'est parti, bon courage !');
     } catch (err) {
-      console.error('acceptProgram error:', err);
-      fireToast('❌', 'Erreur', 'Impossible d\'accepter le programme.');
+      console.error('[acceptProgram] error:', err);
+      // Rollback optimistic
+      setAcceptedPrograms(prev => { const n = { ...prev }; delete n[assignmentId]; return n; });
+      fireToast('❌', 'Erreur réseau', 'Impossible d\'accepter le programme. Réessayez.');
     }
   };
 
@@ -887,11 +893,11 @@ export default function ClientHome() {
                                                     {exIsOpen && (
                                                       <div style={{ background: '#1c1b1b', border: '1px solid rgba(178,42,39,0.25)', borderTop: 'none', borderRadius: '0 0 10px 10px', overflow: 'hidden' }}>
                                                         {/* Photo */}
-                                                        <div style={{ position: 'relative', overflow: 'hidden' }}>
+                                                        <div style={{ position: 'relative', overflow: 'hidden', background: '#111' }}>
                                                           <img
                                                             src={getMusclePhoto(ex.primary_muscle || ex.muscle || '')}
-                                                            alt=""
-                                                            style={{ width: '100%', height: 90, objectFit: 'cover', filter: 'brightness(0.28)', display: 'block' }}
+                                                            alt={ex.name || ''}
+                                                            style={{ width: '100%', height: 'auto', minHeight: 70, maxHeight: 120, objectFit: 'contain', filter: 'brightness(0.28)', display: 'block' }}
                                                           />
                                                           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1c1b1b 0%, transparent 70%)' }} />
                                                           <div style={{ position: 'absolute', bottom: 10, left: 14, fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '0.9rem', color: '#fff' }}>{ex.name}</div>
