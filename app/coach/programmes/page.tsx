@@ -362,7 +362,7 @@ export default function CoachProgrammes() {
         programId: assignProgram.id,
         programTitle: assignProgram.title,
         startDate: assignStartDate,
-        status: 'active',
+        status: 'pending',
         assignedAt: Timestamp.now(),
       });
       fireToast('✅', 'Assigné', `${assignProgram.title} → ${clientDoc?.name || 'Client'}`);
@@ -442,25 +442,24 @@ export default function CoachProgrammes() {
         });
       };
       const unsub = onSnapshot(
-        query(collectionGroup(db, 'exercises'), where('coachId', '==', u.uid)),
+        query(collection(db, 'exercise_completions'), where('coachId', '==', u.uid)),
         (snap) => {
           const compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
           snap.docs.forEach(d => {
             const data = d.data();
-            if (!data.completed) return;
-            const uid = (data.clientId || data.userId) as string;
+            const uid = data.clientId as string;
             if (!uid) return;
             const at: Date = data.completedAt?.toDate?.() ?? new Date(0);
             if (!compByUser[uid]) compByUser[uid] = { count: 0, lastAt: null };
             compByUser[uid].count += 1;
             if (!compByUser[uid].lastAt || at > compByUser[uid].lastAt!) compByUser[uid].lastAt = at;
           });
-          console.log('[onSnapshot:tracking] completion docs:', snap.size, '→ freshClients:', freshClients.length);
+          console.log('[onSnapshot:exercise_completions] docs:', snap.size, '→ freshClients:', freshClients.length);
           setTrackingData(buildEntries(compByUser));
           setTrackingLoading(false);
         },
         (err) => {
-          console.error('[onSnapshot:tracking] error:', err);
+          console.error('[onSnapshot:exercise_completions] error:', err);
           setTrackingData(buildEntries({}));
           setTrackingLoading(false);
         }

@@ -238,7 +238,7 @@ export default function ClientHome() {
         const { programId, assignedAt, status } = aData;
         const pDoc = await getDoc(doc(db, 'programs', programId));
         if (pDoc.exists()) {
-          progData.push({ id: docSnap.id, assignedAt, status: status || 'pending', ...pDoc.data() });
+          progData.push({ id: docSnap.id, assignedAt, status: status || 'pending', programId, ...pDoc.data() });
           if (status === 'active') acceptedMap[docSnap.id] = true;
         }
       }
@@ -303,7 +303,7 @@ export default function ClientHome() {
     completionUnsubRef.current = unsub;
   };
 
-  const toggleExercise = async (assignmentId: string, si: number, ei: number, exName?: string, exReps?: string) => {
+  const toggleExercise = async (assignmentId: string, si: number, ei: number, exName?: string, exReps?: string, exSets?: number) => {
     if (!user) return;
     const key = `${assignmentId}_${si}_${ei}`;
     if (savingCompletion === key) return;
@@ -316,6 +316,9 @@ export default function ClientHome() {
     });
     setSavingCompletion(key);
     const ref = doc(db, 'program_assignments', assignmentId, 'sessions', `s${si}`, 'exercises', `e${ei}`);
+    // Flat doc for coach dashboard — deterministic ID = no duplicates
+    const prog = assignments.find((a: any) => a.id === assignmentId);
+    const completionRef = doc(db, 'exercise_completions', `${assignmentId}_${si}_${ei}`);
     try {
       const payload = {
         completed: !wasDone,
@@ -331,6 +334,22 @@ export default function ClientHome() {
       };
       console.log('[toggleExercise]', wasDone ? 'uncomplete' : 'complete', ref.path, { clientId: user.uid, coachId });
       await setDoc(ref, payload, { merge: true });
+      // Keep exercise_completions in sync for coach dashboard
+      if (!wasDone) {
+        await setDoc(completionRef, {
+          clientId: user.uid,
+          coachId,
+          programId: prog?.programId || '',
+          assignmentId,
+          sessionIndex: si,
+          exerciseName: exName || '',
+          completedAt: serverTimestamp(),
+          sets: exSets ?? 0,
+          reps: exReps || '',
+        });
+      } else {
+        await deleteDoc(completionRef);
+      }
       if (!wasDone) fireToast('✅', 'Exercice validé', '');
     } catch (err) {
       console.error('[toggleExercise] error:', err);
@@ -359,9 +378,9 @@ export default function ClientHome() {
         return;
       }
       await updateDoc(ref, { status: 'active', acceptedAt: serverTimestamp() });
-      setAssignments(prev => prev.map((a: any) => a.id === assignmentId ? { ...a, status: 'active' } : a));
       console.log('[acceptProgram] status set to active:', assignmentId);
       fireToast('✅', 'Défi accepté !', 'C\'est parti, bon courage !');
+      if (user) await fetchAll(user); // refetch pour mettre à jour status et sessions
     } catch (err) {
       console.error('[acceptProgram] error:', err);
       setAcceptedPrograms(prev => { const n = { ...prev }; delete n[assignmentId]; return n; });
@@ -769,8 +788,8 @@ export default function ClientHome() {
                               );
                             })()}
 
-                            {/* Toggle button */}
-                            {(prog.sessions?.length > 0 || prog.weeklyMealPlan?.length > 0) && (
+                            {/* Toggle button — uniquement si programme accepté */}
+                            {isAccepted && (prog.sessions?.length > 0 || prog.weeklyMealPlan?.length > 0) && (
                               <button
                                 onClick={() => { setExpandedProgram(isOpen ? null : prog.id); setExpandedProgSession(null); }}
                                 style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, padding: '7px 14px', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem', letterSpacing: '.08em', textTransform: 'uppercase' as const, color: '#9CA3AF', transition: 'all .15s' }}
@@ -897,7 +916,7 @@ export default function ClientHome() {
                                                       {/* Right: validate + expand arrow */}
                                                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                                         <button
-                                                          onClick={e => { e.stopPropagation(); toggleExercise(prog.id, si, ei, ex.name, String(ex.reps ?? '')); }}
+                                                          onClick={e => { e.stopPropagation(); toggleExercise(prog.id, si, ei, ex.name, String(ex.reps ?? ''), ex.sets ?? 0); }}
                                                           disabled={isSaving}
                                                           style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${isDone ? '#16a34a' : 'rgba(178,42,39,0.5)'}`, background: isDone ? 'rgba(22,163,74,0.15)' : 'rgba(178,42,39,0.1)', cursor: isSaving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .15s', opacity: isSaving ? 0.6 : 1 }}
                                                           title={isDone ? 'Marquer non fait' : 'Valider'}
