@@ -75,6 +75,7 @@ export function subscribeToMessages(
   coachId: string,
   clientId: string,
   callback: (messages: any[]) => void,
+  onError?: (err: Error) => void,
 ): () => void {
   const convId = getConversationId(coachId, clientId);
   const q = query(
@@ -85,6 +86,9 @@ export function subscribeToMessages(
   return onSnapshot(
     q,
     (snap) => callback(snap.docs.map((d) => ({ id: d.id, ...d.data() }))),
-    (err) => console.error('subscribeToMessages error:', err),
+    (err) => {
+      console.error('subscribeToMessages error:', err);
+      onError?.(err);
+    },
   );
 }

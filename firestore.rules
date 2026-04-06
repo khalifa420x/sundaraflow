@@ -48,15 +48,29 @@ service cloud.firestore {
 
       // ─── Sessions ───
       match /sessions/{sessionId} {
-        allow read, write: if isAuth() &&
+        allow read: if isAuth() &&
           (request.auth.uid == resource.data.clientId ||
            request.auth.uid == resource.data.coachId);
+        // CREATE: resource.data does not exist yet → use request.resource.data
+        allow create: if isAuth() &&
+          (request.resource.data.clientId == request.auth.uid ||
+           request.resource.data.coachId == request.auth.uid);
+        allow update, delete: if isAuth() &&
+          (resource.data.clientId == request.auth.uid ||
+           resource.data.coachId == request.auth.uid);
 
         // ─── Exercises ───
         match /exercises/{exerciseId} {
-          allow read, write: if isAuth() &&
+          allow read: if isAuth() &&
             (request.auth.uid == resource.data.clientId ||
              request.auth.uid == resource.data.coachId);
+          // CREATE: resource.data does not exist yet → use request.resource.data
+          allow create: if isAuth() &&
+            (request.resource.data.clientId == request.auth.uid ||
+             request.resource.data.coachId == request.auth.uid);
+          allow update, delete: if isAuth() &&
+            (resource.data.clientId == request.auth.uid ||
+             resource.data.coachId == request.auth.uid);
         }
       }
     }

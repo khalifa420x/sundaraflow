@@ -73,11 +73,19 @@ export default function CoachConversationPage() {
     if (!uid || !clientId) return;
     const coachId = coachIdRef.current;
 
-    const unsub = subscribeToMessages(coachId, clientId, (msgs) => {
-      setMessages(msgs);
-      setLoading(false);
-      markAsRead(coachId, clientId, 'coach');
-    });
+    const unsub = subscribeToMessages(
+      coachId,
+      clientId,
+      (msgs) => {
+        setMessages(msgs);
+        setLoading(false);
+        markAsRead(coachId, clientId, 'coach');
+      },
+      (err) => {
+        console.error('Messages error:', err);
+        setLoading(false);
+      },
+    );
 
     return () => unsub();
   }, [uid, clientId]);

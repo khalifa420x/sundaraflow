@@ -77,11 +77,19 @@ export default function ClientMessagesPage() {
   useEffect(() => {
     if (!uid || !coachId) return;
 
-    const unsub = subscribeToMessages(coachId, uid, (msgs) => {
-      setMessages(msgs);
-      setLoading(false);
-      markAsRead(coachId, uid, 'client');
-    });
+    const unsub = subscribeToMessages(
+      coachId,
+      uid,
+      (msgs) => {
+        setMessages(msgs);
+        setLoading(false);
+        markAsRead(coachId, uid, 'client');
+      },
+      (err) => {
+        console.error('Messages error:', err);
+        setLoading(false);
+      },
+    );
 
     return () => unsub();
   }, [uid, coachId]);
