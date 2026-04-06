@@ -2,114 +2,109 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ─── Helpers ───
     function isAuth() { return request.auth != null; }
     function isOwner(uid) { return isAuth() && request.auth.uid == uid; }
 
-    // Users
+    // ─── Users ───
     match /users/{userId} {
       allow read: if isAuth();
       allow write: if isOwner(userId);
     }
 
-    // Clients
+    // ─── Clients ───
     match /clients/{clientId} {
       allow read: if isAuth();
       allow create: if isAuth();
-      allow update, delete: if isAuth() && (
-        resource.data.coachId == request.auth.uid ||
-        resource.data.clientUserId == request.auth.uid
-      );
+      allow update, delete: if isAuth() &&
+        (resource.data.coachId == request.auth.uid ||
+         resource.data.clientUserId == request.auth.uid);
     }
 
-    // Programs
+    // ─── Programs ───
     match /programs/{programId} {
       allow read: if isAuth();
       allow create: if isAuth();
-      allow update, delete: if isAuth() && resource.data.coachId == request.auth.uid;
+      allow update, delete: if isAuth() &&
+        resource.data.coachId == request.auth.uid;
     }
 
-    // Program Assignments
+    // ─── Program Assignments ───
     match /program_assignments/{assignmentId} {
-      allow read: if isAuth();
-      allow create: if isAuth();
-      // Coach can fully update; client can only update 'status'
-      allow update: if isAuth() && (
-        resource.data.coachId == request.auth.uid ||
-        (request.auth.uid == resource.data.clientId &&
-         request.resource.data.keys().hasOnly(['status']))
-      );
-      allow delete: if isAuth() && resource.data.coachId == request.auth.uid;
 
-      // Nested Sessions
+      allow read: if isAuth() &&
+        (request.auth.uid == resource.data.clientId ||
+         request.auth.uid == resource.data.coachId);
+
+      allow create: if isAuth() &&
+        request.resource.data.coachId == request.auth.uid;
+
+      allow update: if isAuth() &&
+        (request.auth.uid == resource.data.coachId ||
+         request.auth.uid == resource.data.clientId);
+
+      allow delete: if isAuth() &&
+        request.auth.uid == resource.data.coachId;
+
+      // ─── Sessions ───
       match /sessions/{sessionId} {
-        allow read: if isAuth() && (
-          request.auth.uid == resource.data.clientId ||
-          request.auth.uid == resource.data.coachId
-        );
-        allow write: if isAuth() && (
-          request.auth.uid == resource.data.clientId ||
-          request.auth.uid == resource.data.coachId
-        );
+        allow read, write: if isAuth() &&
+          (request.auth.uid == resource.data.clientId ||
+           request.auth.uid == resource.data.coachId);
 
-        // Nested Exercises
+        // ─── Exercises ───
         match /exercises/{exerciseId} {
-          allow read: if isAuth() && (
-            request.auth.uid == resource.data.clientId ||
-            request.auth.uid == resource.data.coachId
-          );
-          allow write: if isAuth() && (
-            request.auth.uid == resource.data.clientId ||
-            request.auth.uid == resource.data.coachId
-          );
+          allow read, write: if isAuth() &&
+            (request.auth.uid == resource.data.clientId ||
+             request.auth.uid == resource.data.coachId);
         }
       }
     }
 
-    // Nutrition Assignments
+    // ─── Nutrition Assignments ───
     match /nutrition_assignments/{docId} {
       allow read: if isAuth();
       allow create: if isAuth();
-      allow update, delete: if isAuth() && (
-        resource.data.coachId == request.auth.uid ||
-        resource.data.clientId == request.auth.uid
-      );
+      allow update, delete: if isAuth() &&
+        (resource.data.coachId == request.auth.uid ||
+         resource.data.clientId == request.auth.uid);
     }
 
-    // Coach Tips
+    // ─── Coach Tips ───
     match /coach_tips/{tipId} {
       allow read: if isAuth();
-      allow write: if isAuth() && request.resource.data.coachId == request.auth.uid;
+      allow write: if isAuth() &&
+        request.resource.data.coachId == request.auth.uid;
     }
 
-    // Coach Meals
+    // ─── Coach Meals ───
     match /coach_meals/{mealId} {
       allow read: if isAuth();
-      allow write: if isAuth() && request.resource.data.coachId == request.auth.uid;
+      allow write: if isAuth() &&
+        request.resource.data.coachId == request.auth.uid;
     }
 
-    // Conversations
+    // ─── Conversations & Messages ───
     match /conversations/{conversationId} {
-      allow read, write: if isAuth() && (
-        resource.data.coachId == request.auth.uid ||
-        resource.data.clientId == request.auth.uid
-      );
+      allow read, write: if isAuth() &&
+        (request.auth.uid == resource.data.clientId ||
+         request.auth.uid == resource.data.coachId);
       allow create: if isAuth();
 
       match /messages/{messageId} {
-        allow read, write: if isAuth() && (
-          resource.data.coachId == request.auth.uid ||
-          resource.data.clientId == request.auth.uid
-        );
+        allow read, write: if isAuth() &&
+          (request.auth.uid == resource.data.clientId ||
+           request.auth.uid == resource.data.coachId);
+        allow create: if isAuth();
       }
     }
 
-    // Legacy flat exercise_completions
+    // ─── Legacy Exercise Completions ───
     match /exercise_completions/{docId} {
       allow read: if isAuth();
-      allow write: if isAuth() && (
-        request.resource.data.userId == request.auth.uid ||
-        resource.data.userId == request.auth.uid
-      );
+      allow write: if isAuth() &&
+        (request.resource.data.userId == request.auth.uid ||
+         resource.data.userId == request.auth.uid);
     }
   }
 }

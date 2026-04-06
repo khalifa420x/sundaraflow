@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { db, auth } from '@/lib/firebase';
 import {
-  collection, collectionGroup, query, where, getDocs, addDoc, deleteDoc,
+  collection, collectionGroup, query, where, getDocs, onSnapshot, addDoc, deleteDoc,
   doc, getDoc, Timestamp,
 } from 'firebase/firestore';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -206,6 +206,8 @@ export default function CoachProgrammes() {
     lastAt: Date | null;
   }[]>([]);
   const [trackingLoading, setTrackingLoading] = useState(false);
+  const trackingUnsubRef = useRef<(() => void) | null>(null);
+  const totalsByClientRef = useRef<Record<string, { exercises: number; sessions: number }>>({});
 
   /* Mount */
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
@@ -268,6 +270,11 @@ export default function CoachProgrammes() {
   }, [user]);
 
   useEffect(() => { if (user) { fetchPrograms(user); fetchClients(user); } }, [user]);
+
+  /* Cleanup tracking listener on unmount */
+  useEffect(() => {
+    return () => { if (trackingUnsubRef.current) trackingUnsubRef.current(); };
+  }, []);
 
   /* ── Handlers ── */
   const handleGenerate = () => {
@@ -378,101 +385,92 @@ export default function CoachProgrammes() {
   const fetchTracking = async (u = user) => {
     if (!u) return;
     setTrackingLoading(true);
+    if (trackingUnsubRef.current) trackingUnsubRef.current();
     try {
-      // 1. Get all active assignments for this coach → build total exercise/session counts per client
-      const aSnap = await getDocs(query(
-        collection(db, 'program_assignments'),
-        where('coachId', '==', u.uid)
-      ));
+      // Step 0: fresh client list to avoid stale closure
+      const cSnap = await getDocs(query(collection(db, 'clients'), where('coachId', '==', u.uid)));
+      const freshClients: { docId: string; clientUserId: string; name: string }[] = [];
+      for (const d of cSnap.docs) {
+        const cd = d.data();
+        let cName = cd.name || '';
+        if (!cName && cd.clientUserId) {
+          try {
+            const uDoc = await getDoc(doc(db, 'users', cd.clientUserId));
+            if (uDoc.exists()) cName = uDoc.data().name || uDoc.data().email || 'Client';
+          } catch {}
+        }
+        freshClients.push({ docId: d.id, clientUserId: cd.clientUserId || '', name: cName || 'Client' });
+      }
+      console.log('[fetchTracking] freshClients:', freshClients.length);
+      // Step 1: one-time fetch of totals
+      const aSnap = await getDocs(query(collection(db, 'program_assignments'), where('coachId', '==', u.uid)));
       console.log('[fetchTracking] assignments found:', aSnap.size);
-
-      const totalsByClient: Record<string, { exercises: number; sessions: number; programTitles: string[] }> = {};
+      const totalsByClient: Record<string, { exercises: number; sessions: number }> = {};
       let totalExFetched = 0;
-
       for (const aDoc of aSnap.docs) {
         const aData = aDoc.data();
         const clientId = aData.clientId as string | undefined;
         const programId = aData.programId as string | undefined;
         const status = aData.status as string | undefined;
-
-        if (!clientId || !programId) {
-          console.warn('[fetchTracking] skip assignment — missing clientId or programId:', aDoc.id);
-          continue;
-        }
-        // Only count active / accepted assignments (skip revoked)
+        if (!clientId || !programId) continue;
         if (status === 'revoked' || status === 'cancelled') continue;
-
         try {
           const pDoc = await getDoc(doc(db, 'programs', programId));
-          if (!pDoc.exists()) {
-            console.warn('[fetchTracking] program not found:', programId);
-            continue;
-          }
-          const pData = pDoc.data();
-          const sessions: any[] = Array.isArray(pData.sessions) ? pData.sessions : [];
-          if (!totalsByClient[clientId]) totalsByClient[clientId] = { exercises: 0, sessions: 0, programTitles: [] };
-          totalsByClient[clientId].programTitles.push(pData.title || 'Sans titre');
-
+          if (!pDoc.exists()) continue;
+          const sessions: any[] = Array.isArray(pDoc.data().sessions) ? pDoc.data().sessions : [];
+          if (!totalsByClient[clientId]) totalsByClient[clientId] = { exercises: 0, sessions: 0 };
           sessions.forEach((s: any) => {
             if (!s) return;
             totalsByClient[clientId].sessions += 1;
-            const exCount = Array.isArray(s.exercises) ? s.exercises.length : 0;
-            totalsByClient[clientId].exercises += exCount;
-            totalExFetched += exCount;
+            totalsByClient[clientId].exercises += Array.isArray(s.exercises) ? s.exercises.length : 0;
+            totalExFetched += Array.isArray(s.exercises) ? s.exercises.length : 0;
           });
         } catch (innerErr) {
           console.error('[fetchTracking] error fetching program:', programId, innerErr);
         }
       }
-      console.log('[fetchTracking] total exercises fetched across all clients:', totalExFetched);
-
-      // 2. Get all exercise completions for this coach via collectionGroup
-      let compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
-      try {
-        const compSnap = await getDocs(query(
-          collectionGroup(db, 'exercises'),
-          where('coachId', '==', u.uid)
-        ));
-        console.log('[fetchTracking] completion docs found:', compSnap.size);
-
-        compSnap.docs.forEach(d => {
-          const data = d.data();
-          if (!data.done) return;
-          const uid = data.userId as string;
-          if (!uid) return;
-          const at: Date = data.completedAt?.toDate?.() ?? new Date(0);
-          if (!compByUser[uid]) compByUser[uid] = { count: 0, lastAt: null };
-          compByUser[uid].count += 1;
-          if (!compByUser[uid].lastAt || at > compByUser[uid].lastAt!) compByUser[uid].lastAt = at;
+      console.log('[fetchTracking] total exercises across all clients:', totalExFetched);
+      totalsByClientRef.current = totalsByClient;
+      // Step 2: real-time completions listener
+      const buildEntries = (compByUser: Record<string, { count: number; lastAt: Date | null }>) => {
+        return freshClients.map(c => {
+          const uid = c.clientUserId || '';
+          const totals = totalsByClientRef.current[uid] || { exercises: 0, sessions: 0 };
+          const comp = compByUser[uid] || { count: 0, lastAt: null };
+          const completionRate = totals.exercises > 0 ? Math.min(100, Math.round((comp.count / totals.exercises) * 100)) : 0;
+          return { name: c.name, uid, completed: comp.count, totalExercises: totals.exercises, totalSessions: totals.sessions, completionRate, lastAt: comp.lastAt };
         });
-      } catch (cgErr) {
-        // collectionGroup may fail if index missing — fall back gracefully
-        console.warn('[fetchTracking] collectionGroup query failed (index may be missing):', cgErr);
-      }
-
-      // 3. Build per-client entries
-      const entries = clients.map(c => {
-        const uid = c.clientUserId || '';
-        const totals = totalsByClient[uid] || { exercises: 0, sessions: 0, programTitles: [] };
-        const comp = compByUser[uid] || { count: 0, lastAt: null };
-        const completionRate = totals.exercises > 0 ? Math.min(100, Math.round((comp.count / totals.exercises) * 100)) : 0;
-        return {
-          name: c.name,
-          uid,
-          completed: comp.count,
-          totalExercises: totals.exercises,
-          totalSessions: totals.sessions,
-          completionRate,
-          lastAt: comp.lastAt,
-        };
-      });
-      console.log('[fetchTracking] tracking entries built:', entries.length);
-      setTrackingData(entries);
+      };
+      const unsub = onSnapshot(
+        query(collectionGroup(db, 'exercises'), where('coachId', '==', u.uid)),
+        (snap) => {
+          const compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
+          snap.docs.forEach(d => {
+            const data = d.data();
+            if (!data.completed) return;
+            const uid = (data.clientId || data.userId) as string;
+            if (!uid) return;
+            const at: Date = data.completedAt?.toDate?.() ?? new Date(0);
+            if (!compByUser[uid]) compByUser[uid] = { count: 0, lastAt: null };
+            compByUser[uid].count += 1;
+            if (!compByUser[uid].lastAt || at > compByUser[uid].lastAt!) compByUser[uid].lastAt = at;
+          });
+          console.log('[onSnapshot:tracking] completion docs:', snap.size, '→ freshClients:', freshClients.length);
+          setTrackingData(buildEntries(compByUser));
+          setTrackingLoading(false);
+        },
+        (err) => {
+          console.error('[onSnapshot:tracking] error:', err);
+          setTrackingData(buildEntries({}));
+          setTrackingLoading(false);
+        }
+      );
+      trackingUnsubRef.current = unsub;
     } catch (err) {
       console.error('[fetchTracking] fatal error:', err);
       fireToast('❌', 'Erreur', 'Impossible de charger le suivi clients.');
+      setTrackingLoading(false);
     }
-    setTrackingLoading(false);
   };
 
   const filteredPrograms = filterGoal === 'TOUS' ? programs : programs.filter(p => p.goal === filterGoal);

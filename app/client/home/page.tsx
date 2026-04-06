@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
 import {
-  collection, query, where, getDocs,
-  doc, getDoc, setDoc, deleteDoc,
-  orderBy, limit, Timestamp,
+  collection, collectionGroup, query, where, getDocs, onSnapshot,
+  doc, getDoc, setDoc, updateDoc, deleteDoc,
+  orderBy, limit, Timestamp, serverTimestamp,
 } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -154,6 +154,7 @@ export default function ClientHome() {
   /* Validation exercices */
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
   const [savingCompletion, setSavingCompletion] = useState<string | null>(null);
+  const completionUnsubRef = useRef<(() => void) | null>(null);
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -198,6 +199,11 @@ export default function ClientHome() {
     return () => clearTimeout(t);
   }, []);
 
+  /* Cleanup real-time listener on unmount */
+  useEffect(() => {
+    return () => { if (completionUnsubRef.current) completionUnsubRef.current(); };
+  }, []);
+
   /* Auth + name */
   useEffect(() => {
     const unsub = auth.onAuthStateChanged(async (u) => {
@@ -233,12 +239,12 @@ export default function ClientHome() {
         const pDoc = await getDoc(doc(db, 'programs', programId));
         if (pDoc.exists()) {
           progData.push({ id: docSnap.id, assignedAt, status: status || 'pending', ...pDoc.data() });
-          if (status === 'accepted' || status === 'active') acceptedMap[docSnap.id] = true;
+          if (status === 'active') acceptedMap[docSnap.id] = true;
         }
       }
       setAssignments(progData);
       setAcceptedPrograms(acceptedMap);
-      await fetchCompletions(u, progData);
+      setupCompletionListener(u);
 
       /* Find coach */
       const clientSnap = await getDocs(query(collection(db, 'clients'), where('clientUserId', '==', u.uid)));
@@ -273,65 +279,61 @@ export default function ClientHome() {
     setLoading(false);
   };
 
-  const fetchCompletions = async (u = user, progData?: any[]) => {
-    if (!u) return;
-    const progsToCheck = progData ?? assignments;
-    try {
-      const map: Record<string, boolean> = {};
-      for (const prog of progsToCheck) {
-        for (let si = 0; si < (prog.sessions?.length || 0); si++) {
-          const session = prog.sessions[si];
-          if (!session?.exercises?.length) continue;
-          const exSnap = await getDocs(
-            collection(db, 'users', u.uid, 'assignments', prog.id, 'sessions', `s${si}`, 'exercises')
-          );
-          exSnap.docs.forEach(d => {
-            const data = d.data();
-            if (data.done) {
-              const ei = parseInt(d.id.replace('e', ''));
-              if (!isNaN(ei)) map[`${prog.id}_${si}_${ei}`] = true;
-            }
-          });
-        }
-      }
-      setCompletions(map);
-    } catch (err) {
-      console.error('fetchCompletions error:', err);
-    }
+  /** Real-time listener for exercise completions (single source of truth) */
+  const setupCompletionListener = (u: import('firebase/auth').User) => {
+    if (completionUnsubRef.current) completionUnsubRef.current();
+    const q = query(
+      collectionGroup(db, 'exercises'),
+      where('clientId', '==', u.uid)
+    );
+    const unsub = onSnapshot(q,
+      (snap) => {
+        const map: Record<string, boolean> = {};
+        snap.docs.forEach(d => {
+          const data = d.data();
+          if (data.completed && data.assignmentId != null && data.si != null && data.ei != null) {
+            map[`${data.assignmentId}_${data.si}_${data.ei}`] = true;
+          }
+        });
+        console.log('[onSnapshot:completions] synced', Object.keys(map).length, 'completions');
+        setCompletions(map);
+      },
+      (err) => console.error('[onSnapshot:completions] error:', err)
+    );
+    completionUnsubRef.current = unsub;
   };
 
-  const toggleExercise = async (assignmentId: string, si: number, ei: number) => {
+  const toggleExercise = async (assignmentId: string, si: number, ei: number, exName?: string, exReps?: string) => {
     if (!user) return;
     const key = `${assignmentId}_${si}_${ei}`;
     if (savingCompletion === key) return;
-
-    // Optimistic update before write
     const wasDone = !!completions[key];
+    // Optimistic UI — onSnapshot will reconcile later
     setCompletions(prev => {
       const n = { ...prev };
       if (wasDone) delete n[key]; else n[key] = true;
       return n;
     });
     setSavingCompletion(key);
-
-    const ref = doc(db, 'users', user.uid, 'assignments', assignmentId, 'sessions', `s${si}`, 'exercises', `e${ei}`);
+    const ref = doc(db, 'program_assignments', assignmentId, 'sessions', `s${si}`, 'exercises', `e${ei}`);
     try {
-      if (wasDone) {
-        await deleteDoc(ref);
-      } else {
-        await setDoc(ref, {
-          done: true,
-          completedAt: Timestamp.now(),
-          coachId,
-          userId: user.uid,
-          assignmentId,
-          si,
-          ei,
-        });
-        fireToast('✅', 'Exercice validé', '');
-      }
+      const payload = {
+        completed: !wasDone,
+        completedAt: !wasDone ? serverTimestamp() : null,
+        clientId: user.uid,
+        coachId,
+        assignmentId,
+        sessionId: `s${si}`,
+        si,
+        ei,
+        ...(exName ? { name: exName } : {}),
+        ...(exReps ? { reps: exReps } : {}),
+      };
+      console.log('[toggleExercise]', wasDone ? 'uncomplete' : 'complete', ref.path, { clientId: user.uid, coachId });
+      await setDoc(ref, payload, { merge: true });
+      if (!wasDone) fireToast('✅', 'Exercice validé', '');
     } catch (err) {
-      console.error('toggleExercise error:', err);
+      console.error('[toggleExercise] error:', err);
       // Rollback optimistic update
       setCompletions(prev => {
         const n = { ...prev };
@@ -345,28 +347,31 @@ export default function ClientHome() {
 
   const acceptProgram = async (assignmentId: string) => {
     if (!user) return;
-    // Optimistic UI
+    // Optimistic
     setAcceptedPrograms(prev => ({ ...prev, [assignmentId]: true }));
     try {
-      console.log('[acceptProgram] writing status=accepted for:', assignmentId);
       const ref = doc(db, 'program_assignments', assignmentId);
-      await setDoc(ref, { status: 'accepted', acceptedAt: Timestamp.now() }, { merge: true });
-      // Also update local assignments state so status reflects everywhere
-      setAssignments(prev => prev.map((a: any) => a.id === assignmentId ? { ...a, status: 'accepted' } : a));
+      const snap = await getDoc(ref);
+      if (!snap.exists()) {
+        console.error('[acceptProgram] assignment not found:', assignmentId);
+        setAcceptedPrograms(prev => { const n = { ...prev }; delete n[assignmentId]; return n; });
+        fireToast('❌', 'Erreur', 'Programme introuvable.');
+        return;
+      }
+      await updateDoc(ref, { status: 'active', acceptedAt: serverTimestamp() });
+      setAssignments(prev => prev.map((a: any) => a.id === assignmentId ? { ...a, status: 'active' } : a));
+      console.log('[acceptProgram] status set to active:', assignmentId);
       fireToast('✅', 'Défi accepté !', 'C\'est parti, bon courage !');
     } catch (err) {
       console.error('[acceptProgram] error:', err);
-      // Rollback optimistic
       setAcceptedPrograms(prev => { const n = { ...prev }; delete n[assignmentId]; return n; });
-      fireToast('❌', 'Erreur réseau', 'Impossible d\'accepter le programme. Réessayez.');
+      fireToast('❌', 'Erreur', 'Impossible d\'accepter le programme.');
     }
   };
 
   useEffect(() => { if (user) fetchAll(user); }, [user]);
   const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
-
   const navTo = (key: string) => { setActiveTab(key as NavKey); };
-
   const firstName = userName.split(' ')[0] || userName;
 
   /* ─────────────────────────────────────────────────────── */
@@ -688,7 +693,7 @@ export default function ClientHome() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {displayPrograms.map((prog: any) => {
                       const isOpen = expandedProgram === prog.id;
-                      const isAccepted = !!acceptedPrograms[prog.id] || prog.status === 'accepted' || prog.status === 'active';
+                      const isAccepted = prog.status === 'active' || (!!acceptedPrograms[prog.id] && prog.status !== 'pending');
                       const startDateStr = prog.startDate
                         ? new Date(prog.startDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
                         : prog.assignedAt ? new Date((prog.assignedAt.toDate ? prog.assignedAt.toDate() : prog.assignedAt)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
@@ -747,10 +752,22 @@ export default function ClientHome() {
                               ))}
                             </div>
 
-                            {/* Progress bar */}
-                            <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden', marginBottom: 16 }}>
-                              <div style={{ height: '100%', width: `${Math.min(100, Math.round((days / ((prog.durationWeeks || 8) * 7)) * 100))}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 999, transition: 'width 1s ease' }} />
-                            </div>
+                            {/* Progress bar — based on actual completions */}
+                            {(() => {
+                              const allDone = (prog.sessions || []).reduce((acc: number, s: any, si: number) => acc + ((s.exercises || []) as any[]).filter((_: any, ei: number) => completions[`${prog.id}_${si}_${ei}`]).length, 0);
+                              const progPct = totalEx > 0 ? Math.min(100, Math.round((allDone / totalEx) * 100)) : 0;
+                              return (
+                                <div style={{ marginBottom: 16 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                    <span style={{ fontSize: '.56rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase' as const, color: '#6B7280' }}>Progression</span>
+                                    <span style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: progPct === 100 ? '#16a34a' : '#b22a27' }}>{progPct}%</span>
+                                  </div>
+                                  <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 999, overflow: 'hidden' }}>
+                                    <div style={{ height: '100%', width: `${progPct}%`, background: progPct === 100 ? 'linear-gradient(90deg,#14532d,#16a34a)' : 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 999, transition: 'width 1s ease' }} />
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Toggle button */}
                             {(prog.sessions?.length > 0 || prog.weeklyMealPlan?.length > 0) && (
@@ -790,10 +807,12 @@ export default function ClientHome() {
                                   <div style={{ marginBottom: 20, paddingBottom: 4 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 4 }}>
                                       {prog.sessions.map((session: any, si: number) => {
-                                        const status = si === 0 ? 'done' : si === 1 ? 'current' : 'todo';
+                                        const exCount = (session.exercises?.length || 0);
+                                        const doneCount = exCount > 0 ? (session.exercises as any[]).filter((_: any, ei: number) => completions[`${prog.id}_${si}_${ei}`]).length : 0;
+                                        const status = doneCount >= exCount && exCount > 0 ? 'done' : doneCount > 0 ? 'current' : 'todo';
                                         return (
                                           <div key={si} style={{ display: 'flex', alignItems: 'center' }}>
-                                            {si > 0 && <div style={{ width: 12, height: 2, background: si === 1 ? '#b22a27' : 'rgba(255,255,255,0.1)', flexShrink: 0 }} />}
+                                            {si > 0 && <div style={{ width: 12, height: 2, background: status === 'current' ? '#b22a27' : status === 'done' ? '#b22a27' : 'rgba(255,255,255,0.1)', flexShrink: 0 }} />}
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                                               <div style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: status === 'done' ? '#b22a27' : 'transparent', border: status === 'done' ? 'none' : status === 'current' ? '2px solid #b22a27' : '2px solid rgba(255,255,255,0.18)', fontSize: '.62rem', color: status === 'done' ? '#fff' : status === 'current' ? '#b22a27' : '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 900, transition: 'all .2s' }}>
                                                 {status === 'done' ? '✓' : status === 'current' ? '→' : String(si + 1)}
@@ -878,7 +897,7 @@ export default function ClientHome() {
                                                       {/* Right: validate + expand arrow */}
                                                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                                         <button
-                                                          onClick={e => { e.stopPropagation(); toggleExercise(prog.id, si, ei); }}
+                                                          onClick={e => { e.stopPropagation(); toggleExercise(prog.id, si, ei, ex.name, String(ex.reps ?? '')); }}
                                                           disabled={isSaving}
                                                           style={{ width: 32, height: 32, borderRadius: 8, border: `1.5px solid ${isDone ? '#16a34a' : 'rgba(178,42,39,0.5)'}`, background: isDone ? 'rgba(22,163,74,0.15)' : 'rgba(178,42,39,0.1)', cursor: isSaving ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .15s', opacity: isSaving ? 0.6 : 1 }}
                                                           title={isDone ? 'Marquer non fait' : 'Valider'}

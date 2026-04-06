@@ -4,8 +4,14 @@
       "collectionGroup": "exercises",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
-        { "fieldPath": "coachId", "order": "ASCENDING" },
-        { "fieldPath": "done", "order": "ASCENDING" }
+        { "fieldPath": "coachId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "exercises",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "clientId", "order": "ASCENDING" }
       ]
     }
   ],
