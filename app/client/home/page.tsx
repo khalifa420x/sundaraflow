@@ -112,6 +112,86 @@ function getSessionPhoto(label: string, focus: string): string {
   return 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400&q=50';
 }
 
+/* ── Food DB ── */
+interface FoodItem {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  unit: 'g' | 'ml' | 'unité';
+  category: 'proteine' | 'glucide' | 'legume' | 'fruit' | 'graisse' | 'laitage';
+}
+
+const FOOD_DB: FoodItem[] = [
+  // Protéines
+  { name: 'Poulet', calories: 165, protein: 31, carbs: 0, fat: 3.6, unit: 'g', category: 'proteine' },
+  { name: 'Saumon', calories: 208, protein: 20, carbs: 0, fat: 13, unit: 'g', category: 'proteine' },
+  { name: 'Thon en boîte', calories: 116, protein: 26, carbs: 0, fat: 1, unit: 'g', category: 'proteine' },
+  { name: 'Bœuf haché 5%', calories: 137, protein: 21, carbs: 0, fat: 5, unit: 'g', category: 'proteine' },
+  { name: "Blanc d'œuf", calories: 52, protein: 11, carbs: 0.7, fat: 0.2, unit: 'g', category: 'proteine' },
+  { name: 'Œuf entier', calories: 155, protein: 13, carbs: 1.1, fat: 11, unit: 'g', category: 'proteine' },
+  { name: 'Dinde', calories: 135, protein: 30, carbs: 0, fat: 1, unit: 'g', category: 'proteine' },
+  { name: 'Crevettes', calories: 99, protein: 24, carbs: 0, fat: 0.3, unit: 'g', category: 'proteine' },
+  { name: 'Fromage blanc 0%', calories: 45, protein: 8, carbs: 4, fat: 0.2, unit: 'g', category: 'laitage' },
+  { name: 'Yaourt grec 0%', calories: 59, protein: 10, carbs: 3.6, fat: 0.4, unit: 'g', category: 'laitage' },
+  { name: 'Cottage cheese', calories: 98, protein: 11, carbs: 3, fat: 4.5, unit: 'g', category: 'laitage' },
+  { name: 'Whey protéine', calories: 400, protein: 80, carbs: 8, fat: 5, unit: 'g', category: 'proteine' },
+  // Glucides
+  { name: 'Riz blanc cuit', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, unit: 'g', category: 'glucide' },
+  { name: 'Riz complet cuit', calories: 110, protein: 2.6, carbs: 23, fat: 0.9, unit: 'g', category: 'glucide' },
+  { name: 'Pâtes cuites', calories: 158, protein: 5.8, carbs: 31, fat: 0.9, unit: 'g', category: 'glucide' },
+  { name: 'Avoine', calories: 389, protein: 17, carbs: 66, fat: 7, unit: 'g', category: 'glucide' },
+  { name: 'Pain complet', calories: 247, protein: 13, carbs: 41, fat: 4, unit: 'g', category: 'glucide' },
+  { name: 'Patate douce cuite', calories: 90, protein: 2, carbs: 21, fat: 0.1, unit: 'g', category: 'glucide' },
+  { name: 'Pomme de terre cuite', calories: 87, protein: 1.9, carbs: 20, fat: 0.1, unit: 'g', category: 'glucide' },
+  { name: 'Quinoa cuit', calories: 120, protein: 4.4, carbs: 21, fat: 1.9, unit: 'g', category: 'glucide' },
+  { name: 'Banane', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, unit: 'g', category: 'fruit' },
+  { name: "Flocons d'avoine", calories: 379, protein: 13, carbs: 68, fat: 7, unit: 'g', category: 'glucide' },
+  // Légumes
+  { name: 'Brocolis', calories: 34, protein: 2.8, carbs: 7, fat: 0.4, unit: 'g', category: 'legume' },
+  { name: 'Épinards', calories: 23, protein: 2.9, carbs: 3.6, fat: 0.4, unit: 'g', category: 'legume' },
+  { name: 'Courgette', calories: 17, protein: 1.2, carbs: 3.1, fat: 0.3, unit: 'g', category: 'legume' },
+  { name: 'Haricots verts', calories: 31, protein: 1.8, carbs: 7, fat: 0.1, unit: 'g', category: 'legume' },
+  { name: 'Salade verte', calories: 15, protein: 1.4, carbs: 2.2, fat: 0.2, unit: 'g', category: 'legume' },
+  { name: 'Tomate', calories: 18, protein: 0.9, carbs: 3.9, fat: 0.2, unit: 'g', category: 'legume' },
+  { name: 'Poivron', calories: 31, protein: 1, carbs: 6, fat: 0.3, unit: 'g', category: 'legume' },
+  { name: 'Champignons', calories: 22, protein: 3.1, carbs: 3.3, fat: 0.3, unit: 'g', category: 'legume' },
+  // Graisses
+  { name: 'Avocat', calories: 160, protein: 2, carbs: 9, fat: 15, unit: 'g', category: 'graisse' },
+  { name: "Huile d'olive", calories: 884, protein: 0, carbs: 0, fat: 100, unit: 'ml', category: 'graisse' },
+  { name: 'Amandes', calories: 579, protein: 21, carbs: 22, fat: 50, unit: 'g', category: 'graisse' },
+  { name: 'Noix de cajou', calories: 553, protein: 18, carbs: 30, fat: 44, unit: 'g', category: 'graisse' },
+  { name: "Beurre d'amande", calories: 614, protein: 21, carbs: 20, fat: 56, unit: 'g', category: 'graisse' },
+  // Fruits
+  { name: 'Pomme', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, unit: 'g', category: 'fruit' },
+  { name: 'Fraises', calories: 32, protein: 0.7, carbs: 8, fat: 0.3, unit: 'g', category: 'fruit' },
+  { name: 'Myrtilles', calories: 57, protein: 0.7, carbs: 14, fat: 0.3, unit: 'g', category: 'fruit' },
+  { name: 'Orange', calories: 47, protein: 0.9, carbs: 12, fat: 0.1, unit: 'g', category: 'fruit' },
+  { name: 'Mangue', calories: 60, protein: 0.8, carbs: 15, fat: 0.4, unit: 'g', category: 'fruit' },
+  // Laitages
+  { name: 'Lait écrémé', calories: 35, protein: 3.4, carbs: 5, fat: 0.1, unit: 'ml', category: 'laitage' },
+  { name: 'Lait entier', calories: 61, protein: 3.2, carbs: 4.8, fat: 3.3, unit: 'ml', category: 'laitage' },
+];
+
+const CAT_EMOJI: Record<string, string> = {
+  proteine: '🍗', glucide: '🍚', legume: '🥦', fruit: '🍎', graisse: '🥑', laitage: '🥛',
+};
+
+const MEAL_PHOTOS: Record<string, string> = {
+  breakfast: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400&q=50',
+  lunch: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=50',
+  dinner: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&q=50',
+  snack: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400&q=50',
+};
+
+const MEAL_LABELS: Record<string, string> = {
+  breakfast: 'Petit-déjeuner',
+  lunch: 'Déjeuner',
+  dinner: 'Dîner',
+  snack: 'Collation',
+};
+
 const NAV_ITEMS = [
   { key: 'overview',     icon: '🏠', label: 'Tableau de bord' },
   { key: 'programmes',   icon: '📋', label: 'Mes Programmes' },
@@ -150,6 +230,18 @@ export default function ClientHome() {
 
   /* Programme acceptance */
   const [acceptedPrograms, setAcceptedPrograms] = useState<Record<string, boolean>>({});
+
+  /* Nutrition tracking */
+  const [foodLogs, setFoodLogs] = useState<any[]>([]);
+  const [hydration, setHydration] = useState(0);
+  const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showFoodModal, setShowFoodModal] = useState(false);
+  const [activeMealType, setActiveMealType] = useState<string>('breakfast');
+  const [foodSearch, setFoodSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
+  const [quantity, setQuantity] = useState(100);
 
   /* Validation exercices */
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
@@ -302,6 +394,24 @@ export default function ClientHome() {
       const mealsData = mealsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
       mealsData.sort((a: any, b: any) => (a.time || '').localeCompare(b.time || ''));
       setClientMeals(mealsData);
+
+      /* Food logs du jour */
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const flSnap = await getDocs(query(
+          collection(db, 'food_logs'),
+          where('clientId', '==', u.uid),
+          where('date', '==', today)
+        ));
+        setFoodLogs(flSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch {}
+
+      /* Hydratation du jour */
+      try {
+        const hDoc = await getDoc(doc(db, 'hydration_logs', `${u.uid}_${today}`));
+        if (hDoc.exists()) setHydration(hDoc.data().liters || 0);
+        else setHydration(0);
+      } catch {}
     } catch (e) {
       console.error(e);
       fireToast('❌', 'Erreur', 'Impossible de charger vos données.');
@@ -430,6 +540,126 @@ export default function ClientHome() {
   const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
   const navTo = (key: string) => { setActiveTab(key as NavKey); };
   const firstName = userName.split(' ')[0] || userName;
+
+  /* ── Nutrition helpers ── */
+  const todayTotals = foodLogs.reduce(
+    (acc, l: any) => ({
+      cal: acc.cal + (l.totalCalories || 0),
+      p: acc.p + (l.totalProtein || 0),
+      c: acc.c + (l.totalCarbs || 0),
+      f: acc.f + (l.totalFat || 0),
+    }),
+    { cal: 0, p: 0, c: 0, f: 0 }
+  );
+
+  const searchFoodFn = async (q: string) => {
+    if (!q || q.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    const local = FOOD_DB.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
+    let combined: FoodItem[] = [...local];
+    if (local.length < 3) {
+      try {
+        const r = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10&fields=product_name,nutriments`);
+        const j = await r.json();
+        const remote: FoodItem[] = (j?.products || [])
+          .filter((p: any) => p?.product_name && p?.nutriments?.['energy-kcal_100g'])
+          .map((p: any) => ({
+            name: String(p.product_name).slice(0, 60),
+            calories: Math.round(Number(p.nutriments['energy-kcal_100g']) || 0),
+            protein: Number(p.nutriments?.proteins_100g) || 0,
+            carbs: Number(p.nutriments?.carbohydrates_100g) || 0,
+            fat: Number(p.nutriments?.fat_100g) || 0,
+            unit: 'g' as const,
+            category: 'glucide' as const,
+          }));
+        const seen = new Set(combined.map(f => f.name.toLowerCase()));
+        remote.forEach(f => { if (!seen.has(f.name.toLowerCase())) { combined.push(f); seen.add(f.name.toLowerCase()); } });
+      } catch {}
+    }
+    setSearchResults(combined.slice(0, 8));
+    setSearchLoading(false);
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => { searchFoodFn(foodSearch); }, 400);
+    return () => clearTimeout(t);
+  }, [foodSearch]);
+
+  const openFoodModal = (mealType: string) => {
+    setActiveMealType(mealType);
+    setFoodSearch('');
+    setSearchResults([]);
+    setSelectedFood(null);
+    setQuantity(100);
+    setShowFoodModal(true);
+  };
+
+  const handleAddFood = async () => {
+    if (!user || !selectedFood) return;
+    const factor = quantity / 100;
+    const item = {
+      name: selectedFood.name,
+      quantity,
+      unit: selectedFood.unit,
+      calories: Math.round(selectedFood.calories * factor),
+      protein: +(selectedFood.protein * factor).toFixed(1),
+      carbs: +(selectedFood.carbs * factor).toFixed(1),
+      fat: +(selectedFood.fat * factor).toFixed(1),
+    };
+    const today = selectedDate;
+    const logId = `${user.uid}_${today}_${activeMealType}`;
+    const ref = doc(db, 'food_logs', logId);
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        const items = [...(data.items || []), item];
+        const totals = items.reduce((a, i: any) => ({
+          c: a.c + i.calories, p: a.p + i.protein, g: a.g + i.carbs, f: a.f + i.fat,
+        }), { c: 0, p: 0, g: 0, f: 0 });
+        await updateDoc(ref, {
+          items,
+          totalCalories: totals.c,
+          totalProtein: +totals.p.toFixed(1),
+          totalCarbs: +totals.g.toFixed(1),
+          totalFat: +totals.f.toFixed(1),
+        });
+      } else {
+        await setDoc(ref, {
+          clientId: user.uid,
+          coachId,
+          date: today,
+          mealType: activeMealType,
+          items: [item],
+          totalCalories: item.calories,
+          totalProtein: item.protein,
+          totalCarbs: item.carbs,
+          totalFat: item.fat,
+          createdAt: serverTimestamp(),
+        });
+      }
+      fireToast('✅', 'Aliment ajouté', selectedFood.name);
+      setShowFoodModal(false);
+      await fetchAll(user);
+    } catch (e) {
+      console.error(e);
+      fireToast('❌', 'Erreur', 'Impossible d\'ajouter l\'aliment.');
+    }
+  };
+
+  const handleHydration = async (liters: number) => {
+    if (!user) return;
+    const next = Math.max(0, Math.min(5, liters));
+    setHydration(next);
+    try {
+      await setDoc(doc(db, 'hydration_logs', `${user.uid}_${selectedDate}`), {
+        clientId: user.uid,
+        date: selectedDate,
+        liters: next,
+        updatedAt: serverTimestamp(),
+      }, { merge: true });
+    } catch (e) { console.error(e); }
+  };
 
   /* ─────────────────────────────────────────────────────── */
   return (
@@ -1074,15 +1304,193 @@ export default function ClientHome() {
             )}
 
             {/* ══ NUTRITION TAB ══ */}
-            {activeTab === 'nutrition' && (
-              <div>
-                <div className="cl-page-header">
-                  <h2 className="cl-page-title">MA NUTRITION</h2>
-                  <p className="cl-page-sub">Plan nutritionnel et repas du jour</p>
+            {activeTab === 'nutrition' && (() => {
+              const goalCal = displayNut.calories || 2000;
+              const goalP = displayNut.protein || 150;
+              const goalC = displayNut.carbs || 200;
+              const goalF = displayNut.fat || 65;
+              const pct = Math.min(100, Math.round((todayTotals.cal / goalCal) * 100));
+              const r = 55;
+              const circ = 2 * Math.PI * r;
+              const dashOffset = circ - (circ * pct) / 100;
+              const todayLabel = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+              const mealsByType: Record<string, any> = {};
+              foodLogs.forEach((l: any) => { mealsByType[l.mealType] = l; });
+              return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20, overflowX: 'hidden' }}>
+                <style>{`
+                  @keyframes nutModalIn { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+                  @keyframes nutFadeIn { from { opacity:0 } to { opacity:1 } }
+                  .nut-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+                  @media(max-width:768px){ .nut-grid-2 { grid-template-columns: 1fr; } }
+                  .nut-bubble { width:44px; height:44px; border-radius:50%; cursor:pointer; transition: background .3s, transform .15s; border:1px solid rgba(255,255,255,0.08); }
+                  .nut-bubble:active { transform: scale(1.1); }
+                  .nut-meal-card { background:#1c1b1b; border:1px solid rgba(255,255,255,0.06); border-radius:14px; overflow:hidden; transition: border-color .2s; }
+                  .nut-meal-card:hover { border-color: rgba(178,42,39,0.3); }
+                  .nut-add-btn { background: linear-gradient(135deg,#89070e,#b22a27); border:none; color:#fff; padding:10px 16px; border-radius:8px; font-family: 'Lexend', sans-serif; font-weight:800; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; cursor:pointer; transition: transform .2s, box-shadow .2s; }
+                  .nut-add-btn:hover { transform: scale(1.02); box-shadow: 0 0 24px rgba(178,42,39,0.35); }
+                  .nut-input { width:100%; background:#2a2a2a; border:1px solid rgba(255,255,255,0.07); border-radius:8px; padding:11px 13px; color:#e5e2e1; font-family:'Inter', sans-serif; font-size:.85rem; outline:none; }
+                  .nut-input:focus { border-color: rgba(178,42,39,0.5); }
+                  .nut-pill { padding:7px 13px; border-radius:7px; border:1px solid rgba(255,255,255,0.07); background:#2a2a2a; color:#9CA3AF; font-family:'Lexend', sans-serif; font-weight:700; font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition: all .2s; }
+                  .nut-pill.active { background:#b22a27; border-color:#b22a27; color:#fff; }
+                `}</style>
+
+                {/* HERO */}
+                <div style={{
+                  position:'relative', borderRadius:16, overflow:'hidden',
+                  backgroundImage: 'linear-gradient(135deg, rgba(19,19,19,0.85), rgba(19,19,19,0.55)), url(https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=1200&q=60)',
+                  backgroundSize:'cover', backgroundPosition:'center',
+                  padding:'34px 26px', display:'flex', justifyContent:'space-between', alignItems:'flex-end', flexWrap:'wrap', gap:18,
+                }}>
+                  <div style={{ filter: 'brightness(1)' }}>
+                    <div style={{ fontSize:'.55rem', fontFamily:'Inter, sans-serif', fontWeight:600, letterSpacing:'.22em', textTransform:'uppercase', color:'rgba(229,226,225,0.5)', marginBottom:8 }}>{todayLabel}</div>
+                    <h2 style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'clamp(2rem,5vw,3.5rem)', letterSpacing:'-.05em', color:'#e5e2e1', margin:'0 0 6px', lineHeight:.95 }}>
+                      MA NUTRITION<span style={{ color:'#b22a27' }}>.</span>
+                    </h2>
+                    <p style={{ fontSize:'.78rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif', margin:0, maxWidth:420 }}>Suivi précis de vos apports. Performance par la donnée.</p>
+                  </div>
+                  <button className="nut-add-btn" onClick={() => openFoodModal('breakfast')} style={{ padding:'13px 22px', fontSize:'.75rem' }}>+ Ajouter un repas</button>
                 </div>
 
-                {/* Calculateur */}
-                <div className="cl-card" style={{ marginBottom: 24 }}>
+                {/* SECTION 2 — BILAN */}
+                <div className="nut-grid-2">
+                  {/* Apport journalier */}
+                  <div style={{ background:'#1c1b1b', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:22 }}>
+                    <div style={{ fontSize:'.55rem', fontFamily:'Lexend, sans-serif', fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#b22a27', marginBottom:18 }}>APPORT JOURNALIER</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:18, flexWrap:'wrap' }}>
+                      <div style={{ position:'relative', width:130, height:130, flexShrink:0 }}>
+                        <svg width="130" height="130" viewBox="0 0 130 130">
+                          <circle cx="65" cy="65" r={r} stroke="rgba(255,255,255,0.06)" strokeWidth="10" fill="none" />
+                          <circle cx="65" cy="65" r={r} stroke="#b22a27" strokeWidth="10" fill="none"
+                            strokeDasharray={circ} strokeDashoffset={dashOffset} strokeLinecap="round"
+                            transform="rotate(-90 65 65)" style={{ transition:'stroke-dashoffset 1.2s ease' }} />
+                        </svg>
+                        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column' }}>
+                          <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'1.3rem', color:'#e5e2e1', letterSpacing:'-.03em' }}>{pct}%</div>
+                          <div style={{ fontSize:'.5rem', fontFamily:'Inter, sans-serif', color:'#9CA3AF', textTransform:'uppercase', letterSpacing:'.15em', marginTop:2 }}>objectif</div>
+                        </div>
+                      </div>
+                      <div style={{ flex:1, minWidth:120 }}>
+                        <div style={{ display:'flex', alignItems:'baseline', gap:6, flexWrap:'wrap' }}>
+                          <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'clamp(2rem,5vw,3rem)', color:'#b22a27', letterSpacing:'-.05em', lineHeight:1 }}>{Math.round(todayTotals.cal).toLocaleString('fr-FR')}</div>
+                          <div style={{ fontSize:'.7rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif' }}>/ {goalCal.toLocaleString('fr-FR')} kcal</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:11, marginTop:20 }}>
+                      {[
+                        { label:'Protéines', cur: todayTotals.p, goal: goalP },
+                        { label:'Glucides', cur: todayTotals.c, goal: goalC },
+                        { label:'Lipides', cur: todayTotals.f, goal: goalF },
+                      ].map(m => {
+                        const w = Math.min(100, (m.cur / m.goal) * 100);
+                        return (
+                          <div key={m.label}>
+                            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
+                              <span style={{ fontSize:'.6rem', fontFamily:'Inter, sans-serif', fontWeight:600, color:'#9CA3AF', letterSpacing:'.1em', textTransform:'uppercase' }}>{m.label}</span>
+                              <span style={{ fontFamily:'Lexend, sans-serif', fontWeight:700, fontSize:'.72rem', color:'#e5e2e1' }}>{m.cur.toFixed(0)}g <span style={{ color:'#6B7280' }}>/ {m.goal}g</span></span>
+                            </div>
+                            <div style={{ height:6, background:'rgba(255,255,255,0.06)', borderRadius:9999, overflow:'hidden' }}>
+                              <div style={{ height:'100%', width:`${w}%`, background:'linear-gradient(to right,#89070e,#b22a27)', borderRadius:9999, transition:'width 1s ease' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Hydratation */}
+                  <div style={{ background:'#1c1b1b', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:22 }}>
+                    <div style={{ fontSize:'.55rem', fontFamily:'Lexend, sans-serif', fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#b22a27', marginBottom:18 }}>HYDRATATION</div>
+                    <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom:18 }}>
+                      <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'clamp(2rem,5vw,2.5rem)', color:'#e5e2e1', letterSpacing:'-.05em', lineHeight:1 }}>{hydration.toFixed(1)} <span style={{ color:'#3b82f6' }}>L</span></div>
+                      <div style={{ fontSize:'.7rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif' }}>/ 2.5 L</div>
+                    </div>
+                    <div style={{ display:'flex', gap:9, marginBottom:16, flexWrap:'wrap' }}>
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className="nut-bubble" onClick={() => handleHydration(i * 0.5)}
+                          style={{ background: hydration >= i * 0.5 ? '#3b82f6' : 'rgba(59,130,246,0.08)' }} />
+                      ))}
+                    </div>
+                    <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+                      <button className="nut-pill" onClick={() => handleHydration(hydration + 0.25)}>+ 250 ml</button>
+                      <button className="nut-pill" onClick={() => handleHydration(hydration + 0.5)}>+ 500 ml</button>
+                      <button className="nut-pill" onClick={() => handleHydration(0)}>Reset</button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SECTION 3 — JEÛNE */}
+                {displayNut.fastingType && displayNut.fastingType !== 'none' && (
+                  <div style={{ background:'#1c1b1b', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:22, display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:14 }}>
+                    <div>
+                      <div style={{ fontSize:'.55rem', fontFamily:'Lexend, sans-serif', fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#b22a27', marginBottom:6 }}>PROTOCOLE DE JEÛNE</div>
+                      <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'1.6rem', color:'#e5e2e1', letterSpacing:'-.03em' }}>{displayNut.fastingType}</div>
+                    </div>
+                    <div style={{ textAlign:'right' }}>
+                      <div style={{ fontSize:'.55rem', fontFamily:'Inter, sans-serif', fontWeight:600, letterSpacing:'.15em', textTransform:'uppercase', color:'#9CA3AF', marginBottom:4 }}>FENÊTRE ALIMENTAIRE</div>
+                      <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:700, fontSize:'1rem', color:'#e5e2e1' }}>{displayNut.windowStart || '12:00'} → {displayNut.windowEnd || '20:00'}</div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SECTION 4 — REPAS DU JOUR */}
+                <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+                  {(['breakfast','lunch','dinner','snack'] as const).map(mt => {
+                    const log = mealsByType[mt];
+                    return (
+                      <div key={mt} className="nut-meal-card">
+                        <div style={{ display:'flex', alignItems:'center', gap:14, padding:14, borderBottom: log ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                          <div style={{ width:60, height:60, borderRadius:10, backgroundImage:`url(${MEAL_PHOTOS[mt]})`, backgroundSize:'cover', backgroundPosition:'center', flexShrink:0 }} />
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:800, fontSize:'.85rem', color:'#e5e2e1', textTransform:'uppercase', letterSpacing:'.05em' }}>{MEAL_LABELS[mt]}</div>
+                            <div style={{ fontSize:'.65rem', fontFamily:'Inter, sans-serif', color:'#9CA3AF', marginTop:3 }}>
+                              {log ? `${log.totalCalories} kcal · P ${log.totalProtein}g · G ${log.totalCarbs}g · L ${log.totalFat}g` : 'Aucun aliment enregistré'}
+                            </div>
+                          </div>
+                          <button className="nut-add-btn" onClick={() => openFoodModal(mt)} style={{ padding:'8px 14px', fontSize:'.65rem', flexShrink:0 }}>+</button>
+                        </div>
+                        {log?.items?.length > 0 && (
+                          <div style={{ padding:'8px 14px 14px', display:'flex', flexDirection:'column', gap:6 }}>
+                            {log.items.map((it: any, idx: number) => (
+                              <div key={idx} style={{ display:'flex', justifyContent:'space-between', gap:8, padding:'8px 12px', background:'rgba(255,255,255,0.02)', borderRadius:7 }}>
+                                <div style={{ minWidth:0, flex:1 }}>
+                                  <div style={{ fontSize:'.75rem', fontFamily:'Inter, sans-serif', fontWeight:600, color:'#e5e2e1', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{it.name}</div>
+                                  <div style={{ fontSize:'.6rem', color:'#6B7280', marginTop:2 }}>{it.quantity}{it.unit} · P {it.protein}g · G {it.carbs}g · L {it.fat}g</div>
+                                </div>
+                                <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:700, fontSize:'.72rem', color:'#b22a27', flexShrink:0 }}>{it.calories} kcal</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* SECTION 5 — PLAN COACH */}
+                {clientMeals.length > 0 && (
+                  <div style={{ background:'#1c1b1b', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14, padding:22 }}>
+                    <div style={{ fontSize:'.55rem', fontFamily:'Lexend, sans-serif', fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#b22a27', marginBottom:18 }}>PLAN DE VOTRE COACH</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+                      {clientMeals.map((meal: any) => (
+                        <div key={meal.id} style={{ display:'flex', gap:12, alignItems:'center', padding:12, background:'rgba(255,255,255,0.02)', borderRadius:10, border:'1px solid rgba(255,255,255,0.04)' }}>
+                          <div style={{ width:42, height:42, borderRadius:9, background:'rgba(178,42,39,0.12)', border:'1px solid rgba(178,42,39,0.2)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.2rem', flexShrink:0 }}>{meal.emoji || '🍽️'}</div>
+                          <div style={{ flex:1, minWidth:0 }}>
+                            <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:700, fontSize:'.8rem', color:'#e5e2e1' }}>{meal.name}</div>
+                            <div style={{ fontSize:'.6rem', color:'#9CA3AF', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{meal.time} · {meal.description}</div>
+                          </div>
+                          <div style={{ textAlign:'right', flexShrink:0 }}>
+                            <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:700, fontSize:'.75rem', color:'#b22a27' }}>{meal.calories} kcal</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Calculateur conservé */}
+                <div className="cl-card">
                   <div style={{ marginBottom: 22 }}>
                     <div style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 10 }}>⚡ Outil personnel</div>
                     <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.2rem,3vw,1.6rem)', letterSpacing: '-.05em', color: '#e5e2e1', margin: '0 0 8px' }}>
@@ -1091,59 +1499,84 @@ export default function ClientHome() {
                     <p style={{ fontSize: '.75rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', margin: 0 }}>Calculez vos besoins caloriques selon votre profil.</p>
                   </div>
                   <CalorieCalculator mode="membre" />
-                  <div style={{ marginTop: 20, padding: '12px 16px', background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, fontSize: '.72rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.6 }}>
-                    💡 Votre coach peut ajuster ces valeurs dans votre plan nutritionnel.
-                  </div>
                 </div>
 
-                {/* Plan nutrition */}
-                <div className="cl-card" style={{ marginBottom: 24 }}>
-                  <div className="cl-card-label" style={{ marginBottom: 20 }}>MON PLAN NUTRITIONNEL</div>
-                  <div className="cl-nut-stats">
-                    {[
-                      { label: 'Calories cible', val: displayNut.calories, unit: 'kcal' },
-                      { label: 'Protéines', val: displayNut.protein, unit: 'g' },
-                      { label: 'Glucides', val: displayNut.carbs, unit: 'g' },
-                      { label: 'Lipides', val: displayNut.fat, unit: 'g' },
-                    ].map(s => (
-                      <div key={s.label} className="cl-nut-stat">
-                        <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>{s.label}</div>
-                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.4rem', color: '#b22a27', letterSpacing: '-.04em' }}>{s.val}</div>
-                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif' }}>{s.unit}</div>
+                {/* MODAL */}
+                {showFoodModal && (
+                  <div onClick={() => setShowFoodModal(false)} style={{
+                    position:'fixed', inset:0, background:'rgba(0,0,0,0.8)', backdropFilter:'blur(8px)',
+                    zIndex:1000, display:'flex', alignItems:'center', justifyContent:'center', padding:16,
+                    animation:'nutFadeIn .25s ease',
+                  }}>
+                    <div onClick={(e) => e.stopPropagation()} style={{
+                      background:'#1c1b1b', borderRadius:16, padding:24, width:'calc(100% - 0px)', maxWidth:500,
+                      maxHeight:'85vh', overflowY:'auto', border:'1px solid rgba(255,255,255,0.08)',
+                      animation:'nutModalIn .3s ease',
+                    }}>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16, gap:10 }}>
+                        <div>
+                          <div style={{ fontSize:'.55rem', fontFamily:'Lexend, sans-serif', fontWeight:700, letterSpacing:'.2em', textTransform:'uppercase', color:'#b22a27', marginBottom:5 }}>AJOUTER UN ALIMENT</div>
+                          <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:900, fontSize:'1.2rem', color:'#e5e2e1' }}>{MEAL_LABELS[activeMealType]}</div>
+                        </div>
+                        <button onClick={() => setShowFoodModal(false)} style={{ background:'rgba(255,255,255,0.06)', border:'none', color:'#e5e2e1', width:32, height:32, borderRadius:8, cursor:'pointer', fontSize:'1rem' }}>✕</button>
                       </div>
-                    ))}
-                  </div>
-                  {displayNut.notes && (
-                    <div style={{ background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '14px 16px', marginTop: 20 }}>
-                      <div style={{ fontSize: '.58rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 8 }}>NOTES DU COACH</div>
-                      <p style={{ fontSize: '.75rem', color: '#e5e2e1', fontFamily: 'Inter, sans-serif', lineHeight: 1.6, margin: 0 }}>{displayNut.notes}</p>
+
+                      <div style={{ display:'flex', gap:6, marginBottom:14, flexWrap:'wrap' }}>
+                        {(['breakfast','lunch','dinner','snack'] as const).map(mt => (
+                          <button key={mt} className={`nut-pill${activeMealType === mt ? ' active' : ''}`} onClick={() => setActiveMealType(mt)}>{MEAL_LABELS[mt]}</button>
+                        ))}
+                      </div>
+
+                      <input className="nut-input" placeholder="Rechercher un aliment..." value={foodSearch} onChange={(e) => setFoodSearch(e.target.value)} style={{ marginBottom:12 }} />
+
+                      {searchLoading && <div style={{ fontSize:'.68rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif', marginBottom:10 }}>Recherche…</div>}
+
+                      {searchResults.length > 0 && (
+                        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14, maxHeight:240, overflowY:'auto' }}>
+                          {searchResults.map((f, i) => (
+                            <div key={i} onClick={() => { setSelectedFood(f); setQuantity(100); }} style={{
+                              display:'flex', alignItems:'center', gap:10, padding:10,
+                              background: selectedFood?.name === f.name ? 'rgba(178,42,39,0.12)' : 'rgba(255,255,255,0.02)',
+                              border:'1px solid ' + (selectedFood?.name === f.name ? 'rgba(178,42,39,0.4)' : 'rgba(255,255,255,0.04)'),
+                              borderRadius:8, cursor:'pointer',
+                            }}>
+                              <div style={{ width:36, height:36, borderRadius:8, background:'rgba(178,42,39,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', flexShrink:0 }}>{CAT_EMOJI[f.category] || '🍽️'}</div>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontSize:'.75rem', fontFamily:'Inter, sans-serif', fontWeight:600, color:'#e5e2e1', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</div>
+                                <div style={{ fontSize:'.58rem', color:'#9CA3AF', marginTop:2 }}>{f.calories} kcal · P{f.protein} G{f.carbs} L{f.fat} /100{f.unit}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {selectedFood && (
+                        <div style={{ background:'rgba(178,42,39,0.06)', border:'1px solid rgba(178,42,39,0.18)', borderRadius:10, padding:14, marginBottom:14 }}>
+                          <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:800, fontSize:'.85rem', color:'#e5e2e1', marginBottom:10 }}>{selectedFood.name}</div>
+                          <label style={{ fontSize:'.55rem', fontFamily:'Inter, sans-serif', fontWeight:600, letterSpacing:'.15em', textTransform:'uppercase', color:'#9CA3AF' }}>Quantité ({selectedFood.unit})</label>
+                          <input className="nut-input" type="number" min={1} max={2000} step={1} value={quantity} onChange={(e) => setQuantity(Math.max(1, +e.target.value || 0))} style={{ marginTop:6, marginBottom:12 }} />
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8 }}>
+                            {[
+                              { l:'KCAL', v: Math.round(selectedFood.calories * quantity / 100) },
+                              { l:'PROT', v: (selectedFood.protein * quantity / 100).toFixed(1) + 'g' },
+                              { l:'GLU',  v: (selectedFood.carbs * quantity / 100).toFixed(1) + 'g' },
+                              { l:'LIP',  v: (selectedFood.fat * quantity / 100).toFixed(1) + 'g' },
+                            ].map(m => (
+                              <div key={m.l} style={{ background:'rgba(0,0,0,0.3)', borderRadius:7, padding:'8px 6px', textAlign:'center' }}>
+                                <div style={{ fontSize:'.5rem', fontFamily:'Inter, sans-serif', fontWeight:600, letterSpacing:'.12em', color:'#9CA3AF' }}>{m.l}</div>
+                                <div style={{ fontFamily:'Lexend, sans-serif', fontWeight:800, fontSize:'.78rem', color:'#b22a27', marginTop:3 }}>{m.v}</div>
+                              </div>
+                            ))}
+                          </div>
+                          <button className="nut-add-btn" onClick={handleAddFood} style={{ width:'100%', marginTop:14, padding:'12px' }}>AJOUTER AU JOURNAL →</button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-
-                {/* Repas */}
-                <div className="cl-card">
-                  <div className="cl-card-label" style={{ marginBottom: 20 }}>MES REPAS</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {displayMeals.map((meal: any) => (
-                      <div key={meal.id} style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)' }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>
-                          {meal.emoji || '🍽️'}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.85rem', color: '#e5e2e1' }}>{meal.name}</div>
-                          <div style={{ fontSize: '.62rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 3 }}>{meal.time} · {meal.description}</div>
-                        </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.82rem', color: '#b22a27' }}>{meal.calories} kcal</div>
-                          <div style={{ fontSize: '.58rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', marginTop: 2 }}>P {meal.protein}g · G {meal.carbs}g · L {meal.fat}g</div>
-                        </div>
-                      </div>
-                    ))}
                   </div>
-                </div>
+                )}
               </div>
-            )}
+              );
+            })()}
 
             {/* ══ STATISTIQUES TAB ══ */}
             {activeTab === 'statistiques' && (
