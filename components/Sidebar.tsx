@@ -177,6 +177,9 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
         </div>
       </header>
 
+      {/* Spacer — compense la hauteur du header fixed sur mobile */}
+      <div className="sb-mobile-spacer" />
+
       {/* ── Overlay (rendu uniquement si ouvert) ── */}
       {mobileOpen && (
         <div
@@ -222,12 +225,15 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@900&family=Inter:wght@400;500&display=swap');
 
-        /* Header mobile — sticky, intégré dans le flux */
+        /* Header mobile — fixed, hors du flux flex */
         .sb-mobile-header {
           display: none;
-          position: sticky;
+          position: fixed;
           top: 0;
-          z-index: 100;
+          left: 0;
+          right: 0;
+          width: 100%;
+          z-index: 200;
           height: 56px;
           min-height: 56px;
           padding: 0 16px;
@@ -238,7 +244,7 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
           overflow: hidden;
         }
 
-        /* Bouton hamburger — dans le flux du header, PAS fixed */
+        /* Bouton hamburger */
         .sb-hamburger-btn {
           display: flex;
           width: 40px;
@@ -254,17 +260,32 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
           flex-shrink: 0;
         }
 
+        /* Spacer pour compenser le header fixed sur mobile */
+        .sb-mobile-spacer {
+          display: none;
+          height: 56px;
+          min-height: 56px;
+          flex-shrink: 0;
+          width: 100%;
+        }
+
         @media (max-width: 767px) {
           .sb-mobile-header { display: flex; }
+          .sb-mobile-spacer { display: block; }
           #sb-panel {
             transform: translateX(-100%);
             transition: transform .28s cubic-bezier(.4,0,.2,1);
           }
           #sb-panel.sb-open { transform: translateX(0); }
+          /* Tout contenu principal doit être décalé de 56px */
+          .page-main, .cl-main, .ch-main, .cp-main, .stp-main {
+            padding-top: 56px;
+          }
         }
 
         @media (min-width: 768px) {
           .sb-mobile-header { display: none !important; }
+          .sb-mobile-spacer { display: none !important; }
           #sb-panel { transform: none !important; }
         }
       `}</style>
