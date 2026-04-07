@@ -116,13 +116,13 @@ export default function ClientMessagesPage() {
       }}>
         <Sidebar role="client" />
 
-        <div style={{
+        <div className="page-main" style={{
           flex: 1,
-          marginLeft: 240,
           display: 'flex',
           flexDirection: 'column',
           height: '100vh',
           overflowX: 'hidden',
+          minWidth: 0,
         }}>
           {/* Header */}
           <div style={{
@@ -258,9 +258,9 @@ export default function ClientMessagesPage() {
           @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@700;800;900&family=Inter:wght@400;500;600&display=swap');
           *, *::before, *::after { box-sizing: border-box; }
           @keyframes spin { to { transform: rotate(360deg); } }
-          @media (max-width: 767px) {
-            div[style*="margin-left: 240"] { margin-left: 0 !important; }
-          }
+          .page-main { margin-left: 0; width: 100%; }
+          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
+          @media (max-width: 767px) { .page-main { margin-left: 0 !important; width: 100% !important; } }
         `}</style>
       </div>
     </ProtectedRoute>

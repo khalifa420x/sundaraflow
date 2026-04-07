@@ -279,16 +279,16 @@ export default function CoachStatsPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#131313', color: '#e5e2e1', fontFamily: 'Inter, sans-serif', overflowX: 'hidden' }}>
         <Sidebar role="coach" />
 
-        <main className="stp-main" style={{ flex: 1, marginLeft: 240, padding: '0 0 80px', minWidth: 0 }}>
+        <main className="stp-main page-main" style={{ flex: 1, padding: '0 0 80px', minWidth: 0, overflowX: 'hidden' }}>
 
           {/* ══ 1. HERO ══ */}
           <div style={{ position: 'relative', minHeight: 240, display: 'flex', alignItems: 'flex-end', overflow: 'hidden', marginBottom: 28 }}>
             <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.18)' }} />
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #131313 0%, rgba(19,19,19,0.55) 55%, transparent 100%)' }} />
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', padding: '44px 32px 32px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
+            <div className="stp-hero-inner" style={{ position: 'relative', zIndex: 1, width: '100%', padding: '44px 32px 32px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
               <div>
                 <p style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.24em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.38)', margin: '0 0 10px' }}>📊 ANALYTICS</p>
-                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2.5rem,5vw,4rem)', letterSpacing: '-.05em', lineHeight: .9, textTransform: 'uppercase', margin: 0 }}>
+                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,5vw,4rem)', letterSpacing: '-.05em', lineHeight: .9, textTransform: 'uppercase', margin: 0 }}>
                   SUIVI <span style={{ color: '#b22a27', fontStyle: 'italic' }}>PERFORMANCES.</span>
                 </h1>
                 <p style={{ color: '#6B7280', fontSize: '.82rem', margin: '12px 0 0', fontFamily: 'Inter, sans-serif' }}>
@@ -311,7 +311,7 @@ export default function CoachStatsPage() {
             </div>
           </div>
 
-          <div style={{ padding: '0 24px' }}>
+          <div className="stp-inner" style={{ padding: '0 24px', overflowX: 'hidden' }}>
 
             {/* ══ 2. CLIENT PILLS ══ */}
             <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, marginBottom: 24, scrollbarWidth: 'none' }}>
@@ -603,8 +603,12 @@ export default function CoachStatsPage() {
             .stp-row2  { grid-template-columns: 1fr 1fr; }
             .stp-kpi   { grid-template-columns: repeat(4,1fr); }
           }
+          .page-main { margin-left: 0; width: 100%; }
+          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
           @media (max-width: 767px) {
-            .stp-main { margin-left: 0 !important; }
+            .page-main { margin-left: 0 !important; width: 100% !important; }
+            .stp-hero-inner { padding: 28px 16px 24px !important; }
+            .stp-inner { padding: 0 14px !important; }
           }
           div::-webkit-scrollbar { display: none; }
         `}</style>

@@ -183,13 +183,13 @@ export default function CoachMessagesPage() {
       }}>
         <Sidebar role="coach" />
 
-        <main style={{
+        <main className="page-main" style={{
           flex: 1,
-          marginLeft: 240,
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           overflowX: 'hidden',
+          minWidth: 0,
         }}>
 
           {/* ── En-tête ── */}
@@ -570,9 +570,9 @@ export default function CoachMessagesPage() {
           *, *::before, *::after { box-sizing: border-box; }
           @keyframes spin { to { transform: rotate(360deg); } }
           @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-          @media (max-width: 767px) {
-            main { margin-left: 0 !important; padding-top: 60px; }
-          }
+          .page-main { margin-left: 0; width: 100%; }
+          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
+          @media (max-width: 767px) { .page-main { margin-left: 0 !important; width: 100% !important; } }
         `}</style>
       </div>
     </ProtectedRoute>
