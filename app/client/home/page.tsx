@@ -153,8 +153,38 @@ export default function ClientHome() {
 
   /* Validation exercices */
   const [completions, setCompletions] = useState<Record<string, boolean>>({});
+  const [completionLogs, setCompletionLogs] = useState<any[]>([]);
   const [savingCompletion, setSavingCompletion] = useState<string | null>(null);
   const completionUnsubRef = useRef<(() => void) | null>(null);
+
+  /* Stats helpers */
+  const statFilteredLogs = (() => {
+    if (statPeriod === '7J') return completionLogs.filter(c => {
+      const t = c.completedAt?.toDate ? c.completedAt.toDate().getTime() : 0;
+      return Date.now() - t <= 7 * 86400000;
+    });
+    if (statPeriod === '30J') return completionLogs.filter(c => {
+      const t = c.completedAt?.toDate ? c.completedAt.toDate().getTime() : 0;
+      return Date.now() - t <= 30 * 86400000;
+    });
+    return completionLogs;
+  })();
+  const statActiveDays = new Set(statFilteredLogs.map((c: any) => c.completedAt?.toDate?.()?.toDateString?.() || '').filter(Boolean)).size;
+  const statTotalExercises = assignments.reduce((acc: number, a: any) =>
+    acc + ((a.sessions || []).reduce((s: number, sess: any) => s + ((sess.exercises || []).length || 0), 0)), 0);
+  const statRate = statTotalExercises > 0 ? Math.min(100, Math.round((statFilteredLogs.length / statTotalExercises) * 100)) : 0;
+  const statWeeklyData = (() => {
+    const weeks: Record<string, number> = {};
+    statFilteredLogs.forEach((c: any) => {
+      const date = c.completedAt?.toDate?.();
+      if (!date) return;
+      const ws = new Date(date); ws.setDate(date.getDate() - date.getDay());
+      const key = ws.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+      weeks[key] = (weeks[key] || 0) + 1;
+    });
+    return Object.entries(weeks).slice(-4).map(([label, val]) => ({ label, val }));
+  })();
+  const statMaxWeek = Math.max(1, ...statWeeklyData.map(d => d.val));
 
   /* Computed: real data or mock fallback */
   const displayPrograms = assignments.length > 0 ? assignments : MOCK_PROGRAMS;
@@ -301,6 +331,14 @@ export default function ClientHome() {
       (err) => console.error('[onSnapshot:completions] error:', err)
     );
     completionUnsubRef.current = unsub;
+
+    // Secondary listener on flat exercise_completions for stats tab (timestamps)
+    try {
+      const q2 = query(collection(db, 'exercise_completions'), where('clientId', '==', u.uid));
+      onSnapshot(q2, (snap) => {
+        setCompletionLogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }, (err) => console.error('[completionLogs] error:', err));
+    } catch (e) { console.error(e); }
   };
 
   const toggleExercise = async (assignmentId: string, si: number, ei: number, exName?: string, exReps?: string, exSets?: number) => {
@@ -1147,13 +1185,13 @@ export default function ClientHome() {
                   <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27' }}>PERFORMANCE DU MOIS</div>
                     <p style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: 'clamp(1rem,2.5vw,1.25rem)', color: '#e5e2e1', lineHeight: 1.3, margin: 0 }}>
-                      Vous avez complété <span style={{ color: '#b22a27' }}>12 séances</span> ce mois.
+                      Vous avez complété <span style={{ color: '#b22a27' }}>{completionLogs.length} exercices</span>.
                     </p>
                     <div style={{ padding: '10px 14px', background: 'rgba(178,42,39,0.08)', border: '1px solid rgba(178,42,39,0.15)', borderRadius: 8, fontSize: '.7rem', color: '#9CA3AF', fontFamily: 'Inter, sans-serif', lineHeight: 1.65 }}>
                       💡 <em>Conseil coach : Vos temps de récupération s'améliorent. Augmentez l'intensité lors de votre prochain cycle.</em>
                     </div>
                     <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-                      {['−2.8 kg', '89% assiduité', '420 kcal moy.'].map(pill => (
+                      {[`${statFilteredLogs.length} exercices`, `${statRate}% assiduité`, `${statActiveDays} jours actifs`].map(pill => (
                         <span key={pill} style={{ background: 'rgba(178,42,39,0.12)', borderRadius: 6, padding: '4px 10px', fontSize: '.62rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#e3beb8', letterSpacing: '.04em' }}>{pill}</span>
                       ))}
                     </div>
@@ -1162,15 +1200,15 @@ export default function ClientHome() {
                   {/* Card 2 — Séances ce mois */}
                   <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center' }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>🏆</div>
-                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.8rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>12</div>
-                    <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#b22a27' }}>SÉANCES CE MOIS</div>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.8rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>{statFilteredLogs.length}</div>
+                    <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#b22a27' }}>EXERCICES COMPLÉTÉS</div>
                     <div style={{ fontSize: '.68rem', fontFamily: 'Inter, sans-serif', color: '#16a34a', fontWeight: 600 }}>↑ +3 vs mois dernier</div>
                   </div>
 
                   {/* Card 3 — Jours actifs */}
                   <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center' }}>
                     <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>🔥</div>
-                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.8rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>18</div>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,2.8rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>{statActiveDays}</div>
                     <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#b22a27' }}>JOURS ACTIFS</div>
                     <div style={{ fontSize: '.68rem', fontFamily: 'Inter, sans-serif', color: '#9CA3AF' }}>Meilleure série : 22 jours</div>
                   </div>
@@ -1197,32 +1235,26 @@ export default function ClientHome() {
                     <div style={{ display: 'flex', gap: 10, alignItems: 'stretch' }}>
                       {/* Axe Y */}
                       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', paddingBottom: 22, flexShrink: 0 }}>
-                        {['120', '80', '40', '0'].map(v => (
+                        {[statMaxWeek, Math.round(statMaxWeek * .66), Math.round(statMaxWeek * .33), 0].map(v => (
                           <span key={v} style={{ fontSize: '.52rem', fontFamily: 'Inter, sans-serif', color: '#6B7280', lineHeight: 1 }}>{v}</span>
                         ))}
                       </div>
-                      {/* Barres */}
+                      {/* Barres — données réelles */}
                       <div style={{ flex: 1, display: 'flex', gap: 6, alignItems: 'flex-end' }}>
-                        {[
-                          { label: 'SEM 01', squat: 67, sdt: 83, sqKg: '80kg', sdtKg: '100kg' },
-                          { label: 'SEM 02', squat: 71, sdt: 92, sqKg: '85kg', sdtKg: '110kg' },
-                          { label: 'SEM 03', squat: 75, sdt: 96, sqKg: '90kg', sdtKg: '115kg' },
-                          { label: 'SEM 04', squat: 79, sdt: 100, sqKg: '95kg', sdtKg: '120kg' },
-                        ].map(w => (
-                          <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                            {/* Valeurs au-dessus */}
-                            <div style={{ display: 'flex', gap: 2, width: '100%', justifyContent: 'center' }}>
-                              <span style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27', flex: 1, textAlign: 'center' }}>{w.sqKg}</span>
-                              <span style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#9CA3AF', flex: 1, textAlign: 'center' }}>{w.sdtKg}</span>
+                        {statWeeklyData.length === 0 ? (
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 22, color: '#6B7280', fontSize: '.72rem' }}>Aucune activité</div>
+                        ) : statWeeklyData.map(w => {
+                          const h = Math.max(4, Math.round((w.val / statMaxWeek) * 100));
+                          return (
+                            <div key={w.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
+                              <span style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27', textAlign: 'center' }}>{w.val}</span>
+                              <div style={{ width: '100%', display: 'flex', gap: 2, alignItems: 'flex-end', height: 110 }}>
+                                <div style={{ flex: 1, background: 'linear-gradient(to top,#89070e,#b22a27)', borderRadius: '3px 3px 0 0', height: `${h}%`, transition: 'height 1s ease' }} />
+                              </div>
+                              <div style={{ fontSize: '.5rem', fontFamily: 'Lexend, sans-serif', fontWeight: 600, color: '#6B7280', letterSpacing: '.06em', textAlign: 'center' }}>{w.label}</div>
                             </div>
-                            {/* Barres */}
-                            <div style={{ width: '100%', display: 'flex', gap: 2, alignItems: 'flex-end', height: 110 }}>
-                              <div style={{ flex: 1, background: '#b22a27', borderRadius: '3px 3px 0 0', height: `${w.squat}%`, transition: 'height 1s ease' }} />
-                              <div style={{ flex: 1, background: '#4a4949', borderRadius: '3px 3px 0 0', height: `${w.sdt}%`, transition: 'height 1s ease' }} />
-                            </div>
-                            <div style={{ fontSize: '.5rem', fontFamily: 'Lexend, sans-serif', fontWeight: 600, color: '#6B7280', letterSpacing: '.06em', textAlign: 'center' }}>{w.label}</div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1257,10 +1289,10 @@ export default function ClientHome() {
                     {/* Volume soulevé */}
                     <div style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', borderRadius: 14, padding: '20px 22px', position: 'relative', overflow: 'hidden' }}>
                       <div style={{ position: 'absolute', top: -18, right: -8, fontSize: '4.5rem', opacity: .08, lineHeight: 1, pointerEvents: 'none' }}>🏋️</div>
-                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', marginBottom: 8, position: 'relative' }}>VOLUME SOULEVÉ CE MOIS</div>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.3rem,3vw,1.7rem)', color: '#fff', letterSpacing: '-.04em', lineHeight: 1, position: 'relative' }}>56 500 kg</div>
+                      <div style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.7)', marginBottom: 8, position: 'relative' }}>EXERCICES COMPLÉTÉS</div>
+                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.3rem,3vw,1.7rem)', color: '#fff', letterSpacing: '-.04em', lineHeight: 1, position: 'relative' }}>{completionLogs.length} total</div>
                       <div style={{ fontSize: '.68rem', fontFamily: 'Inter, sans-serif', color: 'rgba(255,255,255,0.8)', marginTop: 8, display: 'flex', alignItems: 'center', gap: 5, position: 'relative' }}>
-                        <span>↑</span> +8% vs mois dernier
+                        <span>↑</span> {statFilteredLogs.length} sur la période {statPeriod === 'ALL' ? 'totale' : statPeriod}
                       </div>
                     </div>
                   </div>
@@ -1274,22 +1306,37 @@ export default function ClientHome() {
                   <div style={{ marginBottom: 22 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                       <span style={{ fontSize: '.72rem', fontFamily: 'Inter, sans-serif', color: '#9CA3AF' }}>Séances complétées ce mois</span>
-                      <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.8rem', color: '#e5e2e1' }}>12 / 16</span>
+                      <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.8rem', color: '#e5e2e1' }}>{statFilteredLogs.length} / {statTotalExercises}</span>
                     </div>
                     <div style={{ height: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden', marginBottom: 7 }}>
-                      <div style={{ height: '100%', width: '75%', background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1.2s ease' }} />
+                      <div style={{ height: '100%', width: `${statRate}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1.2s ease' }} />
                     </div>
-                    <div style={{ fontSize: '.65rem', fontFamily: 'Inter, sans-serif', color: '#6B7280' }}>Il vous reste 4 séances pour atteindre votre objectif ce mois</div>
+                    <div style={{ fontSize: '.65rem', fontFamily: 'Inter, sans-serif', color: '#6B7280' }}>{statRate}% de complétion sur la période {statPeriod === 'ALL' ? 'totale' : statPeriod}</div>
                   </div>
 
-                  {/* Grille semaines */}
+                  {/* Grille semaines — données réelles */}
                   <div className="st-week-grid">
-                    {[
-                      { label: 'SEM 01', days: ['✓','-','✓','✓','-','✓','-'] },
-                      { label: 'SEM 02', days: ['✓','✓','-','✓','✓','-','-'] },
-                      { label: 'SEM 03', days: ['-','✓','✓','-','✓','✓','-'] },
-                      { label: 'SEM 04', days: ['✓','✓','-','✓','-','-','-'] },
-                    ].map(week => (
+                    {(() => {
+                      // Build last 4 weeks from real completions
+                      const activeDaySet = new Set(
+                        statFilteredLogs.map((c: any) => c.completedAt?.toDate?.()?.toDateString?.() || '').filter(Boolean)
+                      );
+                      const weeks: { label: string; days: string[] }[] = [];
+                      for (let w = 3; w >= 0; w--) {
+                        const days: string[] = [];
+                        const weekRef = new Date(); weekRef.setHours(0,0,0,0);
+                        // Go to start of current week (Monday)
+                        const dow = weekRef.getDay(); // 0=Sun
+                        const toMon = dow === 0 ? -6 : 1 - dow;
+                        weekRef.setDate(weekRef.getDate() + toMon - w * 7);
+                        for (let d = 0; d < 7; d++) {
+                          const day = new Date(weekRef); day.setDate(weekRef.getDate() + d);
+                          days.push(activeDaySet.has(day.toDateString()) ? '✓' : '-');
+                        }
+                        weeks.push({ label: `SEM ${4 - w < 10 ? '0' : ''}${4 - w}`, days });
+                      }
+                      return weeks;
+                    })().map(week => (
                       <div key={week.label}>
                         <div style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.14em', textTransform: 'uppercase', color: '#6B7280', marginBottom: 8, textAlign: 'center' }}>{week.label}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 3 }}>

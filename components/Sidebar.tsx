@@ -85,7 +85,7 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
     { label: 'Programmes',      href: '/coach/programmes', icon: '📋' },
     { label: 'Nutrition',       href: '/coach/page',     icon: '🥗' },
     { label: 'Conseils',        href: '/coach/page',     icon: '💡' },
-    { label: 'Statistiques',    href: '/coach/page',     icon: '📊' },
+    { label: 'Statistiques',    href: '/coach/stats',    icon: '📊' },
     { label: 'Messages',        href: '/coach/messages', icon: '💬', badge: true },
   ];
   const clientLinks = [
