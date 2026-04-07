@@ -25,9 +25,17 @@ export default function CoachConversationPage() {
   const [clientName, setClientName] = useState('');
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const coachIdRef = useRef<string>('');
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const clientId = (params?.clientId as string) ?? '';
 
@@ -114,8 +122,10 @@ export default function CoachConversationPage() {
         <Sidebar role="coach" />
 
         {/* Colonne conversation */}
-        <div className="page-main" style={{
+        <div style={{
           flex: 1,
+          marginLeft: isMobile ? 0 : 240,
+          width: isMobile ? '100%' : 'calc(100vw - 240px)',
           display: 'flex',
           flexDirection: 'column',
           height: '100vh',
@@ -253,9 +263,6 @@ export default function CoachConversationPage() {
           @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@700;800;900&family=Inter:wght@400;500;600&display=swap');
           *, *::before, *::after { box-sizing: border-box; }
           @keyframes spin { to { transform: rotate(360deg); } }
-          .page-main { margin-left: 0; width: 100%; }
-          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
-          @media (max-width: 767px) { .page-main { margin-left: 0 !important; width: 100% !important; } }
         `}</style>
       </div>
     </ProtectedRoute>

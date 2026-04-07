@@ -114,6 +114,15 @@ export default function CoachStatsPage() {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [period, setPeriod] = useState<Period>('30J');
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  /* Mobile detection */
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   /* Auth */
   useEffect(() => {
@@ -279,7 +288,14 @@ export default function CoachStatsPage() {
       <div style={{ display: 'flex', minHeight: '100vh', background: '#131313', color: '#e5e2e1', fontFamily: 'Inter, sans-serif', overflowX: 'hidden' }}>
         <Sidebar role="coach" />
 
-        <main className="stp-main page-main" style={{ flex: 1, padding: '0 0 80px', minWidth: 0, overflowX: 'hidden' }}>
+        <main style={{
+          flex: 1,
+          marginLeft: isMobile ? 0 : 240,
+          width: isMobile ? '100%' : 'calc(100vw - 240px)',
+          padding: '0 0 80px',
+          minWidth: 0,
+          overflowX: 'hidden',
+        }} className="stp-main">
 
           {/* ══ 1. HERO ══ */}
           <div style={{ position: 'relative', minHeight: 240, display: 'flex', alignItems: 'flex-end', overflow: 'hidden', marginBottom: 28 }}>
@@ -603,10 +619,7 @@ export default function CoachStatsPage() {
             .stp-row2  { grid-template-columns: 1fr 1fr; }
             .stp-kpi   { grid-template-columns: repeat(4,1fr); }
           }
-          .page-main { margin-left: 0; width: 100%; }
-          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
           @media (max-width: 767px) {
-            .page-main { margin-left: 0 !important; width: 100% !important; }
             .stp-hero-inner { padding: 28px 16px 24px !important; }
             .stp-inner { padding: 0 14px !important; }
           }

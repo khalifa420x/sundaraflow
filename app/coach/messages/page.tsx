@@ -65,12 +65,20 @@ export default function CoachMessagesPage() {
   const [coachName, setCoachName] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   /* Modale */
   const [showModal, setShowModal] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [startingWith, setStartingWith] = useState<string | null>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   /* ── Auth ── */
   useEffect(() => {
@@ -183,8 +191,10 @@ export default function CoachMessagesPage() {
       }}>
         <Sidebar role="coach" />
 
-        <main className="page-main" style={{
+        <main style={{
           flex: 1,
+          marginLeft: isMobile ? 0 : 240,
+          width: isMobile ? '100%' : 'calc(100vw - 240px)',
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
@@ -570,9 +580,6 @@ export default function CoachMessagesPage() {
           *, *::before, *::after { box-sizing: border-box; }
           @keyframes spin { to { transform: rotate(360deg); } }
           @keyframes modalIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: scale(1); } }
-          .page-main { margin-left: 0; width: 100%; }
-          @media (min-width: 768px) { .page-main { margin-left: 240px; width: calc(100% - 240px); } }
-          @media (max-width: 767px) { .page-main { margin-left: 0 !important; width: 100% !important; } }
         `}</style>
       </div>
     </ProtectedRoute>

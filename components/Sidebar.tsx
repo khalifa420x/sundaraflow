@@ -177,9 +177,6 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
         </div>
       </header>
 
-      {/* Spacer — compense la hauteur du header fixed sur mobile */}
-      <div className="sb-mobile-spacer" />
-
       {/* ── Overlay (rendu uniquement si ouvert) ── */}
       {mobileOpen && (
         <div
@@ -260,27 +257,13 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
           flex-shrink: 0;
         }
 
-        /* Spacer pour compenser le header fixed sur mobile */
-        .sb-mobile-spacer {
-          display: none;
-          height: 56px;
-          min-height: 56px;
-          flex-shrink: 0;
-          width: 100%;
-        }
-
         @media (max-width: 767px) {
           .sb-mobile-header { display: flex; }
-          .sb-mobile-spacer { display: block; }
           #sb-panel {
             transform: translateX(-100%);
             transition: transform .28s cubic-bezier(.4,0,.2,1);
           }
           #sb-panel.sb-open { transform: translateX(0); }
-          /* Tout contenu principal doit être décalé de 56px */
-          .page-main, .cl-main, .ch-main, .cp-main, .stp-main {
-            padding-top: 56px;
-          }
         }
 
         @media (min-width: 768px) {
