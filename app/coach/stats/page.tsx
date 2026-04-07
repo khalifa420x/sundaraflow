@@ -49,10 +49,10 @@ const AVATAR_COLORS = [
   'linear-gradient(135deg,#064e3b,#059669)',
 ];
 
-const initials = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+const mkInitials = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
 
 /* ══════════════════════════
-   HELPERS
+   HELPERS  (logique intacte)
 ══════════════════════════ */
 const filterByPeriod = (completions: Completion[], period: Period): Completion[] => {
   const now = new Date();
@@ -153,10 +153,9 @@ export default function CoachStatsPage() {
             } catch { /* keep default */ }
           }
           list.push({
-            id: d.id,
-            name,
+            id: d.id, name,
             clientUserId: data.clientUserId || d.id,
-            initials: initials(name),
+            initials: mkInitials(name),
             color: AVATAR_COLORS[ci % AVATAR_COLORS.length],
           });
           ci++;
@@ -192,12 +191,9 @@ export default function CoachStatsPage() {
             } catch { /* keep empty */ }
           }
           list.push({
-            id: d.id,
-            clientId: data.clientId,
-            programId: data.programId,
-            programTitle: title,
-            status: data.status,
-            sessions,
+            id: d.id, clientId: data.clientId,
+            programId: data.programId, programTitle: title,
+            status: data.status, sessions,
           });
         }
         setAssignments(list);
@@ -219,7 +215,7 @@ export default function CoachStatsPage() {
     return () => unsub();
   }, [uid]);
 
-  /* Computed */
+  /* ── Computed ── */
   const filtered = useMemo(() => {
     const base = selectedClientId
       ? getClientCompletions(selectedClientId, completions)
@@ -233,12 +229,14 @@ export default function CoachStatsPage() {
       : assignments,
   [assignments, selectedClientId]);
 
-  const totalEx = getTotalExercises(filteredAssignments);
-  const rate = getCompletionRate(filtered.length, totalEx);
+  const totalEx    = getTotalExercises(filteredAssignments);
+  const rate       = getCompletionRate(filtered.length, totalEx);
   const activeDays = getActiveDays(filtered);
   const activeClients = new Set(filtered.map(c => c.clientId)).size;
+  const activeClients7d = new Set(
+    filterByPeriod(completions, '7J').map(c => c.clientId),
+  ).size;
   const weeklyData = useMemo(() => getWeeklyData(filtered), [filtered]);
-  const maxWeek = Math.max(1, ...weeklyData.map(d => d.val));
   const muscleData = useMemo(() => getMuscleDistribution(filtered, filteredAssignments), [filtered, filteredAssignments]);
   const selName = selectedClientId
     ? (clients.find(c => c.clientUserId === selectedClientId)?.name || 'Client')
@@ -254,325 +252,337 @@ export default function CoachStatsPage() {
     return map;
   }, [completions]);
 
-  const insightText = filtered.length === 0
-    ? 'Aucune activité enregistrée sur cette période. Relancez ce client pour reprendre le suivi.'
+  /* Insight texts */
+  const insightTitle = filtered.length === 0
+    ? 'Démarrage en attente.'
+    : rate >= 80 ? 'Performance Élite.'
+    : rate >= 50 ? 'Progression Solide.'
+    : 'Reprise à planifier.';
+  const insightDesc = filtered.length === 0
+    ? `Aucune activité enregistrée pour ${selName}. Relancez ce client pour reprendre le suivi.`
     : rate >= 80
-    ? `Excellente assiduité à ${rate}%. Augmentez progressivement l'intensité pour maximiser la progression.`
+    ? `${selName} maintient une assiduité de ${rate}%. Volume optimal atteint — envisagez une montée en intensité progressive.`
     : rate >= 50
-    ? `Bonne progression à ${rate}%. Encouragez la régularité — la constance est la clé des résultats.`
-    : `Activité faible à ${rate}%. Identifiez les obstacles et proposez un ajustement du programme.`;
+    ? `${selName} progresse à ${rate}% d'assiduité. Encouragez la régularité hebdomadaire pour débloquer la phase de progression.`
+    : `Assiduité à ${rate}% pour ${selName}. Identifiez les obstacles et proposez un ajustement du volume ou du rythme.`;
+
+  /* SVG area chart */
+  const chartData = weeklyData.length >= 2 ? weeklyData
+    : weeklyData.length === 1 ? [{ label: '', val: 0 }, weeklyData[0]]
+    : [{ label: 'SEM 1', val: 0 }, { label: 'SEM 2', val: 0 }, { label: 'SEM 3', val: 0 }, { label: 'SEM 4', val: 0 }];
+  const maxVal = Math.max(...chartData.map(w => w.val), 1);
+  const chartW = 400; const chartH = 160;
+  const pts = chartData.map((w, i) => ({
+    x: 20 + (i / (chartData.length - 1 || 1)) * 360,
+    y: 140 - (w.val / maxVal) * 120,
+  }));
+  const pathD  = pts.map((p, i) => (i === 0 ? 'M' : 'L') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  const areaD  = pathD + ` L${pts[pts.length - 1].x.toFixed(1)} 140 L20 140 Z`;
+  const lastPt = pts[pts.length - 1];
 
   return (
     <ProtectedRoute role="coach">
       <div style={{ display: 'flex', minHeight: '100vh', background: '#131313', color: '#e5e2e1', fontFamily: 'Inter, sans-serif', overflowX: 'hidden' }}>
         <Sidebar role="coach" />
 
-        <main style={{ flex: 1, marginLeft: 240, padding: '36px 32px 80px', minWidth: 0 }} className="stm">
+        <main className="stp-main" style={{ flex: 1, marginLeft: 240, padding: '0 0 80px', minWidth: 0 }}>
 
-          {/* ══ HERO ══ */}
-          <header style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 40 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 20 }}>
+          {/* ══ 1. HERO ══ */}
+          <div style={{ position: 'relative', minHeight: 260, display: 'flex', alignItems: 'flex-end', overflow: 'hidden', marginBottom: 32 }}>
+            {/* BG photo */}
+            <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1920&q=80)', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.18)' }} />
+            {/* Overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #131313 0%, rgba(19,19,19,0.6) 60%, transparent 100%)' }} />
+            {/* Content */}
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', padding: '48px 36px 36px', display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 24 }}>
               <div>
-                <p style={{ fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>
-                  📊 ANALYTICS
-                </p>
-                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2.8rem,7vw,5.5rem)', letterSpacing: '-.05em', lineHeight: .88, textTransform: 'uppercase', margin: 0, color: '#e5e2e1' }}>
+                <p style={{ fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.4)', margin: '0 0 10px' }}>📊 ANALYTICS</p>
+                <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(3rem,6vw,5rem)', letterSpacing: '-.05em', lineHeight: .88, textTransform: 'uppercase', margin: 0 }}>
                   SUIVI <span style={{ color: '#b22a27' }}>PERFORMANCES.</span>
                 </h1>
-                <p style={{ color: '#6B7280', fontSize: '.85rem', margin: '12px 0 0', maxWidth: 520 }}>
-                  Métriques synthétisées et suivi biométrique de votre équipe en temps réel.
+                <p style={{ color: '#6B7280', fontSize: '.85rem', margin: '14px 0 0' }}>
+                  Données en temps réel · {clients.length} client{clients.length !== 1 ? 's' : ''} · Période {period === 'ALL' ? 'totale' : period}
                 </p>
               </div>
               {/* Period pills */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <div style={{ display: 'inline-flex', background: '#1c1b1b', padding: 4, borderRadius: 9999, border: '1px solid rgba(255,255,255,0.06)' }}>
-                  {(['7J', '30J', 'ALL'] as Period[]).map(p => (
-                    <button key={p} onClick={() => setPeriod(p)} style={{
-                      padding: '8px 22px', borderRadius: 9999, border: 'none', cursor: 'pointer',
-                      fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem',
-                      letterSpacing: '.1em', textTransform: 'uppercase',
-                      background: period === p ? '#353534' : 'transparent',
-                      color: period === p ? '#b22a27' : '#9CA3AF',
-                      transition: 'all .15s',
-                    }}>
-                      {p === 'ALL' ? 'ALL TIME' : p}
-                    </button>
-                  ))}
-                </div>
+              <div style={{ display: 'inline-flex', background: 'rgba(28,27,27,0.85)', border: '1px solid rgba(255,255,255,0.07)', padding: 4, borderRadius: 9999 }}>
+                {(['7J', '30J', 'ALL'] as Period[]).map(p => (
+                  <button key={p} onClick={() => setPeriod(p)} style={{
+                    padding: '9px 22px', borderRadius: 9999, border: 'none', cursor: 'pointer',
+                    fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem',
+                    letterSpacing: '.12em', textTransform: 'uppercase',
+                    background: period === p ? '#b22a27' : 'transparent',
+                    color: period === p ? '#fff' : '#9CA3AF',
+                    transition: 'all .15s',
+                  }}>
+                    {p === 'ALL' ? 'ALL TIME' : p}
+                  </button>
+                ))}
               </div>
             </div>
-          </header>
-
-          {/* ══ CLIENT PILLS ══ */}
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, marginBottom: 32, scrollbarWidth: 'none' }}>
-            {[{ id: null as string | null, name: 'ÉQUIPE', ini: '⊞', color: '' },
-              ...clients.map(c => ({ id: c.clientUserId, name: c.name, ini: c.initials, color: c.color })),
-            ].map(item => {
-              const active = selectedClientId === item.id;
-              return (
-                <button key={item.id || 'all'} onClick={() => setSelectedClientId(item.id)} style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  padding: '8px 16px', borderRadius: 9999, flexShrink: 0, cursor: 'pointer',
-                  border: active ? '1px solid #b22a27' : '1px solid rgba(255,255,255,0.08)',
-                  background: active ? 'rgba(178,42,39,0.12)' : '#1c1b1b',
-                  color: active ? '#b22a27' : '#e5e2e1',
-                  fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem',
-                  letterSpacing: '.06em', textTransform: 'uppercase', transition: 'all .15s',
-                }}>
-                  {item.id && (
-                    <span style={{ width: 22, height: 22, borderRadius: '50%', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.5rem', color: '#fff', flexShrink: 0 }}>
-                      {item.ini}
-                    </span>
-                  )}
-                  {!item.id && <span style={{ fontSize: '.8rem' }}>⊞</span>}
-                  {item.name}
-                </button>
-              );
-            })}
           </div>
 
-          {/* ══ BENTO MAIN GRID ══ */}
-          <div className="stm-bento" style={{ display: 'grid', gap: 20, marginBottom: 20 }}>
+          <div style={{ padding: '0 28px' }}>
 
-            {/* ── CHART CARD (col-span-8) ── */}
-            <div style={{ background: '#1c1b1b', borderRadius: 16, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', minHeight: 360 }}>
-              <div style={{ padding: '28px 28px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
-                <div>
-                  <p style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 6px' }}>ACTIVITÉ HEBDOMADAIRE</p>
-                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,3vw,2.6rem)', color: '#e5e2e1', lineHeight: 1, letterSpacing: '-.04em' }}>
-                    {filtered.length} <span style={{ fontSize: '.75rem', fontWeight: 500, color: '#9CA3AF' }}>exercices / période</span>
-                  </div>
-                </div>
-                {rate > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'rgba(178,42,39,0.12)', border: '1px solid rgba(178,42,39,0.25)', borderRadius: 9999 }}>
-                    <span style={{ fontSize: '.78rem' }}>↗</span>
-                    <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem', color: '#b22a27' }}>{rate}% assiduité</span>
-                  </div>
-                )}
-              </div>
-
-              {/* SVG area chart */}
-              <div style={{ flex: 1, padding: '0 28px 28px', overflowX: 'auto' }}>
-                {weeklyData.length === 0 ? (
-                  <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: '.78rem' }}>Aucune activité sur cette période.</div>
-                ) : (
-                  <div style={{ position: 'relative', width: '100%', minWidth: 340, height: 220 }}>
-                    <svg viewBox="0 0 700 200" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                      <defs>
-                        <linearGradient id="areaGrad" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor="#b22a27" stopOpacity="0.6" />
-                          <stop offset="100%" stopColor="#89070e" stopOpacity="0.02" />
-                        </linearGradient>
-                      </defs>
-                      {(() => {
-                        const pts = weeklyData;
-                        const n = pts.length;
-                        if (n < 2) return null;
-                        const xs = pts.map((_, i) => (i / (n - 1)) * 680 + 10);
-                        const ys = pts.map(d => 160 - (d.val / maxWeek) * 130);
-                        const area = `M${xs[0]},${ys[0]} ` +
-                          xs.slice(1).map((x, i) => `Q${(xs[i] + x) / 2},${(ys[i] + ys[i + 1]) / 2} ${x},${ys[i + 1]}`).join(' ') +
-                          ` V180 H10 Z`;
-                        const line = `M${xs[0]},${ys[0]} ` +
-                          xs.slice(1).map((x, i) => `Q${(xs[i] + x) / 2},${(ys[i] + ys[i + 1]) / 2} ${x},${ys[i + 1]}`).join(' ');
-                        const topIdx = pts.reduce((best, d, i) => d.val > pts[best].val ? i : best, 0);
-                        return (
-                          <>
-                            <path d={area} fill="url(#areaGrad)" />
-                            <path d={line} fill="none" stroke="#b22a27" strokeWidth="3" strokeLinecap="round" />
-                            {/* Peak dot */}
-                            <circle cx={xs[topIdx]} cy={ys[topIdx]} r="6" fill="#b22a27" />
-                            <circle cx={xs[topIdx]} cy={ys[topIdx]} r="10" fill="rgba(178,42,39,0.25)" />
-                            {/* Week labels */}
-                            {pts.map((d, i) => (
-                              <text key={i} x={xs[i]} y="196" textAnchor="middle" fontSize="9" fill="#6B7280" fontFamily="Lexend" fontWeight="600">
-                                {d.label}
-                              </text>
-                            ))}
-                          </>
-                        );
-                      })()}
-                    </svg>
-                  </div>
-                )}
-              </div>
+            {/* ══ 2. CLIENT PILLS ══ */}
+            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 6, marginBottom: 28, scrollbarWidth: 'none' }}>
+              {[
+                { id: null as string | null, name: 'ÉQUIPE', ini: null, color: '' },
+                ...clients.map(c => ({ id: c.clientUserId, name: c.name, ini: c.initials, color: c.color })),
+              ].map(item => {
+                const active = selectedClientId === item.id;
+                return (
+                  <button key={item.id || 'all'} onClick={() => setSelectedClientId(item.id)} style={{
+                    display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap',
+                    padding: '8px 16px', borderRadius: 9999, flexShrink: 0, cursor: 'pointer',
+                    border: active ? '1px solid #b22a27' : '1px solid rgba(255,255,255,0.08)',
+                    background: active ? 'rgba(178,42,39,0.14)' : '#1c1b1b',
+                    color: active ? '#b22a27' : '#9CA3AF',
+                    fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.65rem',
+                    letterSpacing: '.08em', textTransform: 'uppercase', transition: 'all .15s',
+                  }}>
+                    {item.ini ? (
+                      <span style={{ width: 20, height: 20, borderRadius: '50%', background: item.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.46rem', color: '#fff', flexShrink: 0, fontFamily: 'Lexend, sans-serif', fontWeight: 800 }}>
+                        {item.ini}
+                      </span>
+                    ) : <span>⊞</span>}
+                    {item.name}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* ── KPI CARDS COLUMN (col-span-4) ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              {/* Card 1 — Exercices complétés */}
-              <div style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '28px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(178,42,39,0.15)', border: '1px solid rgba(178,42,39,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>✓</div>
-                </div>
-                <div>
-                  <p style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>EXERCICES COMPLÉTÉS</p>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2.2rem,4vw,3rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>{filtered.length}</span>
+            {/* ══ 3. BENTO PRINCIPAL : grand chart + 2 KPI ══ */}
+            <div className="stp-bento" style={{ display: 'grid', gap: 16, marginBottom: 16 }}>
+
+              {/* ── Grande carte graphique ── */}
+              <div style={{ background: '#1c1b1b', borderRadius: 16, border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 340 }}>
+                <div style={{ padding: '24px 24px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                  <div>
+                    <p style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>ACTIVITÉ HEBDOMADAIRE</p>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,4vw,3rem)', color: '#e5e2e1', lineHeight: 1, letterSpacing: '-.05em' }}>
+                      {filtered.length}
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '.78rem', color: '#6B7280', marginLeft: 10 }}>exercices / période</span>
+                    </div>
                   </div>
+                  {rate > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '6px 14px', background: 'rgba(178,42,39,0.1)', border: '1px solid rgba(178,42,39,0.25)', borderRadius: 9999 }}>
+                      <span style={{ fontSize: '.8rem' }}>↗</span>
+                      <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.6rem', color: '#b22a27', letterSpacing: '.08em' }}>{rate}% ASSIDUITÉ</span>
+                    </div>
+                  )}
                 </div>
-                <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${Math.min(100, totalEx > 0 ? (filtered.length / totalEx) * 100 : 0)}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1s ease' }} />
+
+                {/* SVG area chart */}
+                <div style={{ flex: 1, padding: '0 24px 24px', overflowX: 'hidden' }}>
+                  <svg viewBox={`0 0 ${chartW} ${chartH}`} preserveAspectRatio="none"
+                    style={{ width: '100%', height: 200, display: 'block' }}>
+                    <defs>
+                      <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#b22a27" stopOpacity="0.6" />
+                        <stop offset="100%" stopColor="#b22a27" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    {/* Area fill */}
+                    <path d={areaD} fill="url(#areaGrad)" opacity="0.8" />
+                    {/* Line */}
+                    <path d={pathD} stroke="#b22a27" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    {/* Peak dot */}
+                    <circle cx={lastPt.x} cy={lastPt.y} r="5" fill="#b22a27" />
+                    <circle cx={lastPt.x} cy={lastPt.y} r="9" fill="rgba(178,42,39,0.25)" />
+                    {/* Week labels */}
+                    {chartData.map((d, i) => (
+                      d.label ? (
+                        <text key={i} x={pts[i].x} y="155" textAnchor="middle" fontSize="9" fill="#6B7280" fontFamily="Lexend" fontWeight="600">
+                          {d.label}
+                        </text>
+                      ) : null
+                    ))}
+                  </svg>
                 </div>
               </div>
 
-              {/* Card 2 — Jours actifs / clients actifs */}
-              <div style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '28px', display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(178,42,39,0.15)', border: '1px solid rgba(178,42,39,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+              {/* ── 2 KPI cards empilées ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                {/* KPI 1 — exercices complétés */}
+                <div style={{ background: '#2a2929', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(178,42,39,0.15)', border: '1px solid rgba(178,42,39,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', color: '#b22a27', fontWeight: 900 }}>✓</div>
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '.54rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>EXERCICES COMPLÉTÉS</p>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '2.5rem', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>{filtered.length}</div>
+                  </div>
+                  <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${totalEx > 0 ? Math.min(100, Math.round(filtered.length / totalEx * 100)) : 0}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1s ease' }} />
+                  </div>
+                </div>
+
+                {/* KPI 2 — jours actifs ou clients actifs */}
+                <div style={{ background: '#2a2929', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '28px 24px', display: 'flex', flexDirection: 'column', gap: 18, flex: 1 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(178,42,39,0.15)', border: '1px solid rgba(178,42,39,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
                     {selectedClientId ? '🔥' : '👥'}
                   </div>
-                </div>
-                <div>
-                  <p style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>
-                    {selectedClientId ? 'JOURS ACTIFS' : 'CLIENTS ACTIFS'}
-                  </p>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2.2rem,4vw,3rem)', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>
+                  <div>
+                    <p style={{ fontSize: '.54rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 8px' }}>
+                      {selectedClientId ? 'JOURS ACTIFS' : 'CLIENTS ACTIFS'}
+                    </p>
+                    <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '2.5rem', color: '#e5e2e1', letterSpacing: '-.05em', lineHeight: 1 }}>
                       {selectedClientId ? activeDays : activeClients}
-                    </span>
-                    <span style={{ fontSize: '.7rem', color: '#9CA3AF', fontWeight: 500 }}>
-                      {selectedClientId ? '/ période' : `/ ${clients.length}`}
+                      <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 400, fontSize: '.7rem', color: '#6B7280', marginLeft: 6 }}>
+                        {selectedClientId ? '/ période' : `/ ${clients.length}`}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: '#16a34a', fontSize: '.9rem' }}>↑</span>
+                    <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.6rem', color: '#16a34a', letterSpacing: '.06em' }}>
+                      {rate >= 70 ? `+${rate}% ZONE OPTIMALE` : `${rate}% ASSIDUITÉ`}
                     </span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '.8rem', color: '#16a34a' }}>↑</span>
-                  <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.62rem', color: '#16a34a' }}>
-                    {rate >= 70 ? '+' + rate + '% optimal' : rate + '% assiduité'}
-                  </span>
+              </div>
+            </div>
+
+            {/* ══ 4. ROW 2 : distribution + insight ══ */}
+            <div className="stp-row2" style={{ display: 'grid', gap: 16, marginBottom: 16 }}>
+
+              {/* ── Distribution musculaire ── */}
+              <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 14, padding: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                  <p style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#9CA3AF', margin: 0 }}>DISTRIBUTION MUSCULAIRE</p>
+                  <span style={{ color: '#6B7280', fontSize: '1rem', cursor: 'default' }}>ⓘ</span>
+                </div>
+                {muscleData.length === 0 ? (
+                  <div style={{ color: '#6B7280', fontSize: '.78rem', padding: '16px 0' }}>Pas encore de données musculaires.</div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                    {muscleData.map(m => (
+                      <div key={m.label}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span style={{ fontSize: '.62rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>{m.label}</span>
+                          <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: '#e5e2e1' }}>{m.pct}%</span>
+                        </div>
+                        <div style={{ height: 10, background: 'rgba(255,255,255,0.06)', borderRadius: 9999, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${m.pct}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1.1s ease' }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* ── Insight card avec photo ── */}
+              <div style={{ borderRadius: 14, overflow: 'hidden', position: 'relative', minHeight: 260 }}>
+                {/* Photo BG */}
+                <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=600&q=50)', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'brightness(0.2)' }} />
+                {/* Overlay gradient */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(137,7,14,0.85) 0%, rgba(10,10,10,0.92) 100%)' }} />
+                {/* Content */}
+                <div style={{ position: 'relative', zIndex: 1, padding: '28px 24px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 14 }}>
+                  {/* Badge */}
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 14px', background: 'rgba(178,42,39,0.3)', border: '1px solid rgba(178,42,39,0.5)', borderRadius: 9999, alignSelf: 'flex-start' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#b22a27' }} />
+                    <span style={{ fontSize: '.55rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27', letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                      ANALYSE · {selName.toUpperCase()}
+                    </span>
+                  </div>
+                  {/* Title */}
+                  <h3 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.4rem,2.5vw,1.8rem)', color: '#fff', lineHeight: 1.1, margin: 0, letterSpacing: '-.02em' }}>
+                    {insightTitle}
+                  </h3>
+                  {/* Desc */}
+                  <p style={{ color: 'rgba(229,226,225,0.75)', fontSize: '.8rem', lineHeight: 1.65, margin: 0 }}>
+                    {insightDesc}
+                  </p>
+                  {/* CTA */}
+                  <button
+                    onClick={() => setSelectedClientId(selectedClientId ? null : (clients[0]?.clientUserId || null))}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', padding: 0, marginTop: 4 }}
+                  >
+                    {selectedClientId ? '← VOIR L\'ÉQUIPE' : '→ VOIR UN CLIENT'}
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* ══ SECOND ROW ══ */}
-          <div className="stm-row2" style={{ display: 'grid', gap: 20, marginBottom: 20 }}>
-
-            {/* ── Muscle distribution (col-span-5) ── */}
-            <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '28px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
-                <p style={{ fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase', color: '#9CA3AF', margin: 0 }}>DISTRIBUTION MUSCULAIRE</p>
-                <span style={{ fontSize: '.78rem', color: '#6B7280' }}>ℹ</span>
-              </div>
-              {muscleData.length === 0 ? (
-                <div style={{ color: '#6B7280', fontSize: '.78rem', padding: '20px 0' }}>Pas encore de données musculaires.</div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  {muscleData.map(m => (
-                    <div key={m.label}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '.65rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase' }}>
-                        <span style={{ color: '#e5e2e1' }}>{m.label}</span>
-                        <span style={{ color: '#b22a27' }}>{m.pct}%</span>
+            {/* ══ 5. LISTE CLIENTS ══ */}
+            {clients.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+                {clients
+                  .map(cl => {
+                    const ts = lastActivityMap.get(cl.clientUserId) || 0;
+                    const clComps = filterByPeriod(getClientCompletions(cl.clientUserId, completions), period);
+                    const clTotal = getTotalExercises(assignments.filter(a => a.clientId === cl.clientUserId));
+                    const clRate = getCompletionRate(clComps.length, clTotal);
+                    const isRecent = ts > 0 && Date.now() - ts < 7 * 86400000;
+                    return { ...cl, ts, clRate, isRecent };
+                  })
+                  .sort((a, b) => b.ts - a.ts)
+                  .map(cl => (
+                    <div
+                      key={cl.id}
+                      onClick={() => setSelectedClientId(selectedClientId === cl.clientUserId ? null : cl.clientUserId)}
+                      style={{
+                        background: selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.08)' : '#1c1b1b',
+                        border: `1px solid ${selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                        borderLeft: `3px solid ${cl.isRecent ? '#b22a27' : 'rgba(178,42,39,0.15)'}`,
+                        borderRadius: 10, padding: '16px 20px',
+                        display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer',
+                        transition: 'all .18s', flexWrap: 'wrap',
+                      }}
+                    >
+                      <div style={{ width: 42, height: 42, borderRadius: '50%', background: cl.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.58rem', fontFamily: 'Lexend, sans-serif', fontWeight: 800, color: '#fff', flexShrink: 0 }}>
+                        {cl.initials}
                       </div>
-                      <div style={{ height: 10, background: '#353534', borderRadius: 9999, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${m.pct}%`, background: 'linear-gradient(90deg,#89070e,#b22a27)', borderRadius: 9999, transition: 'width 1s ease' }} />
+                      <div style={{ flex: 1, minWidth: 110 }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', color: '#e5e2e1', marginBottom: 3 }}>{cl.name}</div>
+                        <div style={{ fontSize: '.62rem', color: '#9CA3AF' }}>
+                          {cl.ts > 0 ? 'Dernier : ' + new Date(cl.ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Aucune activité'}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'center', minWidth: 52 }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.2rem', color: '#e5e2e1', lineHeight: 1, letterSpacing: '-.02em' }}>{cl.clRate}%</div>
+                        <div style={{ fontSize: '.5rem', color: '#9CA3AF', fontFamily: 'Lexend, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 3 }}>assiduité</div>
+                      </div>
+                      <div style={{
+                        padding: '4px 12px', borderRadius: 9999, flexShrink: 0,
+                        background: cl.isRecent ? 'rgba(22,163,74,0.1)' : 'rgba(255,255,255,0.04)',
+                        border: `1px solid ${cl.isRecent ? 'rgba(22,163,74,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                        fontSize: '.5rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700,
+                        color: cl.isRecent ? '#16a34a' : '#6B7280', letterSpacing: '.1em', textTransform: 'uppercase',
+                      }}>
+                        {cl.isRecent ? 'ACTIF' : 'INACTIF'}
                       </div>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
-
-            {/* ── Insight / Activity card (col-span-7) ── */}
-            <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, position: 'relative', overflow: 'hidden', minHeight: 280 }}>
-              {/* BG image */}
-              <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=60)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: .15 }} />
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #1c1b1b 40%, rgba(28,27,27,0.7) 100%)' }} />
-              <div style={{ position: 'relative', zIndex: 1, padding: '32px 28px', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', gap: 16 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'rgba(178,42,39,0.18)', backdropFilter: 'blur(8px)', border: '1px solid rgba(178,42,39,0.35)', borderRadius: 9999, alignSelf: 'flex-start' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#b22a27' }} />
-                  <span style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, color: '#b22a27', letterSpacing: '.14em', textTransform: 'uppercase' }}>
-                    ANALYSE · {selName.toUpperCase()}
-                  </span>
-                </div>
-                <h3 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.2rem,2.5vw,1.8rem)', color: '#e5e2e1', lineHeight: 1.15, margin: 0, letterSpacing: '-.02em' }}>
-                  {rate >= 80
-                    ? 'Pic de performance atteint.'
-                    : rate >= 50
-                    ? 'Progression en cours.'
-                    : 'Reprise à planifier.'}
-                </h3>
-                <p style={{ color: '#9CA3AF', fontSize: '.82rem', lineHeight: 1.7, margin: 0, maxWidth: 520 }}>
-                  {insightText}
-                </p>
-                {selectedClientId && (
-                  <button
-                    onClick={() => setSelectedClientId(null)}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.65rem', letterSpacing: '.12em', textTransform: 'uppercase', color: '#b22a27', padding: 0, marginTop: 4 }}
-                  >
-                    ← VOIR L'ÉQUIPE
-                  </button>
-                )}
               </div>
-            </div>
-          </div>
-
-          {/* ══ BOTTOM STATS — Last activity ══ */}
-          <div className="stm-bottom" style={{ display: 'grid', gap: 20 }}>
-            {clients.length === 0 ? (
-              <div style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 16, padding: '32px', textAlign: 'center', color: '#6B7280', fontSize: '.82rem' }}>
-                Aucun client assigné.
-              </div>
-            ) : (
-              clients
-                .map(cl => {
-                  const ts = lastActivityMap.get(cl.clientUserId) || 0;
-                  const clComps = filterByPeriod(getClientCompletions(cl.clientUserId, completions), period);
-                  const clTotal = getTotalExercises(assignments.filter(a => a.clientId === cl.clientUserId));
-                  const clRate = getCompletionRate(clComps.length, clTotal);
-                  const isRecent = ts > 0 && Date.now() - ts < 7 * 86400000;
-                  return { ...cl, ts, clRate, clComps: clComps.length, isRecent };
-                })
-                .sort((a, b) => b.ts - a.ts)
-                .map(cl => (
-                  <div
-                    key={cl.id}
-                    onClick={() => setSelectedClientId(selectedClientId === cl.clientUserId ? null : cl.clientUserId)}
-                    style={{
-                      background: selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.08)' : '#1c1b1b',
-                      border: `1px solid ${selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                      borderLeft: `3px solid ${cl.isRecent ? '#b22a27' : 'rgba(178,42,39,0.15)'}`,
-                      borderRadius: 14, padding: '18px 22px',
-                      display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer',
-                      transition: 'all .2s', flexWrap: 'wrap',
-                    }}
-                  >
-                    {/* Avatar */}
-                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: cl.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '.62rem', fontFamily: 'Lexend, sans-serif', fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                      {cl.initials}
-                    </div>
-                    {/* Name + last activity */}
-                    <div style={{ flex: 1, minWidth: 120 }}>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.88rem', color: '#e5e2e1', marginBottom: 3 }}>{cl.name}</div>
-                      <div style={{ fontSize: '.65rem', color: '#9CA3AF' }}>
-                        {cl.ts > 0 ? 'Dernier : ' + new Date(cl.ts).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Aucune activité'}
-                      </div>
-                    </div>
-                    {/* Rate */}
-                    <div style={{ textAlign: 'center', minWidth: 60 }}>
-                      <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.3rem', color: '#e5e2e1', lineHeight: 1, letterSpacing: '-.03em' }}>{cl.clRate}%</div>
-                      <div style={{ fontSize: '.52rem', color: '#9CA3AF', fontFamily: 'Lexend, sans-serif', fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', marginTop: 3 }}>assiduité</div>
-                    </div>
-                    {/* Badge */}
-                    <div style={{
-                      padding: '5px 12px', borderRadius: 9999, flexShrink: 0,
-                      background: cl.isRecent ? 'rgba(22,163,74,0.12)' : 'rgba(255,255,255,0.05)',
-                      border: `1px solid ${cl.isRecent ? 'rgba(22,163,74,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                      fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700,
-                      color: cl.isRecent ? '#16a34a' : '#6B7280', letterSpacing: '.1em', textTransform: 'uppercase',
-                    }}>
-                      {cl.isRecent ? 'ACTIF' : 'INACTIF'}
-                    </div>
-                  </div>
-                ))
             )}
-          </div>
 
+            {/* ══ 6. KPI ROW FINAL ══ */}
+            <div className="stp-kpi" style={{ display: 'grid', gap: 12 }}>
+              {[
+                { label: 'TAUX GLOBAL', val: rate + '%', sub: `${filtered.length} / ${totalEx} exercices`, icon: '📊' },
+                { label: 'EXERCICES FAITS', val: String(filtered.length), sub: 'sur la période sélectionnée', icon: '✓' },
+                { label: 'JOURS ACTIFS', val: String(activeDays), sub: 'jours avec activité', icon: '📅' },
+                { label: 'CLIENTS ACTIFS 7J', val: String(activeClients7d), sub: `sur ${clients.length} membres`, icon: '👥' },
+              ].map(k => (
+                <div key={k.label} style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, padding: '18px 16px', borderLeft: '2px solid rgba(178,42,39,0.35)' }}>
+                  <p style={{ fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#9CA3AF', margin: '0 0 10px' }}>{k.label}</p>
+                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.8rem', color: '#b22a27', letterSpacing: '-.04em', lineHeight: 1 }}>{k.val}</div>
+                  <p style={{ fontSize: '.62rem', color: '#6B7280', margin: '8px 0 0' }}>{k.sub}</p>
+                </div>
+              ))}
+            </div>
+
+          </div>{/* /inner padding */}
+
+          {/* Spinner */}
           {loading && (
-            <div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px', background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9999, fontSize: '.72rem', color: '#9CA3AF' }}>
+            <div style={{ position: 'fixed', bottom: 24, right: 24, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px', background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 9999, fontSize: '.72rem', color: '#9CA3AF', zIndex: 99 }}>
               <div style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.06)', borderTopColor: '#b22a27', animation: 'spin .8s linear infinite' }} />
-              Chargement…
+              Synchronisation…
             </div>
           )}
         </main>
@@ -581,24 +591,25 @@ export default function CoachStatsPage() {
           @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@700;800;900&family=Inter:wght@400;500;600&display=swap');
           *, *::before, *::after { box-sizing: border-box; }
           @keyframes spin { to { transform: rotate(360deg); } }
-          /* Bento: default mobile */
-          .stm-bento { grid-template-columns: 1fr; }
-          .stm-row2  { grid-template-columns: 1fr; }
-          .stm-bottom{ grid-template-columns: 1fr; }
-          /* ≥900px : reference bento layout */
+
+          /* bento: mobile first */
+          .stp-bento  { grid-template-columns: 1fr; }
+          .stp-row2   { grid-template-columns: 1fr; }
+          .stp-kpi    { grid-template-columns: repeat(2,1fr); }
+
+          /* ≥ 900px — desktop bento */
           @media (min-width: 900px) {
-            .stm-bento  { grid-template-columns: 2fr 1fr; }
-            .stm-row2   { grid-template-columns: 5fr 7fr; }
-            .stm-bottom { grid-template-columns: repeat(2,1fr); }
+            .stp-bento { grid-template-columns: 2fr 1fr; }
+            .stp-row2  { grid-template-columns: 1fr 1fr; }
+            .stp-kpi   { grid-template-columns: repeat(4,1fr); }
           }
-          @media (min-width: 1200px) {
-            .stm-bottom { grid-template-columns: repeat(3,1fr); }
-          }
-          /* Mobile */
+
+          /* Mobile adjustments */
           @media (max-width: 767px) {
-            .stm { margin-left: 0 !important; padding: 20px 14px 100px !important; }
+            .stp-main { margin-left: 0 !important; }
           }
-          /* Hide scrollbar on pills */
+
+          /* Hide scrollbars on pill row */
           div::-webkit-scrollbar { display: none; }
         `}</style>
       </div>
