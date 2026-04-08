@@ -70,10 +70,21 @@ export default function CoachNutrition() {
   const [savingNut, setSavingNut] = useState(false);
   const [savingMeal, setSavingMeal] = useState(false);
   const [deletingMeal, setDeletingMeal] = useState('');
+  const [foodItems, setFoodItems] = useState<any[]>([]);
+  const [foodQuery, setFoodQuery] = useState('');
+  const [foodResults, setFoodResults] = useState<any[]>([]);
+  const [foodLoading, setFoodLoading] = useState(false);
+  const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
 
   /* Computed */
   const selectedNutPlan = selClient ? nutritionPlans.find(n => n.clientId === selClient.clientUserId || n.clientId === selClient.userId) || null : null;
   const clientMeals = selClient ? meals.filter(m => m.clientId === (selClient.clientUserId || selClient.userId)) : [];
+  const mealTotals = foodItems.reduce((acc, item) => ({
+    calories: acc.calories + (item.calories || 0),
+    protein: acc.protein + (item.protein || 0),
+    carbs: acc.carbs + (item.carbs || 0),
+    fat: acc.fat + (item.fat || 0),
+  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -176,20 +187,76 @@ export default function CoachNutrition() {
   };
 
   const handleAddMeal = async () => {
-    if (!user || !selClient || !mealForm.name) return;
+    if (!user || !selClient || !mealForm.name || foodItems.length === 0) return;
     setSavingMeal(true);
     const clientUserId = selClient.clientUserId || selClient.userId;
     try {
       await addDoc(collection(db, 'coach_meals'), {
         coachId: user.uid, clientId: clientUserId, clientName: selClient.name,
-        ...mealForm, createdAt: Timestamp.now(),
+        name: mealForm.name,
+        time: mealForm.time,
+        description: mealForm.description,
+        emoji: mealForm.emoji || '🍽️',
+        items: foodItems,
+        calories: mealTotals.calories,
+        protein: mealTotals.protein,
+        carbs: mealTotals.carbs,
+        fat: mealTotals.fat,
+        createdAt: Timestamp.now(),
       });
       fireToast('🍽️', 'Repas ajouté', mealForm.name);
       setMealForm(defaultMealForm());
+      setFoodItems([]);
+      setFoodQuery('');
       setShowMealForm(false);
       await fetchAll(user);
     } catch { fireToast('❌', 'Erreur', "Impossible d'ajouter."); }
     setSavingMeal(false);
+  };
+
+  const searchFoodItems = async (q: string) => {
+    if (q.length < 2) { setFoodResults([]); setFoodDropdownOpen(false); return; }
+    setFoodLoading(true);
+    try {
+      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&fields=product_name,nutriments`);
+      const data = await res.json();
+      const items = (data.products || [])
+        .filter((p: any) => p.product_name && p.nutriments?.['energy-kcal_100g'])
+        .map((p: any) => ({
+          name: p.product_name,
+          quantity: 100,
+          calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
+          protein: Math.round((p.nutriments['proteins_100g'] || 0) * 10) / 10,
+          carbs: Math.round((p.nutriments['carbohydrates_100g'] || 0) * 10) / 10,
+          fat: Math.round((p.nutriments['fat_100g'] || 0) * 10) / 10,
+        }));
+      setFoodResults(items);
+      setFoodDropdownOpen(true);
+    } catch { setFoodResults([]); }
+    setFoodLoading(false);
+  };
+
+  const handleAddFoodItem = (item: any) => {
+    setFoodItems(prev => [...prev, { ...item }]);
+    setFoodQuery(''); setFoodResults([]); setFoodDropdownOpen(false);
+  };
+
+  const handleRemoveFoodItem = (index: number) => {
+    setFoodItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateFoodQuantity = (index: number, newQty: number) => {
+    if (newQty <= 0) return;
+    setFoodItems(prev => prev.map((item, i) => {
+      if (i !== index) return item;
+      const ratio = newQty / (item.quantity || 100);
+      return { ...item, quantity: newQty,
+        calories: Math.round(item.calories * ratio),
+        protein: Math.round(item.protein * ratio * 10) / 10,
+        carbs: Math.round(item.carbs * ratio * 10) / 10,
+        fat: Math.round(item.fat * ratio * 10) / 10,
+      };
+    }));
   };
 
   const handleDeleteMeal = async (mealId: string) => {
@@ -532,43 +599,127 @@ export default function CoachNutrition() {
                       {/* Add meal modal */}
                       {showMealForm && (
                         <div
-                          onClick={() => setShowMealForm(false)}
+                          onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }}
                           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
                         >
                           <div
                             onClick={e => e.stopPropagation()}
-                            style={{ background: '#1c1b1b', borderRadius: 16, padding: 24, width: 'calc(100% - 0px)', maxWidth: 500, maxHeight: '85vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', animation: 'cnModalIn .3s ease' }}
+                            style={{ background: '#1c1b1b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.08)', animation: 'cnModalIn .3s ease' }}
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                               <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1rem', color: '#e5e2e1' }}>AJOUTER UN REPAS</div>
-                              <button onClick={() => setShowMealForm(false)} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#e5e2e1', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+                              <button onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#e5e2e1', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: '1rem' }}>✕</button>
                             </div>
 
-                            {/* Emoji picker */}
-                            <div style={{ ...label12, marginBottom: 8 }}>EMOJI</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-                              {MEAL_EMOJIS.map(e => (
-                                <button key={e} className={`cn-emoji-btn${mealForm.emoji === e ? ' active' : ''}`} onClick={() => setMealForm(p => ({ ...p, emoji: e }))}>{e}</button>
+                            {/* Résumé temps réel */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8, marginBottom: 20, padding: 14, background: 'rgba(178,42,39,0.08)', border: '1px solid rgba(178,42,39,0.2)', borderRadius: 10 }}>
+                              {[
+                                { label: 'CALORIES', val: mealTotals.calories, unit: 'kcal' },
+                                { label: 'PROTÉINES', val: mealTotals.protein, unit: 'g' },
+                                { label: 'GLUCIDES', val: mealTotals.carbs, unit: 'g' },
+                                { label: 'LIPIDES', val: mealTotals.fat, unit: 'g' },
+                              ].map(m => (
+                                <div key={m.label} style={{ textAlign: 'center' }}>
+                                  <div style={{ fontFamily: 'Lexend,sans-serif', fontWeight: 900, fontSize: 'clamp(.9rem,2vw,1.3rem)', color: '#b22a27', lineHeight: 1 }}>{m.val}</div>
+                                  <div style={{ fontSize: '.5rem', color: '#9CA3AF', marginTop: 2 }}>{m.unit}</div>
+                                  <div style={{ fontSize: '.46rem', color: '#6B7280', marginTop: 1 }}>{m.label}</div>
+                                </div>
                               ))}
                             </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                              <div className="cn-fld"><label>Nom du repas</label><input type="text" value={mealForm.name} onChange={e => setMealForm(p => ({ ...p, name: e.target.value }))} placeholder="Ex : Déjeuner Performance" /></div>
-                              <div className="cn-fld"><label>Heure</label><input type="time" value={mealForm.time} onChange={e => setMealForm(p => ({ ...p, time: e.target.value }))} /></div>
-                              <div className="cn-fld"><label>Description / aliments</label><textarea value={mealForm.description} onChange={e => setMealForm(p => ({ ...p, description: e.target.value }))} placeholder="Poulet 200g · Riz basmati 120g · Brocolis…" /></div>
-                              <div className="cn-form-grid">
-                                <div className="cn-fld"><label>Calories</label><input type="number" value={mealForm.calories} min={0} onChange={e => setMealForm(p => ({ ...p, calories: Number(e.target.value) }))} /></div>
-                                <div className="cn-fld"><label>Protéines (g)</label><input type="number" value={mealForm.protein} min={0} onChange={e => setMealForm(p => ({ ...p, protein: Number(e.target.value) }))} /></div>
-                                <div className="cn-fld"><label>Glucides (g)</label><input type="number" value={mealForm.carbs} min={0} onChange={e => setMealForm(p => ({ ...p, carbs: Number(e.target.value) }))} /></div>
-                                <div className="cn-fld"><label>Lipides (g)</label><input type="number" value={mealForm.fat} min={0} onChange={e => setMealForm(p => ({ ...p, fat: Number(e.target.value) }))} /></div>
+                            {/* Nom + Heure */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <label style={{ ...label12 }}>Nom du repas</label>
+                                <input type="text" value={mealForm.name} onChange={e => setMealForm(p => ({ ...p, name: e.target.value }))} placeholder="Ex : Déjeuner Performance" style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                <label style={{ ...label12 }}>Heure</label>
+                                <input type="time" value={mealForm.time} onChange={e => setMealForm(p => ({ ...p, time: e.target.value }))} style={{ background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', width: '100%', boxSizing: 'border-box', outline: 'none' }} />
                               </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-                              <button style={{ ...redBtn, flex: 1 }} onClick={handleAddMeal} disabled={savingMeal || !mealForm.name}>
-                                {savingMeal ? 'Ajout…' : 'AJOUTER LE REPAS →'}
+                            {/* Recherche aliments */}
+                            <div style={{ marginBottom: 14, position: 'relative' }}>
+                              <label style={{ ...label12, display: 'block', marginBottom: 6 }}>Rechercher un aliment</label>
+                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <input
+                                  type="text"
+                                  value={foodQuery}
+                                  onChange={e => { setFoodQuery(e.target.value); searchFoodItems(e.target.value); }}
+                                  placeholder="Ex : poulet, riz basmati, avocat…"
+                                  style={{ flex: 1, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                                {foodLoading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', borderRadius: '50%', animation: 'cnSpin .7s linear infinite', flexShrink: 0 }} />}
+                              </div>
+                              {foodDropdownOpen && foodResults.length > 0 && (
+                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, zIndex: 50, maxHeight: 220, overflowY: 'auto', marginTop: 4 }}>
+                                  {foodResults.map((item, i) => (
+                                    <div key={i} onClick={() => handleAddFoodItem(item)}
+                                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                                      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'rgba(178,42,39,0.1)'}
+                                      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
+                                    >
+                                      <div>
+                                        <div style={{ fontSize: '.82rem', color: '#e5e2e1', fontWeight: 500 }}>{item.name.length > 45 ? item.name.slice(0, 45) + '…' : item.name}</div>
+                                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>{item.calories} kcal · P{item.protein}g · G{item.carbs}g · L{item.fat}g · /100g</div>
+                                      </div>
+                                      <span style={{ color: '#b22a27', fontWeight: 700, fontSize: '1.2rem', marginLeft: 8 }}>+</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Aliments ajoutés */}
+                            {foodItems.length > 0 && (
+                              <div style={{ marginBottom: 14 }}>
+                                <div style={{ ...label12, marginBottom: 8 }}>Aliments ajoutés</div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                  {foodItems.map((item, i) => (
+                                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 8 }}>
+                                      <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: '.8rem', color: '#e5e2e1', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</div>
+                                        <div style={{ fontSize: '.62rem', color: '#b22a27', fontFamily: 'Lexend,sans-serif', fontWeight: 700, marginTop: 2 }}>{item.calories} kcal · P{item.protein}g · G{item.carbs}g · L{item.fat}g</div>
+                                      </div>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                                        <input type="number" value={item.quantity} min={1}
+                                          onChange={e => handleUpdateFoodQuantity(i, Number(e.target.value))}
+                                          style={{ width: 58, textAlign: 'center', padding: '5px 6px', fontSize: '.78rem', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: '#e5e2e1', outline: 'none' }}
+                                        />
+                                        <span style={{ fontSize: '.6rem', color: '#6B7280' }}>g</span>
+                                        <button onClick={() => handleRemoveFoodItem(i)}
+                                          style={{ background: 'rgba(220,38,38,0.12)', border: 'none', borderRadius: 6, width: 28, height: 28, cursor: 'pointer', color: '#f87171', fontSize: '.85rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Description */}
+                            <div style={{ marginBottom: 18 }}>
+                              <label style={{ ...label12, display: 'block', marginBottom: 6 }}>Description / notes</label>
+                              <textarea rows={2} value={mealForm.description} onChange={e => setMealForm(p => ({ ...p, description: e.target.value }))} placeholder="Notes pour le membre…"
+                                style={{ width: '100%', background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', resize: 'vertical', boxSizing: 'border-box', outline: 'none', fontFamily: 'Inter,sans-serif' }}
+                              />
+                            </div>
+
+                            {/* Boutons */}
+                            <div style={{ display: 'flex', gap: 10 }}>
+                              <button
+                                onClick={handleAddMeal}
+                                disabled={savingMeal || !mealForm.name || foodItems.length === 0}
+                                style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 8, padding: '13px', fontFamily: 'Lexend,sans-serif', fontWeight: 800, fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (savingMeal || !mealForm.name || foodItems.length === 0) ? .5 : 1 }}
+                              >
+                                {savingMeal ? 'Ajout…' : 'Ajouter le repas →'}
                               </button>
-                              <button style={ghostBtn} onClick={() => setShowMealForm(false)}>Annuler</button>
+                              <button
+                                onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }}
+                                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '13px 18px', fontFamily: 'Lexend,sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#9CA3AF', cursor: 'pointer', minHeight: 44 }}
+                              >
+                                Annuler
+                              </button>
                             </div>
                           </div>
                         </div>
