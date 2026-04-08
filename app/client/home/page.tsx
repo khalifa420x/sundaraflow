@@ -1910,7 +1910,7 @@ export default function ClientHome() {
         }
         @media (min-width: 768px) { .cl-main { margin-left: 240px; width: calc(100vw - 240px); } }
         @media (max-width: 767px) {
-          .cl-main { margin-left: 0 !important; width: 100% !important; }
+          .cl-main { margin-left: 0 !important; width: 100% !important; padding-top: 56px; }
         }
 
 
