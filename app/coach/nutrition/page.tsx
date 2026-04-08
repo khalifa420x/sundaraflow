@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
 import {
   collection, query, where, getDocs, limit,
@@ -75,6 +75,7 @@ export default function CoachNutrition() {
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [foodLoading, setFoodLoading] = useState(false);
   const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
   /* Computed */
   const selectedNutPlan = selClient ? nutritionPlans.find(n => n.clientId === selClient.clientUserId || n.clientId === selClient.userId) || null : null;
@@ -215,41 +216,27 @@ export default function CoachNutrition() {
   };
 
   const searchFoodItems = async (q: string) => {
-    if (q.length < 2) {
-      setFoodResults([]);
-      setFoodDropdownOpen(false);
-      return;
-    }
+    if (!q || q.trim().length < 2) { setFoodResults([]); setFoodDropdownOpen(false); return; }
     setFoodLoading(true);
     try {
-      const res = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments`
+      const r = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10&fields=product_name,nutriments`
       );
-      const data = await res.json();
-
-      const items = (data.products || [])
-        .filter((p: any) =>
-          p.product_name &&
-          p.product_name.trim() !== '' &&
-          p.nutriments &&
-          (p.nutriments['energy-kcal_100g'] || 0) > 0
-        )
-        .slice(0, 8)
+      const j = await r.json();
+      const items = (j?.products || [])
+        .filter((p: any) => p?.product_name && p?.nutriments?.['energy-kcal_100g'])
         .map((p: any) => ({
-          name: p.product_name,
+          name: String(p.product_name).slice(0, 60),
           quantity: 100,
-          calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
-          protein: Math.round((p.nutriments['proteins_100g'] || 0) * 10) / 10,
-          carbs: Math.round((p.nutriments['carbohydrates_100g'] || 0) * 10) / 10,
-          fat: Math.round((p.nutriments['fat_100g'] || 0) * 10) / 10,
-        }));
-
+          calories: Math.round(Number(p.nutriments['energy-kcal_100g']) || 0),
+          protein: Math.round((Number(p.nutriments?.proteins_100g) || 0) * 10) / 10,
+          carbs: Math.round((Number(p.nutriments?.carbohydrates_100g) || 0) * 10) / 10,
+          fat: Math.round((Number(p.nutriments?.fat_100g) || 0) * 10) / 10,
+        }))
+        .slice(0, 8);
       setFoodResults(items);
       setFoodDropdownOpen(items.length > 0);
-    } catch (e) {
-      console.error('Food search error:', e);
-      setFoodResults([]);
-    }
+    } catch { setFoodResults([]); }
     setFoodLoading(false);
   };
 
@@ -663,7 +650,7 @@ export default function CoachNutrition() {
                                 <input
                                   type="text"
                                   value={foodQuery}
-                                  onChange={e => { setFoodQuery(e.target.value); searchFoodItems(e.target.value); }}
+                                  onChange={e => { setFoodQuery(e.target.value); clearTimeout(searchTimer.current); searchTimer.current = setTimeout(() => searchFoodItems(e.target.value), 300); }}
                                   placeholder="Ex : poulet, riz basmati, avocat…"
                                   style={{ flex: 1, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', outline: 'none', boxSizing: 'border-box' }}
                                 />
