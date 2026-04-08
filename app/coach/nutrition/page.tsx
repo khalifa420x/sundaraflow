@@ -76,6 +76,8 @@ export default function CoachNutrition() {
   const [foodLoading, setFoodLoading] = useState(false);
   const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
 
   /* Computed */
   const selectedNutPlan = selClient ? nutritionPlans.find(n => n.clientId === selClient.clientUserId || n.clientId === selClient.userId) || null : null;
@@ -86,6 +88,13 @@ export default function CoachNutrition() {
     carbs: acc.carbs + (item.carbs || 0),
     fat: acc.fat + (item.fat || 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
+  useEffect(() => {
+    if (foodDropdownOpen && searchWrapperRef.current) {
+      const rect = searchWrapperRef.current.getBoundingClientRect();
+      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
+    }
+  }, [foodDropdownOpen]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -216,6 +225,7 @@ export default function CoachNutrition() {
   };
 
   const searchFoodItems = async (q: string) => {
+    console.log('searchFoodItems appelé avec:', q);
     if (!q || q.trim().length < 2) { setFoodResults([]); setFoodDropdownOpen(false); return; }
     setFoodLoading(true);
     try {
@@ -234,8 +244,10 @@ export default function CoachNutrition() {
           fat: Math.round((Number(p.nutriments?.fat_100g) || 0) * 10) / 10,
         }))
         .slice(0, 8);
+      console.log('résultats reçus:', items.length, items);
       setFoodResults(items);
       setFoodDropdownOpen(items.length > 0);
+      console.log('foodDropdownOpen mis à:', items.length > 0);
     } catch { setFoodResults([]); }
     setFoodLoading(false);
   };
@@ -644,7 +656,7 @@ export default function CoachNutrition() {
                             </div>
 
                             {/* Recherche aliments */}
-                            <div style={{ marginBottom: 14, position: 'relative' }}>
+                            <div ref={searchWrapperRef} style={{ marginBottom: 14, position: 'relative' }}>
                               <label style={{ ...label12, display: 'block', marginBottom: 6 }}>Rechercher un aliment</label>
                               <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <input
@@ -667,7 +679,7 @@ export default function CoachNutrition() {
                                 {foodLoading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', borderRadius: '50%', animation: 'cnSpin .7s linear infinite', flexShrink: 0 }} />}
                               </div>
                               {foodDropdownOpen && foodResults.length > 0 && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, zIndex: 50, maxHeight: 220, overflowY: 'auto', marginTop: 4 }}>
+                                <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, zIndex: 9999, maxHeight: 220, overflowY: 'auto' }}>
                                   {foodResults.map((item, i) => (
                                     <div key={i} onClick={() => handleAddFoodItem(item)}
                                       style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
