@@ -49,7 +49,7 @@ export default function MessageBubble({ message, isOwn, showTimestamp }: Message
         paddingRight: isOwn ? 0 : 48,
       }}>
         <div style={{
-          maxWidth: '100%',
+          maxWidth: 'min(75%, 280px)',
           padding: '10px 14px',
           borderRadius: isOwn ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
           background: isOwn ? '#b22a27' : '#2a2a2a',
@@ -58,6 +58,8 @@ export default function MessageBubble({ message, isOwn, showTimestamp }: Message
           fontSize: '.875rem',
           lineHeight: 1.55,
           wordBreak: 'break-word',
+          whiteSpace: 'normal',
+          overflowWrap: 'break-word',
         }}>
           {message.content}
         </div>

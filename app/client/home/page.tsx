@@ -1918,6 +1918,7 @@ export default function ClientHome() {
           padding: 24px 20px 40px;
           max-width: 1100px;
           width: 100%;
+          overflow-x: hidden;
         }
         @media (min-width: 769px) { .cl-content { padding: 32px 32px 60px; } }
 
