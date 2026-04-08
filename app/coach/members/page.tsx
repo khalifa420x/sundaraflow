@@ -37,17 +37,17 @@ const FILTER_LABELS: Record<FilterStatus, string> = {
 };
 
 const goalChip = (goal: string) => {
-  if (!goal) return { bg: 'rgba(107,114,128,0.1)', color: '#9CA3AF' };
+  if (!goal) return { bg: 'rgba(107,114,128,0.15)', color: '#9CA3AF' };
   const g = goal.toLowerCase();
-  if (g.includes('perte')) return { bg: 'rgba(178,42,39,0.1)', color: '#e3beb8' };
-  if (g.includes('prise')) return { bg: 'rgba(22,163,74,0.1)', color: '#16a34a' };
-  return { bg: 'rgba(107,114,128,0.1)', color: '#9CA3AF' };
+  if (g.includes('perte')) return { bg: 'rgba(178,42,39,0.15)', color: '#e3beb8' };
+  if (g.includes('prise')) return { bg: 'rgba(22,163,74,0.15)', color: '#16a34a' };
+  return { bg: 'rgba(107,114,128,0.15)', color: '#9CA3AF' };
 };
 
 const statusBadge = (status: string) => {
-  if (status === 'actif')   return { bg: 'rgba(22,163,74,0.12)',   color: '#16a34a', label: '● ACTIF' };
-  if (status === 'pause')   return { bg: 'rgba(107,114,128,0.12)', color: '#6B7280', label: '⏸ EN PAUSE' };
-  return                           { bg: 'rgba(178,42,39,0.12)',  color: '#b22a27', label: '⏳ EN ATTENTE' };
+  if (status === 'actif')   return { bg: 'rgba(22,163,74,0.15)',   color: '#16a34a', label: '● ACTIF' };
+  if (status === 'pause')   return { bg: 'rgba(107,114,128,0.15)', color: '#6B7280', label: '⏸ EN PAUSE' };
+  return                           { bg: 'rgba(178,42,39,0.15)',   color: '#b22a27', label: '⏳ EN ATTENTE' };
 };
 
 /* ════════════════════════════════════════════
@@ -57,26 +57,26 @@ export default function CoachMembers() {
   const router = useRouter();
 
   /* Auth */
-  const [user, setUser]       = useState<import('firebase/auth').User | null>(null);
+  const [user, setUser]         = useState<import('firebase/auth').User | null>(null);
   const [userName, setUserName] = useState('');
 
   /* Data */
-  const [clients, setClients]   = useState<any[]>([]);
-  const [loading, setLoading]   = useState(true);
-  const [mounted, setMounted]   = useState(false);
+  const [clients, setClients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   /* Filters */
-  const [searchQuery, setSearchQuery]     = useState('');
-  const [filterStatus, setFilterStatus]   = useState<FilterStatus>('tous');
+  const [searchQuery, setSearchQuery]   = useState('');
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('tous');
 
   /* Modal */
-  const [showAddModal, setShowAddModal]   = useState(false);
-  const [addMode, setAddMode]             = useState<AddMode>(null);
-  const [inviteEmail, setInviteEmail]     = useState('');
-  const [inviteLink, setInviteLink]       = useState('');
-  const [copying, setCopying]             = useState(false);
-  const [saving, setSaving]               = useState(false);
-  const [manualForm, setManualForm]       = useState({ name: '', email: '', goal: 'Perte de poids', weight: '' });
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addMode, setAddMode]           = useState<AddMode>(null);
+  const [inviteEmail, setInviteEmail]   = useState('');
+  const [inviteLink, setInviteLink]     = useState('');
+  const [copying, setCopying]           = useState(false);
+  const [saving, setSaving]             = useState(false);
+  const [manualForm, setManualForm]     = useState({ name: '', email: '', goal: 'Perte de poids', weight: '' });
 
   /* Mount */
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
@@ -162,15 +162,25 @@ export default function CoachMembers() {
     setSaving(false);
   };
 
-  const closeModal = () => { setShowAddModal(false); setAddMode(null); setInviteEmail(''); setInviteLink(''); setCopying(false); };
+  const closeModal = () => {
+    setShowAddModal(false); setAddMode(null);
+    setInviteEmail(''); setInviteLink(''); setCopying(false);
+  };
 
-  /* Input style */
+  /* ── Kinetic Monolith: Ghost border — felt, not seen ── */
+  const ghostBorder = '1px solid rgba(90,64,60,0.15)';
+
+  /* Input style — ghost border only */
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: '#2a2a2a',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: 8, padding: '10px 14px',
-    color: '#e5e2e1', fontSize: '.85rem',
-    outline: 'none', fontFamily: 'Inter, sans-serif',
+    width: '100%',
+    background: '#1c1b1b',
+    border: ghostBorder,
+    borderRadius: 8,
+    padding: '10px 14px',
+    color: '#e5e2e1',
+    fontSize: '.85rem',
+    outline: 'none',
+    fontFamily: 'Inter, sans-serif',
     boxSizing: 'border-box',
   };
 
@@ -188,6 +198,7 @@ export default function CoachMembers() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
+
         .mem-main {
           flex: 1; min-width: 0; display: flex; flex-direction: column;
           overflow-x: hidden; min-height: 100vh;
@@ -198,27 +209,24 @@ export default function CoachMembers() {
         @media (max-width: 767px) {
           .mem-main { margin-left: 0; width: 100%; padding-top: 56px; }
         }
-        .mem-input:focus {
-          border-color: rgba(178,42,39,0.5) !important;
-          box-shadow: 0 0 0 3px rgba(178,42,39,0.08) !important;
-          outline: none !important;
-        }
+
+        /* Card — surface_container_highest, no border, glow on hover */
         .mem-card {
-          background: #1c1b1b;
-          border: 1px solid rgba(255,255,255,0.06);
+          background: #353534;
           border-radius: 14px;
           padding: 20px;
-          transition: all .2s;
+          transition: transform .2s ease, box-shadow .2s ease;
           cursor: pointer;
         }
         .mem-card:hover {
-          border-color: rgba(178,42,39,0.3);
           transform: scale(1.02);
-          box-shadow: 0 0 24px rgba(178,42,39,0.12);
+          box-shadow: 0 0 32px rgba(178,42,39,0.2);
         }
+
+        /* Grid */
         .mem-grid {
           display: grid;
-          gap: 14px;
+          gap: 16px;
           grid-template-columns: 1fr;
         }
         @media (min-width: 640px) {
@@ -227,6 +235,8 @@ export default function CoachMembers() {
         @media (min-width: 1100px) {
           .mem-grid { grid-template-columns: repeat(3,1fr); }
         }
+
+        /* KPI */
         .mem-kpi-grid {
           display: grid;
           grid-template-columns: repeat(2,1fr);
@@ -234,12 +244,56 @@ export default function CoachMembers() {
         @media (min-width: 768px) {
           .mem-kpi-grid { grid-template-columns: repeat(4,1fr); }
         }
-        .mem-option:hover {
-          border-color: rgba(178,42,39,0.35) !important;
-          background: rgba(178,42,39,0.06) !important;
+
+        /* Search input ghost border + focus state */
+        .mem-search {
+          width: 100%;
+          padding: 11px 14px 11px 42px;
+          background: #1c1b1b;
+          border: 1px solid rgba(90,64,60,0.15);
+          border-radius: 10px;
+          color: #e5e2e1;
+          font-size: .85rem;
+          outline: none;
+          font-family: Inter, sans-serif;
+          box-sizing: border-box;
+          transition: border-color .15s;
         }
-        @keyframes fadeIn { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
-        @keyframes spin { to { transform:rotate(360deg); } }
+        .mem-search:focus {
+          border-color: rgba(178,42,39,0.4);
+          box-shadow: 0 0 0 3px rgba(178,42,39,0.08);
+        }
+
+        /* Modal option rows */
+        .mem-option {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          background: rgba(255,255,255,0.03);
+          border-radius: 10px;
+          padding: 16px 20px;
+          cursor: pointer;
+          transition: background .15s, box-shadow .15s;
+        }
+        .mem-option:hover {
+          background: rgba(178,42,39,0.07);
+          box-shadow: 0 0 16px rgba(178,42,39,0.12);
+        }
+
+        /* Input focus */
+        .mem-field:focus {
+          border-color: rgba(178,42,39,0.4) !important;
+          box-shadow: 0 0 0 3px rgba(178,42,39,0.08) !important;
+        }
+
+        /* Primary CTA pulse on hover */
+        .mem-cta:hover {
+          box-shadow: 0 0 20px rgba(178,42,39,0.35);
+        }
+
+        @keyframes fadeIn { from { opacity:0; transform:scale(.96) translateY(8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+        @keyframes spin   { to { transform:rotate(360deg); } }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(178,42,39,0.35); border-radius: 10px; }
@@ -252,18 +306,15 @@ export default function CoachMembers() {
 
           {/* ══ BLOC 1 — HERO ══ */}
           <div style={{ position: 'relative', height: 'clamp(320px,45vh,480px)', overflow: 'hidden' }}>
-            {/* Image de fond */}
             <img
               src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1920&q=80"
               alt=""
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.25) saturate(0.6) grayscale(0.3)' }}
+              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 30%', filter: 'brightness(0.22) saturate(0.5) grayscale(0.3)' }}
             />
-            {/* Overlays */}
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(19,19,19,0.7)' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(19,19,19,0.95) 0%, transparent 65%)' }} />
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '50%', background: 'linear-gradient(to top, #131313, transparent)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(19,19,19,0.65)' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(19,19,19,0.97) 0%, transparent 60%)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '55%', background: 'linear-gradient(to top, #131313, transparent)' }} />
 
-            {/* Contenu */}
             <div style={{
               position: 'relative', zIndex: 1, height: '100%',
               display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
@@ -275,19 +326,20 @@ export default function CoachMembers() {
               <div style={{ fontSize: '.56rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 12 }}>
                 ESPACE COACH — MEMBRES
               </div>
-              <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2rem,5vw,3.8rem)', letterSpacing: '-.04em', lineHeight: .88, color: '#e5e2e1', margin: '0 0 8px' }}>
-                GÉREZ VOS <br />MEMBRES.
+              <h1 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(2.2rem,5.5vw,4rem)', letterSpacing: '-.04em', lineHeight: .86, color: '#e5e2e1', margin: '0 0 10px' }}>
+                GÉREZ VOS<br />MEMBRES.
               </h1>
-              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(1.2rem,3vw,2.2rem)', color: '#b22a27', letterSpacing: '-.03em', marginBottom: 16 }}>
+              <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontStyle: 'italic', fontSize: 'clamp(1.3rem,3.5vw,2.4rem)', color: '#b22a27', letterSpacing: '-.03em', marginBottom: 18 }}>
                 MAXIMISEZ LA PERFORMANCE.
               </div>
-              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '.85rem', color: '#9CA3AF', maxWidth: 460, lineHeight: 1.7, marginBottom: 24, marginTop: 0 }}>
+              <p style={{ fontFamily: 'Inter, sans-serif', fontSize: '.85rem', color: '#9CA3AF', maxWidth: 460, lineHeight: 1.7, marginBottom: 28, marginTop: 0 }}>
                 Suivez et optimisez la progression de chaque membre en temps réel.
               </p>
               <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button
+                  className="mem-cta"
                   onClick={() => { setShowAddModal(true); setAddMode(null); }}
-                  style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 8, padding: '12px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44 }}
+                  style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '12px 28px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, transition: 'box-shadow .2s' }}
                 >
                   + AJOUTER UN MEMBRE →
                 </button>
@@ -295,8 +347,8 @@ export default function CoachMembers() {
             </div>
           </div>
 
-          {/* ══ BLOC 2 — KPI ROW ══ */}
-          <div style={{ background: '#1c1b1b', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+          {/* ══ BLOC 2 — KPI ROW — tonal shift #131313→#1c1b1b ══ */}
+          <div style={{ background: '#1c1b1b' }}>
             <div className="mem-kpi-grid">
               {[
                 { label: 'MEMBRES TOTAL', val: displayClients.length },
@@ -305,48 +357,41 @@ export default function CoachMembers() {
                 { label: 'EN ATTENTE',    val: displayClients.filter(c => c.status === 'pending').length },
               ].map((kpi, i, arr) => (
                 <div key={kpi.label} style={{
-                  padding: 'clamp(14px,2vw,22px)',
-                  borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  padding: 'clamp(16px,2.5vw,28px)',
+                  borderRight: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 }}>
-                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.6rem,3vw,2.4rem)', color: '#b22a27', lineHeight: 1 }}>{kpi.val}</div>
-                  <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.56rem', letterSpacing: '.14em', textTransform: 'uppercase', color: '#9CA3AF', marginTop: 5 }}>{kpi.label}</div>
+                  <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,3.5vw,2.6rem)', color: '#b22a27', lineHeight: 1 }}>{kpi.val}</div>
+                  <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.55rem', letterSpacing: '.16em', textTransform: 'uppercase', color: '#6B7280', marginTop: 6 }}>{kpi.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
           {/* ══ BLOC 3 — SEARCH & FILTERS ══ */}
-          <div style={{ padding: '20px clamp(16px,2.5vw,32px)', display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {/* Search */}
+          <div style={{ padding: '24px clamp(16px,2.5vw,32px)', display: 'flex', flexDirection: 'column', gap: 14, background: '#131313' }}>
             <div style={{ position: 'relative', width: '100%' }}>
-              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', pointerEvents: 'none' }}>🔍</span>
+              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', pointerEvents: 'none', opacity: .5 }}>🔍</span>
               <input
-                className="mem-input"
+                className="mem-search"
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Rechercher par nom ou email…"
-                style={{
-                  width: '100%', padding: '11px 14px 11px 42px',
-                  background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.07)',
-                  borderRadius: 10, color: '#e5e2e1', fontSize: '.85rem',
-                  outline: 'none', fontFamily: 'Inter, sans-serif', boxSizing: 'border-box',
-                }}
               />
             </div>
 
-            {/* Filter pills */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {(['tous', 'actif', 'pause', 'pending'] as FilterStatus[]).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilterStatus(f)}
                   style={{
-                    borderRadius: 999, padding: '6px 16px',
-                    fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.65rem',
+                    borderRadius: 999, padding: '6px 18px',
+                    fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.64rem',
                     cursor: 'pointer', border: 'none', transition: 'all .15s',
                     background: filterStatus === f ? '#b22a27' : 'rgba(255,255,255,0.05)',
                     color: filterStatus === f ? '#e5e2e1' : '#9CA3AF',
+                    boxShadow: filterStatus === f ? '0 0 16px rgba(178,42,39,0.25)' : 'none',
                   }}
                 >
                   {FILTER_LABELS[f]}
@@ -356,18 +401,19 @@ export default function CoachMembers() {
           </div>
 
           {/* ══ BLOC 4 — GRILLE MEMBRES ══ */}
-          <div style={{ padding: '0 clamp(16px,2.5vw,32px) 48px' }}>
+          <div style={{ padding: '0 clamp(16px,2.5vw,32px) 56px', background: '#131313' }}>
             {displayClients.length === 0 ? (
-              /* Empty state */
-              <div style={{ background: '#1c1b1b', borderRadius: 14, padding: 48, textAlign: 'center', border: '1px solid rgba(255,255,255,0.06)' }}>
+              /* Empty state — surface_container_highest, no border */
+              <div style={{ background: '#353534', borderRadius: 14, padding: 48, textAlign: 'center' }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: 16 }}>👥</div>
                 <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '1.1rem', color: '#e5e2e1', marginBottom: 8 }}>Aucun membre trouvé</div>
                 <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.8rem', color: '#9CA3AF', marginBottom: 20 }}>
                   {searchQuery || filterStatus !== 'tous' ? 'Aucun résultat pour cette recherche.' : "Vous n'avez pas encore de membres."}
                 </div>
                 <button
+                  className="mem-cta"
                   onClick={() => { setShowAddModal(true); setAddMode(null); }}
-                  style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 8, padding: '11px 22px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  style={{ background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '11px 24px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.7rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'box-shadow .2s' }}
                 >
                   + Ajouter un membre
                 </button>
@@ -380,62 +426,74 @@ export default function CoachMembers() {
                   const prog  = client.progress || 0;
                   return (
                     <div key={client.id} className="mem-card">
+
                       {/* A) Header */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                          <div style={{ width: 46, height: 46, borderRadius: '50%', background: AVATAR_GRADIENTS[idx % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', color: '#fff', flexShrink: 0 }}>
+                          <div style={{ width: 46, height: 46, borderRadius: '50%', background: AVATAR_GRADIENTS[idx % 3], display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', color: '#fff', flexShrink: 0, boxShadow: '0 4px 12px rgba(0,0,0,0.3)' }}>
                             {initials(client.name || 'M')}
                           </div>
                           <div style={{ minWidth: 0 }}>
                             <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '1rem', color: '#e5e2e1', letterSpacing: '-.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 160 }}>{client.name}</div>
-                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.62rem', color: '#9CA3AF', marginTop: 2, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</div>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.62rem', color: '#6B7280', marginTop: 2, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{client.email}</div>
                           </div>
                         </div>
-                        <div style={{ background: badge.bg, color: badge.color, fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 4, flexShrink: 0, marginLeft: 8 }}>
+                        <div style={{ background: badge.bg, color: badge.color, fontSize: '.5rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', padding: '4px 9px', borderRadius: 4, flexShrink: 0, marginLeft: 8 }}>
                           {badge.label}
                         </div>
                       </div>
 
                       {/* B) Goal chip */}
-                      <div style={{ marginBottom: 14 }}>
-                        <span style={{ background: chip.bg, color: chip.color, fontSize: '.52rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', padding: '3px 10px', borderRadius: 4 }}>
+                      <div style={{ marginBottom: 16 }}>
+                        <span style={{ background: chip.bg, color: chip.color, fontSize: '.5rem', fontFamily: 'Lexend, sans-serif', fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', padding: '4px 10px', borderRadius: 4 }}>
                           {client.goal || 'Non défini'}
                         </span>
                       </div>
 
-                      {/* C) Stats */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+                      {/* C) Stats — nested surface (#2a2a2a on #353534) */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
                         {[
                           { label: 'POIDS',       val: client.weight ? `${client.weight} kg` : '—' },
                           { label: 'PROGRESSION', val: `${prog}%` },
                         ].map(s => (
-                          <div key={s.label} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 8, padding: '10px 12px' }}>
-                            <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.52rem', textTransform: 'uppercase', letterSpacing: '.1em', color: '#9CA3AF', marginBottom: 4 }}>{s.label}</div>
+                          <div key={s.label} style={{ background: 'rgba(0,0,0,0.22)', borderRadius: 8, padding: '10px 12px' }}>
+                            <div style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.5rem', textTransform: 'uppercase', letterSpacing: '.12em', color: '#6B7280', marginBottom: 5 }}>{s.label}</div>
                             <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.95rem', color: '#e5e2e1' }}>{s.val}</div>
                           </div>
                         ))}
                       </div>
 
-                      {/* D) Progress bar */}
-                      <div style={{ marginBottom: 16 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                          <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.56rem', textTransform: 'uppercase', color: '#9CA3AF' }}>Programme</span>
+                      {/* D) Progress bar — dual tone */}
+                      <div style={{ marginBottom: 18 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ fontFamily: 'Inter, sans-serif', fontWeight: 600, fontSize: '.54rem', textTransform: 'uppercase', letterSpacing: '.1em', color: '#6B7280' }}>Programme</span>
                           <span style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', color: '#b22a27' }}>{prog}%</span>
                         </div>
-                        <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 999 }}>
+                        {/* Track = surface_container_highest darker */}
+                        <div style={{ height: 4, background: 'rgba(0,0,0,0.3)', borderRadius: 999 }}>
+                          {/* Fill = primary gradient */}
                           <div style={{ width: `${prog}%`, height: '100%', background: 'linear-gradient(to right,#89070e,#b22a27)', borderRadius: 999, transition: 'width 1.4s ease' }} />
                         </div>
                       </div>
 
-                      {/* E) Actions */}
+                      {/* E) Actions — glass secondary buttons */}
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => router.push('/coach/home')} style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: 'none', borderRadius: 6, color: '#9CA3AF', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.58rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer' }}>
+                        <button
+                          onClick={() => router.push('/coach/home')}
+                          style={{ flex: 1, background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 999, color: '#9CA3AF', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.56rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer', backdropFilter: 'blur(4px)', transition: 'background .15s' }}
+                        >
                           Voir
                         </button>
-                        <button onClick={() => router.push('/coach/messages')} style={{ flex: 1, background: 'rgba(178,42,39,0.08)', border: 'none', borderRadius: 6, color: '#e3beb8', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.58rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer' }}>
+                        <button
+                          onClick={() => router.push('/coach/messages')}
+                          style={{ flex: 1, background: 'rgba(178,42,39,0.1)', border: 'none', borderRadius: 999, color: '#e3beb8', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.56rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer', transition: 'background .15s' }}
+                        >
                           Message
                         </button>
-                        <button onClick={() => router.push('/coach/home')} style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 6, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.58rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer' }}>
+                        <button
+                          onClick={() => router.push('/coach/home')}
+                          style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.56rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer' }}
+                        >
                           Programme
                         </button>
                       </div>
@@ -446,49 +504,64 @@ export default function CoachMembers() {
             )}
           </div>
 
-          {/* ══ BLOC 5 — MODAL AJOUT ══ */}
+          {/* ══ BLOC 5 — MODAL — glassmorphism strict ══ */}
           {showAddModal && (
             <div
               onClick={closeModal}
-              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(12px)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
             >
               <div
                 onClick={e => e.stopPropagation()}
-                style={{ background: '#1c1b1b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: 28, maxWidth: 480, width: '100%', maxHeight: '90vh', overflowY: 'auto', position: 'relative', animation: 'fadeIn .25s ease' }}
+                style={{
+                  background: 'rgba(28,27,27,0.6)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  borderRadius: 20,
+                  padding: 32,
+                  maxWidth: 480, width: '100%',
+                  maxHeight: '90vh', overflowY: 'auto',
+                  position: 'relative',
+                  animation: 'fadeIn .28s ease',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                }}
               >
                 {/* ✕ */}
-                <button onClick={closeModal} style={{ position: 'absolute', top: 14, right: 14, background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#9CA3AF', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                <button
+                  onClick={closeModal}
+                  style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.06)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#9CA3AF', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}
+                >
+                  ✕
+                </button>
 
                 <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1.2rem', color: '#e5e2e1', marginBottom: 6 }}>AJOUTER UN MEMBRE</div>
-                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.8rem', color: '#9CA3AF', marginBottom: 24 }}>Choisissez comment inviter ou créer un membre.</div>
+                <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.8rem', color: '#6B7280', marginBottom: 28 }}>Choisissez comment inviter ou créer un membre.</div>
 
                 {/* ── Choix du mode ── */}
                 {addMode === null && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {[
-                      { mode: 'email' as AddMode, icon: '✉️', title: 'Invitation par email', desc: 'Le membre reçoit un lien pour créer son compte' },
-                      { mode: 'manuel' as AddMode, icon: '✏️', title: 'Ajout manuel', desc: 'Créez directement le profil, le membre complète plus tard' },
-                      { mode: 'lien' as AddMode, icon: '🔗', title: "Lien d'invitation", desc: 'Générez un lien unique à partager' },
+                      { mode: 'email' as AddMode, icon: '✉️', title: 'Invitation par email',  desc: 'Le membre reçoit un lien pour créer son compte' },
+                      { mode: 'manuel' as AddMode, icon: '✏️', title: 'Ajout manuel',          desc: 'Créez directement le profil, le membre complète plus tard' },
+                      { mode: 'lien' as AddMode, icon: '🔗', title: "Lien d'invitation",      desc: 'Générez un lien unique à partager' },
                     ].map(opt => (
                       <div
                         key={String(opt.mode)}
                         className="mem-option"
                         onClick={() => setAddMode(opt.mode)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '16px 20px', cursor: 'pointer', transition: 'all .15s' }}
                       >
-                        <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(178,42,39,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{opt.icon}</span>
+                        <span style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(178,42,39,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>{opt.icon}</span>
                         <div>
                           <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.88rem', color: '#e5e2e1' }}>{opt.title}</div>
-                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.72rem', color: '#9CA3AF', marginTop: 2 }}>{opt.desc}</div>
+                          <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.72rem', color: '#6B7280', marginTop: 3 }}>{opt.desc}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* ── Back button ── */}
+                {/* ── Back ── */}
                 {addMode !== null && (
-                  <button onClick={() => setAddMode(null)} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', cursor: 'pointer', marginBottom: 20, padding: 0 }}>
+                  <button onClick={() => setAddMode(null)} style={{ background: 'none', border: 'none', color: '#6B7280', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.7rem', cursor: 'pointer', marginBottom: 22, padding: 0 }}>
                     ← Retour
                   </button>
                 )}
@@ -498,6 +571,7 @@ export default function CoachMembers() {
                   <div>
                     <label style={labelStyle}>Email du membre</label>
                     <input
+                      className="mem-field"
                       type="email"
                       value={inviteEmail}
                       onChange={e => setInviteEmail(e.target.value)}
@@ -505,9 +579,10 @@ export default function CoachMembers() {
                       style={inputStyle}
                     />
                     <button
+                      className="mem-cta"
                       onClick={handleSendInvite}
                       disabled={saving || !inviteEmail}
-                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 8, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, marginTop: 16, opacity: (saving || !inviteEmail) ? .5 : 1 }}
+                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, marginTop: 16, opacity: (saving || !inviteEmail) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                     >
                       {saving ? 'Envoi…' : "ENVOYER L'INVITATION →"}
                     </button>
@@ -519,15 +594,15 @@ export default function CoachMembers() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                     <div>
                       <label style={labelStyle}>Nom complet *</label>
-                      <input type="text" value={manualForm.name} onChange={e => setManualForm(p => ({ ...p, name: e.target.value }))} placeholder="Prénom Nom" style={inputStyle} />
+                      <input className="mem-field" type="text" value={manualForm.name} onChange={e => setManualForm(p => ({ ...p, name: e.target.value }))} placeholder="Prénom Nom" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Email *</label>
-                      <input type="email" value={manualForm.email} onChange={e => setManualForm(p => ({ ...p, email: e.target.value }))} placeholder="email@membre.com" style={inputStyle} />
+                      <input className="mem-field" type="email" value={manualForm.email} onChange={e => setManualForm(p => ({ ...p, email: e.target.value }))} placeholder="email@membre.com" style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Objectif</label>
-                      <select value={manualForm.goal} onChange={e => setManualForm(p => ({ ...p, goal: e.target.value }))} style={{ ...inputStyle, color: '#e5e2e1' }}>
+                      <select className="mem-field" value={manualForm.goal} onChange={e => setManualForm(p => ({ ...p, goal: e.target.value }))} style={{ ...inputStyle, color: '#e5e2e1' }}>
                         <option value="Perte de poids">Perte de poids</option>
                         <option value="Prise de masse">Prise de masse</option>
                         <option value="Maintien">Maintien</option>
@@ -535,12 +610,13 @@ export default function CoachMembers() {
                     </div>
                     <div>
                       <label style={labelStyle}>Poids actuel (kg) — optionnel</label>
-                      <input type="number" min={30} max={200} value={manualForm.weight} onChange={e => setManualForm(p => ({ ...p, weight: e.target.value }))} placeholder="75" style={inputStyle} />
+                      <input className="mem-field" type="number" min={30} max={200} value={manualForm.weight} onChange={e => setManualForm(p => ({ ...p, weight: e.target.value }))} placeholder="75" style={inputStyle} />
                     </div>
                     <button
+                      className="mem-cta"
                       onClick={handleAddManual}
                       disabled={saving || !manualForm.name || !manualForm.email}
-                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 8, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, marginTop: 6, opacity: (saving || !manualForm.name || !manualForm.email) ? .5 : 1 }}
+                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !manualForm.name || !manualForm.email) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                     >
                       {saving ? 'Ajout…' : 'AJOUTER LE MEMBRE →'}
                     </button>
@@ -554,25 +630,27 @@ export default function CoachMembers() {
                     <input
                       readOnly
                       value={inviteLink || 'Génération en cours…'}
-                      style={{ ...inputStyle, color: '#9CA3AF', fontSize: '.75rem', cursor: 'default' }}
+                      style={{ ...inputStyle, color: '#6B7280', fontSize: '.75rem', cursor: 'default' }}
                     />
                     <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                       <button
                         onClick={() => navigator.clipboard.writeText(inviteLink).then(() => { setCopying(true); setTimeout(() => setCopying(false), 2000); })}
                         disabled={!inviteLink}
-                        style={{ flex: 1, background: copying ? 'rgba(22,163,74,0.15)' : 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 8, color: copying ? '#16a34a' : '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer' }}
+                        style={{ flex: 1, background: copying ? 'rgba(22,163,74,0.15)' : 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 999, color: copying ? '#16a34a' : '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer', backdropFilter: 'blur(4px)', transition: 'background .2s, color .2s' }}
                       >
                         {copying ? '✓ COPIÉ !' : '📋 COPIER LE LIEN'}
                       </button>
                       <button
+                        className="mem-cta"
                         onClick={() => navigator.share?.({ title: 'SundaraFlow', url: inviteLink })}
                         disabled={!inviteLink || !navigator.share}
-                        style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 8, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer', opacity: (!inviteLink || !navigator.share) ? .5 : 1 }}
+                        style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer', opacity: (!inviteLink || !navigator.share) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                       >
                         📤 PARTAGER
                       </button>
                     </div>
-                    <div style={{ background: 'rgba(178,42,39,0.06)', border: '1px solid rgba(178,42,39,0.14)', borderRadius: 8, padding: '10px 14px', marginTop: 12, fontSize: '.68rem', color: '#9CA3AF', lineHeight: 1.6, fontFamily: 'Inter, sans-serif' }}>
+                    {/* Info box — no border, tonal shift */}
+                    <div style={{ background: 'rgba(178,42,39,0.07)', borderRadius: 8, padding: '10px 14px', marginTop: 14, fontSize: '.68rem', color: '#9CA3AF', lineHeight: 1.6, fontFamily: 'Inter, sans-serif' }}>
                       ℹ️ Toute personne avec ce lien pourra rejoindre votre espace coach.
                     </div>
                   </div>
