@@ -248,6 +248,7 @@ export default function ClientHome() {
   const [completionLogs, setCompletionLogs] = useState<any[]>([]);
   const [savingCompletion, setSavingCompletion] = useState<string | null>(null);
   const completionUnsubRef = useRef<(() => void) | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /* Stats helpers */
   const statFilteredLogs = (() => {
@@ -580,10 +581,6 @@ export default function ClientHome() {
     setSearchLoading(false);
   };
 
-  useEffect(() => {
-    const t = setTimeout(() => { searchFoodFn(foodSearch); }, 400);
-    return () => clearTimeout(t);
-  }, [foodSearch]);
 
   const openFoodModal = (mealType: string) => {
     setActiveMealType(mealType);
@@ -1527,7 +1524,16 @@ export default function ClientHome() {
                         ))}
                       </div>
 
-                      <input className="nut-input" placeholder="Rechercher un aliment..." value={foodSearch} onChange={(e) => setFoodSearch(e.target.value)} style={{ marginBottom:12 }} />
+                      <input className="nut-input" placeholder="Rechercher un aliment..." value={foodSearch} onChange={e => {
+                                      const val = e.target.value;
+                                      setFoodSearch(val);
+                                      clearTimeout(searchTimer.current);
+                                      if (val.length >= 2) {
+                                        searchTimer.current = setTimeout(() => searchFoodFn(val), 250);
+                                      } else {
+                                        setSearchResults([]);
+                                      }
+                                    }} style={{ marginBottom:12 }} />
 
                       {searchLoading && <div style={{ fontSize:'.68rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif', marginBottom:10 }}>Recherche…</div>}
 

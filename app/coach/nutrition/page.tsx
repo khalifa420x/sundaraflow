@@ -650,7 +650,17 @@ export default function CoachNutrition() {
                                 <input
                                   type="text"
                                   value={foodQuery}
-                                  onChange={e => { setFoodQuery(e.target.value); clearTimeout(searchTimer.current); searchTimer.current = setTimeout(() => searchFoodItems(e.target.value), 300); }}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setFoodQuery(val);
+                                    clearTimeout(searchTimer.current);
+                                    if (val.length >= 2) {
+                                      searchTimer.current = setTimeout(() => searchFoodItems(val), 250);
+                                    } else {
+                                      setFoodResults([]);
+                                      setFoodDropdownOpen(false);
+                                    }
+                                  }}
                                   placeholder="Ex : poulet, riz basmati, avocat…"
                                   style={{ flex: 1, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', outline: 'none', boxSizing: 'border-box' }}
                                 />
