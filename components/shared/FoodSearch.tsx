@@ -1,8 +1,7 @@
 'use client';
+import { useRef, useState } from 'react';
 
-import { useState, useRef } from 'react';
-
-export interface FoodItem {
+interface FoodItem {
   name: string;
   quantity: number;
   calories: number;
@@ -16,31 +15,24 @@ interface FoodSearchProps {
   placeholder?: string;
 }
 
-export default function FoodSearch({ onAddItem, placeholder = 'Rechercher un aliment…' }: FoodSearchProps) {
+export default function FoodSearch({ onAddItem, placeholder }: FoodSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<FoodItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0, width: 0 });
+  const timerRef = useRef<any>(null);
+  const skipBlur = useRef(false);
 
-  const searchFoodItems = async (q: string) => {
+  const search = async (q: string) => {
     if (q.length < 2) { setResults([]); setOpen(false); return; }
     setLoading(true);
     try {
-      const url =
-        `https://world.openfoodfacts.org/cgi/search.pl?` +
-        `search_terms=${encodeURIComponent(q)}` +
-        `&search_simple=1&action=process&json=1` +
-        `&page_size=10&fields=product_name,nutriments`;
-      const res = await fetch(url);
+      const res = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=10&fields=product_name,nutriments`
+      );
       const data = await res.json();
       const items: FoodItem[] = (data.products || [])
-        .filter((p: any) =>
-          p.product_name?.trim() &&
-          (p.nutriments?.['energy-kcal_100g'] ?? 0) > 0
-        )
+        .filter((p: any) => p.product_name?.trim() && (p.nutriments?.['energy-kcal_100g'] ?? 0) > 0)
         .slice(0, 8)
         .map((p: any) => ({
           name: p.product_name.trim(),
@@ -50,38 +42,44 @@ export default function FoodSearch({ onAddItem, placeholder = 'Rechercher un ali
           carbs: Math.round((p.nutriments['carbohydrates_100g'] ?? 0) * 10) / 10,
           fat: Math.round((p.nutriments['fat_100g'] ?? 0) * 10) / 10,
         }));
-      if (items.length > 0 && wrapperRef.current) {
-        const rect = wrapperRef.current.getBoundingClientRect();
-        setDropPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-      }
       setResults(items);
       setOpen(items.length > 0);
-    } catch {
-      setResults([]);
-    }
+    } catch { setResults([]); setOpen(false); }
     setLoading(false);
   };
 
-  const handleAdd = (item: FoodItem) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setQuery(val);
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => search(val), 300);
+  };
+
+  const handleSelect = (item: FoodItem) => {
+    skipBlur.current = false;
     onAddItem(item);
     setQuery('');
     setResults([]);
     setOpen(false);
   };
 
+  const handleBlur = () => {
+    setTimeout(() => {
+      if (!skipBlur.current) setOpen(false);
+      skipBlur.current = false;
+    }, 150);
+  };
+
   return (
-    <div ref={wrapperRef} style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
         <input
           type="text"
           value={query}
-          placeholder={placeholder}
-          onChange={e => {
-            const val = e.target.value;
-            setQuery(val);
-            clearTimeout(timerRef.current as any);
-            timerRef.current = setTimeout(() => searchFoodItems(val), 300) as any;
-          }}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          onFocus={() => { if (results.length > 0) setOpen(true); }}
+          placeholder={placeholder || 'Ex : poulet, riz basmati…'}
           style={{
             flex: 1,
             background: '#2a2a2a',
@@ -91,18 +89,16 @@ export default function FoodSearch({ onAddItem, placeholder = 'Rechercher un ali
             color: '#e5e2e1',
             fontSize: '.84rem',
             outline: 'none',
-            boxSizing: 'border-box',
             width: '100%',
           }}
         />
         {loading && (
           <div style={{
-            width: 18,
-            height: 18,
+            width: 18, height: 18,
             border: '2px solid rgba(255,255,255,0.07)',
             borderTopColor: '#b22a27',
             borderRadius: '50%',
-            animation: 'fsSpin .7s linear infinite',
+            animation: 'spin .7s linear infinite',
             flexShrink: 0,
           }} />
         )}
@@ -110,51 +106,57 @@ export default function FoodSearch({ onAddItem, placeholder = 'Rechercher un ali
 
       {open && results.length > 0 && (
         <div style={{
-          position: 'fixed',
-          top: dropPos.top,
-          left: dropPos.left,
-          width: dropPos.width,
-          background: '#2a2a2a',
-          border: '1px solid rgba(255,255,255,0.1)',
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          left: 0, right: 0,
+          background: '#1c1b1b',
+          border: '1px solid rgba(178,42,39,0.3)',
           borderRadius: 8,
           zIndex: 9999,
-          maxHeight: 220,
+          maxHeight: 240,
           overflowY: 'auto',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
         }}>
           {results.map((item, i) => (
             <div
               key={i}
-              onClick={() => handleAdd(item)}
+              onMouseDown={() => { skipBlur.current = true; }}
+              onClick={() => handleSelect(item)}
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 padding: '10px 14px',
                 cursor: 'pointer',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                borderBottom: i < results.length - 1
+                  ? '1px solid rgba(255,255,255,0.05)' : 'none',
               }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(178,42,39,0.1)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+              onMouseEnter={e =>
+                (e.currentTarget as HTMLDivElement).style.background = 'rgba(178,42,39,0.12)'}
+              onMouseLeave={e =>
+                (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
             >
               <div>
-                <div style={{ fontSize: '.82rem', color: '#e5e2e1', fontWeight: 500 }}>
+                <div style={{
+                  fontSize: '.82rem', color: '#e5e2e1',
+                  fontWeight: 500, fontFamily: 'Inter, sans-serif',
+                }}>
                   {item.name.length > 45 ? item.name.slice(0, 45) + '…' : item.name}
                 </div>
                 <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>
-                  {item.calories} kcal · P{item.protein}g · G{item.carbs}g · L{item.fat}g · /100g
+                  {item.calories} kcal · P {item.protein}g · G {item.carbs}g · L {item.fat}g · /100g
                 </div>
               </div>
-              <span style={{ color: '#b22a27', fontWeight: 700, fontSize: '1.2rem', marginLeft: 8 }}>+</span>
+              <span style={{
+                color: '#b22a27', fontWeight: 700,
+                fontSize: '1.2rem', marginLeft: 10, flexShrink: 0,
+              }}>+</span>
             </div>
           ))}
         </div>
       )}
 
-      <style>{`
-        @keyframes fsSpin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
