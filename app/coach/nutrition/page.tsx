@@ -75,7 +75,7 @@ export default function CoachNutrition() {
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [foodLoading, setFoodLoading] = useState(false);
   const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /* Computed */
   const selectedNutPlan = selClient ? nutritionPlans.find(n => n.clientId === selClient.clientUserId || n.clientId === selClient.userId) || null : null;
