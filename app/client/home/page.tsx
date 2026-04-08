@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import FoodSearch from '@/components/shared/FoodSearch';
 import { db, auth } from '@/lib/firebase';
 import {
   collection, collectionGroup, query, where, getDocs, onSnapshot,
@@ -237,9 +238,6 @@ export default function ClientHome() {
   const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showFoodModal, setShowFoodModal] = useState(false);
   const [activeMealType, setActiveMealType] = useState<string>('breakfast');
-  const [foodSearch, setFoodSearch] = useState('');
-  const [searchResults, setSearchResults] = useState<FoodItem[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [selectedFood, setSelectedFood] = useState<FoodItem | null>(null);
   const [quantity, setQuantity] = useState(100);
 
@@ -248,7 +246,6 @@ export default function ClientHome() {
   const [completionLogs, setCompletionLogs] = useState<any[]>([]);
   const [savingCompletion, setSavingCompletion] = useState<string | null>(null);
   const completionUnsubRef = useRef<(() => void) | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   /* Stats helpers */
   const statFilteredLogs = (() => {
@@ -553,39 +550,8 @@ export default function ClientHome() {
     { cal: 0, p: 0, c: 0, f: 0 }
   );
 
-  const searchFoodFn = async (q: string) => {
-    if (!q || q.trim().length < 2) { setSearchResults([]); return; }
-    setSearchLoading(true);
-    const local = FOOD_DB.filter(f => f.name.toLowerCase().includes(q.toLowerCase()));
-    let combined: FoodItem[] = [...local];
-    if (local.length < 3) {
-      try {
-        const r = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10&fields=product_name,nutriments`);
-        const j = await r.json();
-        const remote: FoodItem[] = (j?.products || [])
-          .filter((p: any) => p?.product_name && p?.nutriments?.['energy-kcal_100g'])
-          .map((p: any) => ({
-            name: String(p.product_name).slice(0, 60),
-            calories: Math.round(Number(p.nutriments['energy-kcal_100g']) || 0),
-            protein: Number(p.nutriments?.proteins_100g) || 0,
-            carbs: Number(p.nutriments?.carbohydrates_100g) || 0,
-            fat: Number(p.nutriments?.fat_100g) || 0,
-            unit: 'g' as const,
-            category: 'glucide' as const,
-          }));
-        const seen = new Set(combined.map(f => f.name.toLowerCase()));
-        remote.forEach(f => { if (!seen.has(f.name.toLowerCase())) { combined.push(f); seen.add(f.name.toLowerCase()); } });
-      } catch {}
-    }
-    setSearchResults(combined.slice(0, 8));
-    setSearchLoading(false);
-  };
-
-
   const openFoodModal = (mealType: string) => {
     setActiveMealType(mealType);
-    setFoodSearch('');
-    setSearchResults([]);
     setSelectedFood(null);
     setQuantity(100);
     setShowFoodModal(true);
@@ -1524,37 +1490,12 @@ export default function ClientHome() {
                         ))}
                       </div>
 
-                      <input className="nut-input" placeholder="Rechercher un aliment..." value={foodSearch} onChange={e => {
-                                      const val = e.target.value;
-                                      setFoodSearch(val);
-                                      clearTimeout(searchTimer.current);
-                                      if (val.length >= 2) {
-                                        searchTimer.current = setTimeout(() => searchFoodFn(val), 250);
-                                      } else {
-                                        setSearchResults([]);
-                                      }
-                                    }} style={{ marginBottom:12 }} />
-
-                      {searchLoading && <div style={{ fontSize:'.68rem', color:'#9CA3AF', fontFamily:'Inter, sans-serif', marginBottom:10 }}>Recherche…</div>}
-
-                      {searchResults.length > 0 && (
-                        <div style={{ display:'flex', flexDirection:'column', gap:6, marginBottom:14, maxHeight:240, overflowY:'auto' }}>
-                          {searchResults.map((f, i) => (
-                            <div key={i} onClick={() => { setSelectedFood(f); setQuantity(100); }} style={{
-                              display:'flex', alignItems:'center', gap:10, padding:10,
-                              background: selectedFood?.name === f.name ? 'rgba(178,42,39,0.12)' : 'rgba(255,255,255,0.02)',
-                              border:'1px solid ' + (selectedFood?.name === f.name ? 'rgba(178,42,39,0.4)' : 'rgba(255,255,255,0.04)'),
-                              borderRadius:8, cursor:'pointer',
-                            }}>
-                              <div style={{ width:36, height:36, borderRadius:8, background:'rgba(178,42,39,0.1)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1.1rem', flexShrink:0 }}>{CAT_EMOJI[f.category] || '🍽️'}</div>
-                              <div style={{ flex:1, minWidth:0 }}>
-                                <div style={{ fontSize:'.75rem', fontFamily:'Inter, sans-serif', fontWeight:600, color:'#e5e2e1', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{f.name}</div>
-                                <div style={{ fontSize:'.58rem', color:'#9CA3AF', marginTop:2 }}>{f.calories} kcal · P{f.protein} G{f.carbs} L{f.fat} /100{f.unit}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <div style={{ marginBottom:12 }}>
+                        <FoodSearch
+                          onAddItem={item => { setSelectedFood({ ...item, unit: 'g', category: 'glucide' }); setQuantity(100); }}
+                          placeholder="Rechercher un aliment..."
+                        />
+                      </div>
 
                       {selectedFood && (
                         <div style={{ background:'rgba(178,42,39,0.06)', border:'1px solid rgba(178,42,39,0.18)', borderRadius:10, padding:14, marginBottom:14 }}>

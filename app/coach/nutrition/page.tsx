@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import FoodSearch from '@/components/shared/FoodSearch';
 import { db, auth } from '@/lib/firebase';
 import {
   collection, query, where, getDocs, limit,
@@ -71,13 +72,6 @@ export default function CoachNutrition() {
   const [savingMeal, setSavingMeal] = useState(false);
   const [deletingMeal, setDeletingMeal] = useState('');
   const [foodItems, setFoodItems] = useState<any[]>([]);
-  const [foodQuery, setFoodQuery] = useState('');
-  const [foodResults, setFoodResults] = useState<any[]>([]);
-  const [foodLoading, setFoodLoading] = useState(false);
-  const [foodDropdownOpen, setFoodDropdownOpen] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const searchWrapperRef = useRef<HTMLDivElement>(null);
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
 
   /* Computed */
   const selectedNutPlan = selClient ? nutritionPlans.find(n => n.clientId === selClient.clientUserId || n.clientId === selClient.userId) || null : null;
@@ -88,13 +82,6 @@ export default function CoachNutrition() {
     carbs: acc.carbs + (item.carbs || 0),
     fat: acc.fat + (item.fat || 0),
   }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-  useEffect(() => {
-    if (foodDropdownOpen && searchWrapperRef.current) {
-      const rect = searchWrapperRef.current.getBoundingClientRect();
-      setDropdownPos({ top: rect.bottom + 4, left: rect.left, width: rect.width });
-    }
-  }, [foodDropdownOpen]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -217,44 +204,14 @@ export default function CoachNutrition() {
       fireToast('🍽️', 'Repas ajouté', mealForm.name);
       setMealForm(defaultMealForm());
       setFoodItems([]);
-      setFoodQuery('');
       setShowMealForm(false);
       await fetchAll(user);
     } catch { fireToast('❌', 'Erreur', "Impossible d'ajouter."); }
     setSavingMeal(false);
   };
 
-  const searchFoodItems = async (q: string) => {
-    console.log('searchFoodItems appelé avec:', q);
-    if (!q || q.trim().length < 2) { setFoodResults([]); setFoodDropdownOpen(false); return; }
-    setFoodLoading(true);
-    try {
-      const r = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&json=1&page_size=10&fields=product_name,nutriments`
-      );
-      const j = await r.json();
-      const items = (j?.products || [])
-        .filter((p: any) => p?.product_name && p?.nutriments?.['energy-kcal_100g'])
-        .map((p: any) => ({
-          name: String(p.product_name).slice(0, 60),
-          quantity: 100,
-          calories: Math.round(Number(p.nutriments['energy-kcal_100g']) || 0),
-          protein: Math.round((Number(p.nutriments?.proteins_100g) || 0) * 10) / 10,
-          carbs: Math.round((Number(p.nutriments?.carbohydrates_100g) || 0) * 10) / 10,
-          fat: Math.round((Number(p.nutriments?.fat_100g) || 0) * 10) / 10,
-        }))
-        .slice(0, 8);
-      console.log('résultats reçus:', items.length, items);
-      setFoodResults(items);
-      setFoodDropdownOpen(items.length > 0);
-      console.log('foodDropdownOpen mis à:', items.length > 0);
-    } catch { setFoodResults([]); }
-    setFoodLoading(false);
-  };
-
   const handleAddFoodItem = (item: any) => {
     setFoodItems(prev => [...prev, { ...item }]);
-    setFoodQuery(''); setFoodResults([]); setFoodDropdownOpen(false);
   };
 
   const handleRemoveFoodItem = (index: number) => {
@@ -615,7 +572,7 @@ export default function CoachNutrition() {
                       {/* Add meal modal */}
                       {showMealForm && (
                         <div
-                          onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }}
+                          onClick={() => { setShowMealForm(false); setFoodItems([]); }}
                           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
                         >
                           <div
@@ -624,7 +581,7 @@ export default function CoachNutrition() {
                           >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
                               <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '1rem', color: '#e5e2e1' }}>AJOUTER UN REPAS</div>
-                              <button onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#e5e2e1', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+                              <button onClick={() => { setShowMealForm(false); setFoodItems([]); }} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#e5e2e1', width: 32, height: 32, borderRadius: 8, cursor: 'pointer', fontSize: '1rem' }}>✕</button>
                             </div>
 
                             {/* Résumé temps réel */}
@@ -656,45 +613,9 @@ export default function CoachNutrition() {
                             </div>
 
                             {/* Recherche aliments */}
-                            <div ref={searchWrapperRef} style={{ marginBottom: 14, position: 'relative' }}>
+                            <div style={{ marginBottom: 14 }}>
                               <label style={{ ...label12, display: 'block', marginBottom: 6 }}>Rechercher un aliment</label>
-                              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                <input
-                                  type="text"
-                                  value={foodQuery}
-                                  onChange={e => {
-                                    const val = e.target.value;
-                                    setFoodQuery(val);
-                                    clearTimeout(searchTimer.current);
-                                    if (val.length >= 2) {
-                                      searchTimer.current = setTimeout(() => searchFoodItems(val), 250);
-                                    } else {
-                                      setFoodResults([]);
-                                      setFoodDropdownOpen(false);
-                                    }
-                                  }}
-                                  placeholder="Ex : poulet, riz basmati, avocat…"
-                                  style={{ flex: 1, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 7, padding: '9px 12px', color: '#e5e2e1', fontSize: '.84rem', outline: 'none', boxSizing: 'border-box' }}
-                                />
-                                {foodLoading && <div style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', borderRadius: '50%', animation: 'cnSpin .7s linear infinite', flexShrink: 0 }} />}
-                              </div>
-                              {foodDropdownOpen && foodResults.length > 0 && (
-                                <div style={{ position: 'fixed', top: dropdownPos.top, left: dropdownPos.left, width: dropdownPos.width, background: '#2a2a2a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, zIndex: 9999, maxHeight: 220, overflowY: 'auto' }}>
-                                  {foodResults.map((item, i) => (
-                                    <div key={i} onClick={() => handleAddFoodItem(item)}
-                                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-                                      onMouseEnter={e => (e.currentTarget as HTMLDivElement).style.background = 'rgba(178,42,39,0.1)'}
-                                      onMouseLeave={e => (e.currentTarget as HTMLDivElement).style.background = 'transparent'}
-                                    >
-                                      <div>
-                                        <div style={{ fontSize: '.82rem', color: '#e5e2e1', fontWeight: 500 }}>{item.name.length > 45 ? item.name.slice(0, 45) + '…' : item.name}</div>
-                                        <div style={{ fontSize: '.6rem', color: '#9CA3AF', marginTop: 2 }}>{item.calories} kcal · P{item.protein}g · G{item.carbs}g · L{item.fat}g · /100g</div>
-                                      </div>
-                                      <span style={{ color: '#b22a27', fontWeight: 700, fontSize: '1.2rem', marginLeft: 8 }}>+</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
+                              <FoodSearch onAddItem={handleAddFoodItem} placeholder="Ex : poulet, riz basmati, avocat…" />
                             </div>
 
                             {/* Aliments ajoutés */}
@@ -741,7 +662,7 @@ export default function CoachNutrition() {
                                 {savingMeal ? 'Ajout…' : 'Ajouter le repas →'}
                               </button>
                               <button
-                                onClick={() => { setShowMealForm(false); setFoodItems([]); setFoodQuery(''); }}
+                                onClick={() => { setShowMealForm(false); setFoodItems([]); }}
                                 style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8, padding: '13px 18px', fontFamily: 'Lexend,sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#9CA3AF', cursor: 'pointer', minHeight: 44 }}
                               >
                                 Annuler
