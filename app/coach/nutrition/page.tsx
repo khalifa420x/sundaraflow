@@ -214,23 +214,42 @@ export default function CoachNutrition() {
     setSavingMeal(false);
   };
 
+  const normalizeStr = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
   const searchFoodItems = async (q: string) => {
     if (q.length < 2) { setFoodResults([]); setFoodDropdownOpen(false); return; }
     setFoodLoading(true);
     try {
-      const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=6&fields=product_name,nutriments`);
+      const res = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&action=process&json=1&page_size=20&fields=product_name,nutriments&lc=fr&countries=france`
+      );
       const data = await res.json();
-      const items = (data.products || [])
-        .filter((p: any) => p.product_name && p.nutriments?.['energy-kcal_100g'])
-        .map((p: any) => ({
-          name: p.product_name,
-          quantity: 100,
-          calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
-          protein: Math.round((p.nutriments['proteins_100g'] || 0) * 10) / 10,
-          carbs: Math.round((p.nutriments['carbohydrates_100g'] || 0) * 10) / 10,
-          fat: Math.round((p.nutriments['fat_100g'] || 0) * 10) / 10,
-        }));
-      setFoodResults(items);
+      const normQ = normalizeStr(q);
+
+      const toItem = (p: any) => ({
+        name: p.product_name,
+        quantity: 100,
+        calories: Math.round(p.nutriments['energy-kcal_100g'] || 0),
+        protein: Math.round((p.nutriments['proteins_100g'] || 0) * 10) / 10,
+        carbs: Math.round((p.nutriments['carbohydrates_100g'] || 0) * 10) / 10,
+        fat: Math.round((p.nutriments['fat_100g'] || 0) * 10) / 10,
+      });
+
+      const valid = (data.products || []).filter(
+        (p: any) => p.product_name && p.nutriments?.['energy-kcal_100g'] > 0
+      );
+
+      const items = valid
+        .filter((p: any) => normalizeStr(p.product_name).includes(normQ))
+        .slice(0, 8)
+        .map(toItem);
+
+      if (items.length === 0) {
+        setFoodResults(valid.slice(0, 6).map(toItem));
+      } else {
+        setFoodResults(items);
+      }
       setFoodDropdownOpen(true);
     } catch { setFoodResults([]); }
     setFoodLoading(false);
