@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, query, where, getDocs, getDoc, doc, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -72,11 +72,15 @@ export default function CoachMembers() {
   /* Modal */
   const [showAddModal, setShowAddModal] = useState(false);
   const [addMode, setAddMode]           = useState<AddMode>(null);
-  const [inviteEmail, setInviteEmail]   = useState('');
-  const [inviteLink, setInviteLink]     = useState('');
-  const [copying, setCopying]           = useState(false);
-  const [saving, setSaving]             = useState(false);
-  const [manualForm, setManualForm]     = useState({ name: '', email: '', goal: 'Perte de poids', weight: '' });
+  const [inviteForm, setInviteForm]       = useState({ name: '', email: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+  const [inviteError, setInviteError]     = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
+  const [inviteLink, setInviteLink]       = useState('');
+  const [copying, setCopying]             = useState(false);
+  const [saving, setSaving]               = useState(false);
+  const [manualForm, setManualForm]       = useState({ name: '', email: '', password: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+  const [manualError, setManualError]     = useState<string | null>(null);
+  const [manualSuccess, setManualSuccess] = useState<string | null>(null);
 
   /* Mount */
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
@@ -97,13 +101,7 @@ export default function CoachMembers() {
   /* Generate invite link when mode = lien */
   useEffect(() => {
     if (addMode === 'lien' && user) {
-      const token = crypto.randomUUID();
-      const link = `${window.location.origin}/register/client?coach=${user.uid}&token=${token}`;
-      setInviteLink(link);
-      addDoc(collection(db, 'invitations'), {
-        coachId: user.uid, token, type: 'link',
-        status: 'active', createdAt: Timestamp.now(),
-      }).catch(() => {});
+      setInviteLink(`https://sundaraflow.vercel.app/join?coach=${user.uid}`);
     }
   }, [addMode, user]);
 
@@ -155,43 +153,72 @@ export default function CoachMembers() {
 
   /* Handlers */
   const handleSendInvite = async () => {
-    if (!user || !inviteEmail) return;
-    setSaving(true);
+    if (!user || !inviteForm.name || !inviteForm.email) return;
+    setSaving(true); setInviteError(null); setInviteSuccess(null);
     try {
-      await addDoc(collection(db, 'invitations'), {
-        coachId: user.uid, email: inviteEmail,
-        token: crypto.randomUUID(), status: 'pending', type: 'email',
-        createdAt: Timestamp.now(),
+      const res = await fetch('/api/clients/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: inviteForm.name,
+          email: inviteForm.email,
+          goal: inviteForm.goal,
+          weight: inviteForm.weight ? Number(inviteForm.weight) : null,
+          height: inviteForm.height ? Number(inviteForm.height) : null,
+          age: inviteForm.age ? Number(inviteForm.age) : null,
+          coachId: user.uid,
+        }),
       });
-      fireToast('✉️', 'Invitation envoyée', inviteEmail);
-      setInviteEmail(''); setAddMode(null); setShowAddModal(false);
-    } catch { fireToast('❌', 'Erreur', "Impossible d'envoyer l'invitation."); }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setInviteSuccess(`Invitation envoyée à ${inviteForm.email}`);
+      fireToast('✉️', 'Invitation envoyée', inviteForm.email);
+      setTimeout(() => {
+        setInviteForm({ name: '', email: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+        setAddMode(null); setShowAddModal(false); setInviteSuccess(null);
+      }, 1500);
+    } catch (err: any) { setInviteError(err.message); }
     setSaving(false);
   };
 
   const handleAddManual = async () => {
-    if (!user || !manualForm.name || !manualForm.email) return;
-    setSaving(true);
+    if (!user || !manualForm.name || !manualForm.email || !manualForm.password) return;
+    setSaving(true); setManualError(null); setManualSuccess(null);
     try {
-      await addDoc(collection(db, 'clients'), {
-        coachId: user.uid, clientUserId: '',
-        name: manualForm.name, email: manualForm.email,
-        goal: manualForm.goal,
-        weight: manualForm.weight ? Number(manualForm.weight) : null,
-        status: 'pending', progress: 0,
-        createdAt: Timestamp.now(),
+      const res = await fetch('/api/clients/manual', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: manualForm.name,
+          email: manualForm.email,
+          password: manualForm.password,
+          goal: manualForm.goal,
+          weight: manualForm.weight ? Number(manualForm.weight) : null,
+          height: manualForm.height ? Number(manualForm.height) : null,
+          age: manualForm.age ? Number(manualForm.age) : null,
+          coachId: user.uid,
+        }),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setManualSuccess('Client ajouté avec succès');
       fireToast('✅', 'Membre ajouté', manualForm.name);
-      setManualForm({ name: '', email: '', goal: 'Perte de poids', weight: '' });
-      setAddMode(null); setShowAddModal(false);
-      if (user) await fetchClients(user);
-    } catch { fireToast('❌', 'Erreur', "Impossible d'ajouter le membre."); }
+      setTimeout(async () => {
+        setManualForm({ name: '', email: '', password: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+        setAddMode(null); setShowAddModal(false); setManualSuccess(null);
+        if (user) await fetchClients(user);
+      }, 1500);
+    } catch (err: any) { setManualError(err.message); }
     setSaving(false);
   };
 
   const closeModal = () => {
     setShowAddModal(false); setAddMode(null);
-    setInviteEmail(''); setInviteLink(''); setCopying(false);
+    setInviteForm({ name: '', email: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+    setInviteError(null); setInviteSuccess(null);
+    setManualForm({ name: '', email: '', password: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
+    setManualError(null); setManualSuccess(null);
+    setInviteLink(''); setCopying(false);
   };
 
   /* ── Kinetic Monolith: Ghost border — felt, not seen ── */
@@ -595,21 +622,42 @@ export default function CoachMembers() {
 
                 {/* ── MODE EMAIL ── */}
                 {addMode === 'email' && (
-                  <div>
-                    <label style={labelStyle}>Email du membre</label>
-                    <input
-                      className="mem-field"
-                      type="email"
-                      value={inviteEmail}
-                      onChange={e => setInviteEmail(e.target.value)}
-                      placeholder="email@membre.com"
-                      style={inputStyle}
-                    />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <label style={labelStyle}>Nom complet *</label>
+                      <input className="mem-field" type="text" value={inviteForm.name} onChange={e => setInviteForm(p => ({ ...p, name: e.target.value }))} placeholder="Prénom Nom" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Email *</label>
+                      <input className="mem-field" type="email" value={inviteForm.email} onChange={e => setInviteForm(p => ({ ...p, email: e.target.value }))} placeholder="email@membre.com" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Objectif</label>
+                      <select className="mem-field" value={inviteForm.goal} onChange={e => setInviteForm(p => ({ ...p, goal: e.target.value }))} style={{ ...inputStyle, color: '#e5e2e1' }}>
+                        <option value="Perte de poids">Perte de poids</option>
+                        <option value="Prise de masse">Prise de masse</option>
+                        <option value="Maintien">Maintien</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Poids (kg) — optionnel</label>
+                      <input className="mem-field" type="number" min={30} max={200} value={inviteForm.weight} onChange={e => setInviteForm(p => ({ ...p, weight: e.target.value }))} placeholder="75" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Taille (cm) — optionnel</label>
+                      <input className="mem-field" type="number" min={100} max={250} value={inviteForm.height} onChange={e => setInviteForm(p => ({ ...p, height: e.target.value }))} placeholder="175" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Âge — optionnel</label>
+                      <input className="mem-field" type="number" min={10} max={100} value={inviteForm.age} onChange={e => setInviteForm(p => ({ ...p, age: e.target.value }))} placeholder="30" style={inputStyle} />
+                    </div>
+                    {inviteError && <div style={{ background: 'rgba(178,42,39,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: '.75rem', color: '#e3beb8', fontFamily: 'Inter, sans-serif' }}>⚠ {inviteError}</div>}
+                    {inviteSuccess && <div style={{ background: 'rgba(22,163,74,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: '.75rem', color: '#16a34a', fontFamily: 'Inter, sans-serif' }}>✓ {inviteSuccess}</div>}
                     <button
                       className="mem-cta"
                       onClick={handleSendInvite}
-                      disabled={saving || !inviteEmail}
-                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, marginTop: 16, opacity: (saving || !inviteEmail) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
+                      disabled={saving || !inviteForm.name || !inviteForm.email}
+                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !inviteForm.name || !inviteForm.email) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                     >
                       {saving ? 'Envoi…' : "ENVOYER L'INVITATION →"}
                     </button>
@@ -628,6 +676,10 @@ export default function CoachMembers() {
                       <input className="mem-field" type="email" value={manualForm.email} onChange={e => setManualForm(p => ({ ...p, email: e.target.value }))} placeholder="email@membre.com" style={inputStyle} />
                     </div>
                     <div>
+                      <label style={labelStyle}>Mot de passe *</label>
+                      <input className="mem-field" type="password" value={manualForm.password} onChange={e => setManualForm(p => ({ ...p, password: e.target.value }))} placeholder="6 caractères minimum" style={inputStyle} />
+                    </div>
+                    <div>
                       <label style={labelStyle}>Objectif</label>
                       <select className="mem-field" value={manualForm.goal} onChange={e => setManualForm(p => ({ ...p, goal: e.target.value }))} style={{ ...inputStyle, color: '#e5e2e1' }}>
                         <option value="Perte de poids">Perte de poids</option>
@@ -639,11 +691,21 @@ export default function CoachMembers() {
                       <label style={labelStyle}>Poids actuel (kg) — optionnel</label>
                       <input className="mem-field" type="number" min={30} max={200} value={manualForm.weight} onChange={e => setManualForm(p => ({ ...p, weight: e.target.value }))} placeholder="75" style={inputStyle} />
                     </div>
+                    <div>
+                      <label style={labelStyle}>Taille (cm) — optionnel</label>
+                      <input className="mem-field" type="number" min={100} max={250} value={manualForm.height} onChange={e => setManualForm(p => ({ ...p, height: e.target.value }))} placeholder="175" style={inputStyle} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Âge — optionnel</label>
+                      <input className="mem-field" type="number" min={10} max={100} value={manualForm.age} onChange={e => setManualForm(p => ({ ...p, age: e.target.value }))} placeholder="30" style={inputStyle} />
+                    </div>
+                    {manualError && <div style={{ background: 'rgba(178,42,39,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: '.75rem', color: '#e3beb8', fontFamily: 'Inter, sans-serif' }}>⚠ {manualError}</div>}
+                    {manualSuccess && <div style={{ background: 'rgba(22,163,74,0.1)', borderRadius: 8, padding: '10px 14px', fontSize: '.75rem', color: '#16a34a', fontFamily: 'Inter, sans-serif' }}>✓ {manualSuccess}</div>}
                     <button
                       className="mem-cta"
                       onClick={handleAddManual}
-                      disabled={saving || !manualForm.name || !manualForm.email}
-                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !manualForm.name || !manualForm.email) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
+                      disabled={saving || !manualForm.name || !manualForm.email || !manualForm.password}
+                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !manualForm.name || !manualForm.email || !manualForm.password) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                     >
                       {saving ? 'Ajout…' : 'AJOUTER LE MEMBRE →'}
                     </button>
