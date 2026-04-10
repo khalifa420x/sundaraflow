@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { UserRole } from '@/types/models';
@@ -13,21 +13,30 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const router = useRouter();
   const { user, loading } = useCurrentUser();
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
     // Ne jamais rediriger pendant le chargement
     if (loading) return;
 
+    // Ne rediriger qu'une seule fois
+    if (hasRedirected.current) return;
+
     if (!user) {
+      hasRedirected.current = true;
       console.log('[AuthGuard] No user — redirect to /login');
       router.replace('/login');
       return;
     }
 
     if (user.role !== requiredRole) {
+      hasRedirected.current = true;
       console.log(`[AuthGuard] Wrong role: ${user.role} vs ${requiredRole}`);
       router.replace(user.role === 'coach' ? '/coach/home' : '/client/home');
+      return;
     }
+
+    console.log(`[AuthGuard] ✅ Access granted — ${user.role}`);
   }, [user, loading, requiredRole, router]);
 
   // Pendant chargement → spinner
