@@ -32,6 +32,16 @@ export default function LoginPage() {
       const snap = await getDoc(doc(db, 'users', cred.user.uid));
       if (!snap.exists()) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
       const role = snap.data().role;
+
+      // Set session cookie so middleware can gate protected routes
+      const idToken = await cred.user.getIdToken();
+      await fetch('/api/auth/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+      console.log('[login] Session cookie set');
+
       window.location.href = role === 'coach' ? '/coach/home' : '/client/home';
     } catch (err: any) {
       const c = err.code || '';
