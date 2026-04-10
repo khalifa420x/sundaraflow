@@ -28,9 +28,9 @@ export default function Header() {
 
   return (
     <nav id="mainNav" className={scrolled ? 'scrolled' : ''}>
-      <div className="nav-logo">
+      <a href="/" className="nav-logo" style={{ textDecoration: 'none' }}>
         Sundara<span>Flow</span>
-      </div>
+      </a>
       <div className="nav-center">
         <a href="#dashboard" onClick={(e) => { e.preventDefault(); scrollTo('#dashboard'); }}>Dashboard</a>
         <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo('#features'); }}>Fonctionnalités</a>
