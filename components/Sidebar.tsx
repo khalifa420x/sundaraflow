@@ -80,13 +80,13 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
 
   /* ── Liens ── */
   const coachLinks = [
-    { label: 'Tableau de bord', href: '/coach/home',     icon: '⊞' },
-    { label: 'Membres',         href: '/coach/page',     icon: '👥' },
+    { label: 'Tableau de bord', href: '/coach/home',      icon: '⊞' },
+    { label: 'Membres',         href: '/coach/members',   icon: '👥' },
     { label: 'Programmes',      href: '/coach/programmes', icon: '📋' },
     { label: 'Nutrition',       href: '/coach/nutrition', icon: '🥗' },
-    { label: 'Conseils',        href: '/coach/page',     icon: '💡' },
-    { label: 'Statistiques',    href: '/coach/stats',    icon: '📊' },
-    { label: 'Messages',        href: '/coach/messages', icon: '💬', badge: true },
+    { label: 'Conseils',        href: '/coach/home',      icon: '💡' },
+    { label: 'Statistiques',    href: '/coach/stats',     icon: '📊' },
+    { label: 'Messages',        href: '/coach/messages',  icon: '💬', badge: true },
   ];
   const clientLinks = [
     { label: 'Tableau de bord',  href: '/client/home',     icon: '⊞' },

@@ -51,7 +51,7 @@ export default function OverviewTab({ userName, mounted, clients, programs, tips
           </p>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <button style={S.gradBtn} onClick={() => navTo('analyses')}>VOIR LES STATISTIQUES →</button>
-            <button style={S.ghostBtn} onClick={() => router.push('/coach')}>AJOUTER UN MEMBRE</button>
+            <button style={S.ghostBtn} onClick={() => router.push('/coach/members')}>AJOUTER UN MEMBRE</button>
           </div>
         </div>
       </section>
@@ -138,7 +138,7 @@ export default function OverviewTab({ userName, mounted, clients, programs, tips
                   </div>
                 ))}
               </div>
-              <button style={{ ...S.ghostBtn, width: '100%', marginTop: 16, justifyContent: 'center', display: 'flex' }} onClick={() => navTo('clients')}>VOIR TOUS LES MEMBRES</button>
+              <button style={{ ...S.ghostBtn, width: '100%', marginTop: 16, justifyContent: 'center', display: 'flex' }} onClick={() => router.push('/coach/members')}>VOIR TOUS LES MEMBRES</button>
             </div>
 
             {tips.length > 0 && (
