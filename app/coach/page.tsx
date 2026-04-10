@@ -117,31 +117,23 @@ export default function CoachDashboard() {
     setPrograms(data);
   };
 
-  /* ── Fetch clients (inchangé) ── */
+  /* ── Fetch clients ── */
   const fetchClients = async () => {
     if (!user) return;
     const q = query(collection(db, 'clients'), where('coachId', '==', user.uid));
     const snap = await getDocs(q);
-    const data: any[] = [];
-    for (const docSnap of snap.docs) {
-      const cd = docSnap.data();
-      const clientUserId = cd.clientUserId;
-      // uid Firebase : priorité au champ uid du doc /clients (posé lors du join)
-      let firebaseUid = cd.uid || null;
-      let name = cd.name || '';
-      let email = cd.email || '';
-      if (clientUserId) {
-        try {
-          const clientDoc = await getDoc(doc(db, 'users', clientUserId));
-          if (clientDoc.exists()) {
-            if (!name) name = clientDoc.data().name || clientDoc.data().displayName || '';
-            if (!email) email = clientDoc.data().email || '';
-            if (!firebaseUid) firebaseUid = clientDoc.data().uid || null;
-          }
-        } catch {}
-      }
-      data.push({ id: docSnap.id, name: name || email || 'Client', email, userId: clientUserId, uid: firebaseUid });
-    }
+    const data = snap.docs.map(docSnap => {
+      const d = docSnap.data();
+      return {
+        id: docSnap.id,
+        uid: d.uid || null,
+        name: d.name || d.displayName || d.email || 'Client',
+        email: d.email || '',
+        goal: d.goal || '',
+        status: d.status || 'invited',
+        profile: d.profile || {},
+      };
+    });
     setClients(data);
   };
 
@@ -192,23 +184,27 @@ export default function CoachDashboard() {
     }
   };
 
-  /* ── Assigner programme (inchangé) ── */
+  /* ── Assigner programme ── */
   const handleAssignProgram = async () => {
     if (!selectedClient || !selectedProgram)
       return fireToast('⚠️', 'Sélection incomplète', 'Choisissez un membre et un programme.');
+    const client = clients.find((c) => c.id === selectedClient);
+    if (!client?.uid) {
+      fireToast('⚠️', 'Compte non activé', 'Ce client n\'a pas encore activé son compte.');
+      return;
+    }
     try {
-      const client = clients.find((c) => c.id === selectedClient);
-      const clientUid = client?.uid || client?.userId || selectedClient;
+      const prog = programs.find((p) => p.id === selectedProgram);
       await addDoc(collection(db, 'program_assignments'), {
-        clientId: clientUid,
+        clientId: client.uid,
         clientDocId: selectedClient,
-        programId: selectedProgram,
         coachId: user?.uid,
+        programId: selectedProgram,
         assignedAt: Timestamp.now(),
+        status: 'pending',
       });
       setSelectedClient(''); setSelectedProgram('');
-      const prog = programs.find((p) => p.id === selectedProgram);
-      fireToast('✅', 'Programme assigné !', `"${prog?.title}" → ${client?.name}.`);
+      fireToast('✅', 'Programme assigné !', `"${prog?.title}" → ${client.name}.`);
     } catch (e) {
       console.error(e);
       fireToast('❌', 'Erreur', "Impossible d'assigner le programme.");
