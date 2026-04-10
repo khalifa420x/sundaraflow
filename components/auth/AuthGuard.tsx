@@ -15,13 +15,23 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const { user, loading } = useCurrentUser();
 
   useEffect(() => {
+    // Ne jamais rediriger pendant le chargement
     if (loading) return;
-    if (!user) { router.push('/login'); return; }
-    if (user.role !== requiredRole) { router.push('/login'); }
+
+    if (!user) {
+      console.log('[AuthGuard] No user — redirect to /login');
+      router.replace('/login');
+      return;
+    }
+
+    if (user.role !== requiredRole) {
+      console.log(`[AuthGuard] Wrong role: ${user.role} vs ${requiredRole}`);
+      router.replace(user.role === 'coach' ? '/coach/home' : '/client/home');
+    }
   }, [user, loading, requiredRole, router]);
 
-  // Show loading spinner while auth resolves
-  if (loading || !user || user.role !== requiredRole) {
+  // Pendant chargement → spinner
+  if (loading) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -51,6 +61,9 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
       </div>
     );
   }
+
+  // Pas de user ou mauvais rôle → null pendant redirection
+  if (!user || user.role !== requiredRole) return null;
 
   return <>{children}</>;
 }
