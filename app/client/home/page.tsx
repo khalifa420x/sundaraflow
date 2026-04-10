@@ -428,6 +428,8 @@ export default function ClientHome() {
 
             {activeTab === 'programmes' && (
               <ProgrammesTab
+                clientId={user?.uid || ''}
+                coachId={coachId}
                 displayPrograms={displayPrograms}
                 loading={loading}
                 expandedProgram={expandedProgram}
