@@ -1,52 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server'
 
-// Routes accessible without authentication
-const PUBLIC_ROUTES = ['/login', '/register', '/join', '/forgot-password'];
+// Routes publiques — jamais redirigées
+const PUBLIC_ROUTES = [
+  '/',
+  '/login',
+  '/register',
+  '/join',
+  '/forgot-password',
+]
 
-// Static asset patterns to skip
-const SKIP_PATTERNS = [
-  '/_next',
-  '/api',
-  '/favicon.ico',
-  '/manifest.json',
-  '/icons',
-  '/images',
-];
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  console.log('[middleware] Request:', pathname)
 
-  // Skip static assets and internal Next.js routes
-  if (SKIP_PATTERNS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+  // Assets Next.js — toujours laisser passer
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/api') ||
+    pathname.includes('.')
+  ) {
+    return NextResponse.next()
   }
 
-  // Skip files with extensions (images, fonts, etc.)
-  if (/\.\w{1,6}$/.test(pathname)) {
-    return NextResponse.next();
+  // Routes publiques — toujours laisser passer, jamais rediriger
+  const isPublicRoute = PUBLIC_ROUTES.some(
+    route => pathname === route || pathname.startsWith(route + '/')
+  )
+
+  if (isPublicRoute) {
+    console.log('[middleware] Public route — pass through:', pathname)
+    return NextResponse.next()
   }
 
-  // Always allow public routes
-  if (PUBLIC_ROUTES.some((r) => pathname.startsWith(r))) {
-    return NextResponse.next();
+  // Routes privées — vérifier session cookie
+  const sessionCookie = request.cookies.get('session')?.value
+
+  if (!sessionCookie) {
+    console.log('[middleware] No session — redirect to /login from:', pathname)
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Check for session cookie
-  // NOTE: the /login page must call the /api/auth/session endpoint after
-  // Firebase signInWithEmailAndPassword to set this cookie.
-  const session = request.cookies.get('session')?.value;
-
-  if (!session) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // Fine-grained role validation is delegated to AuthGuard (client-side),
-  // which uses useCurrentUser() with a real-time Firestore listener.
-  return NextResponse.next();
+  console.log('[middleware] Session found — pass through:', pathname)
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+}
