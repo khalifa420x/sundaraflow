@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { doc, updateDoc } from 'firebase/firestore'
+import { useState, useEffect } from 'react'
+import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth, db } from '@/lib/firebase'
 
-export default function JoinPage() {
+// Composant interne qui utilise useSearchParams
+function JoinForm() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const token = searchParams?.get('token')
@@ -27,20 +29,18 @@ export default function JoinPage() {
 
   async function loadClientByToken() {
     try {
-      const { collection, query, where, getDocs } = await import('firebase/firestore')
       const q = query(
         collection(db, 'clients'),
         where('inviteToken', '==', token)
       )
       const snap = await getDocs(q)
-
       if (snap.empty) {
         setNotFound(true)
       } else {
         setClientData({ id: snap.docs[0].id, ...snap.docs[0].data() })
       }
     } catch (err) {
-      console.error('[join] Error loading client:', err)
+      console.error('[join] Error:', err)
       setNotFound(true)
     } finally {
       setLoading(false)
@@ -64,24 +64,26 @@ export default function JoinPage() {
       const credential = await createUserWithEmailAndPassword(auth, clientData.email, password)
       await updateProfile(credential.user, { displayName: clientData.name })
 
-      const clientRef = doc(db, 'clients', clientData.id)
-      const userRef = doc(db, 'users', clientData.id)
-
       await Promise.all([
-        updateDoc(clientRef, { status: 'active', uid: credential.user.uid, inviteToken: null }),
-        updateDoc(userRef,   { status: 'active', uid: credential.user.uid, inviteToken: null }),
+        updateDoc(doc(db, 'clients', clientData.id), {
+          status: 'active',
+          uid: credential.user.uid,
+          inviteToken: null,
+        }),
+        updateDoc(doc(db, 'users', clientData.id), {
+          status: 'active',
+          uid: credential.user.uid,
+          inviteToken: null,
+        }),
       ])
 
-      console.log('[join] Account activated:', clientData.email)
       router.replace('/client/home')
-
     } catch (err: any) {
-      console.error('[join] Error:', err)
-      setError(
-        err.code === 'auth/email-already-in-use'
-          ? 'Ce compte existe déjà. Connectez-vous sur /login'
-          : err.message
-      )
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Ce compte existe déjà. Connectez-vous sur /login')
+      } else {
+        setError(err.message)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -128,8 +130,6 @@ export default function JoinPage() {
 
       <div style={{ minHeight: '100vh', background: '#131313', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
         <div style={{ width: '100%', maxWidth: 440, background: '#1c1b1b', borderRadius: 20, padding: 36 }}>
-
-          {/* Header */}
           <div style={{ marginBottom: 28 }}>
             <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: '.6rem', letterSpacing: '.2em', textTransform: 'uppercase', color: '#b22a27', marginBottom: 10 }}>
               SUNDARA<span style={{ color: '#e5e2e1' }}>FLOW</span>
@@ -150,55 +150,41 @@ export default function JoinPage() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>
-                Email
-              </label>
+              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>Email</label>
               <input type="email" value={clientData?.email} disabled className="join-input" />
             </div>
-
             <div>
-              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>
-                Mot de passe *
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="6 caractères minimum"
-                className="join-input"
-                autoComplete="new-password"
-              />
+              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>Mot de passe *</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="6 caractères minimum" className="join-input" autoComplete="new-password" />
             </div>
-
             <div>
-              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>
-                Confirmer le mot de passe *
-              </label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                placeholder="Répétez votre mot de passe"
-                className="join-input"
-                autoComplete="new-password"
-              />
+              <label style={{ display: 'block', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.55rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 6 }}>Confirmer *</label>
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Répétez votre mot de passe" className="join-input" autoComplete="new-password" />
             </div>
-
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', padding: '14px', cursor: 'pointer', minHeight: 48, marginTop: 4, opacity: submitting ? .6 : 1, transition: 'opacity .2s, box-shadow .2s' }}
+              style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', padding: '14px', cursor: 'pointer', minHeight: 48, marginTop: 4, opacity: submitting ? .6 : 1, transition: 'opacity .2s' }}
             >
-              {submitting ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.2)', borderTopColor: '#fff', animation: 'spin .7s linear infinite', display: 'inline-block' }} />
-                  Activation…
-                </span>
-              ) : 'ACCÉDER À MON ESPACE →'}
+              {submitting ? 'Activation…' : 'ACCÉDER À MON ESPACE →'}
             </button>
           </div>
         </div>
       </div>
     </>
+  )
+}
+
+// Page principale avec Suspense obligatoire pour useSearchParams
+export default function JoinPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#131313', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.07)', borderTopColor: '#b22a27', animation: 'spin .8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    }>
+      <JoinForm />
+    </Suspense>
   )
 }
