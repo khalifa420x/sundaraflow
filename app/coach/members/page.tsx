@@ -27,13 +27,13 @@ const initials = (name: string) =>
   name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
 type AddMode = null | 'email' | 'manuel' | 'lien';
-type FilterStatus = 'tous' | 'actif' | 'pause' | 'pending';
+type FilterStatus = 'tous' | 'active' | 'inactive' | 'invited';
 
 const FILTER_LABELS: Record<FilterStatus, string> = {
   tous: 'Tous',
-  actif: 'Actifs ●',
-  pause: 'En pause ⏸',
-  pending: 'En attente ⏳',
+  active: 'Actifs ●',
+  inactive: 'Inactifs ⏸',
+  invited: 'En attente ⏳',
 };
 
 const goalChip = (goal: string) => {
@@ -45,9 +45,10 @@ const goalChip = (goal: string) => {
 };
 
 const statusBadge = (status: string) => {
-  if (status === 'actif')   return { bg: 'rgba(22,163,74,0.15)',   color: '#16a34a', label: '● ACTIF' };
-  if (status === 'pause')   return { bg: 'rgba(107,114,128,0.15)', color: '#6B7280', label: '⏸ EN PAUSE' };
-  return                           { bg: 'rgba(178,42,39,0.15)',   color: '#b22a27', label: '⏳ EN ATTENTE' };
+  if (status === 'active')   return { bg: 'rgba(22,163,74,0.15)',   color: '#16a34a', label: '● ACTIF' };
+  if (status === 'inactive') return { bg: 'rgba(107,114,128,0.15)', color: '#6B7280', label: '⏸ INACTIF' };
+  if (status === 'invited')  return { bg: 'rgba(178,42,39,0.15)',   color: '#b22a27', label: '⏳ EN ATTENTE' };
+  return                            { bg: 'rgba(178,42,39,0.15)',   color: '#b22a27', label: '⏳ EN ATTENTE' };
 };
 
 /* ════════════════════════════════════════════
@@ -149,8 +150,7 @@ export default function CoachMembers() {
     })
     .filter(c => filterStatus === 'tous' || c.status === filterStatus);
 
-  // Show filtered real clients, or mock data only when no real clients loaded at all
-  const displayClients = clients.length === 0 ? MOCK_CLIENTS : clientsFiltres;
+  const displayClients = clientsFiltres;
 
   /* Handlers */
   const handleSendInvite = async () => {
@@ -403,10 +403,10 @@ export default function CoachMembers() {
           <div style={{ background: '#1c1b1b' }}>
             <div className="mem-kpi-grid">
               {[
-                { label: 'MEMBRES TOTAL', val: displayClients.length },
-                { label: 'ACTIFS',        val: displayClients.filter(c => c.status === 'actif').length },
-                { label: 'EN PAUSE',      val: displayClients.filter(c => c.status === 'pause').length },
-                { label: 'EN ATTENTE',    val: displayClients.filter(c => c.status === 'pending').length },
+                { label: 'MEMBRES TOTAL', val: clients.length },
+                { label: 'ACTIFS',        val: clients.filter(c => c.status === 'active').length },
+                { label: 'INACTIFS',      val: clients.filter(c => c.status === 'inactive').length },
+                { label: 'EN ATTENTE',    val: clients.filter(c => c.status === 'invited').length },
               ].map((kpi, i, arr) => (
                 <div key={kpi.label} style={{
                   padding: 'clamp(16px,2.5vw,28px)',
@@ -433,7 +433,7 @@ export default function CoachMembers() {
             </div>
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {(['tous', 'actif', 'pause', 'pending'] as FilterStatus[]).map(f => (
+              {(['tous', 'active', 'inactive', 'invited'] as FilterStatus[]).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilterStatus(f)}
