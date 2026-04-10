@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Routes publiques — jamais redirigées
 const PUBLIC_ROUTES = [
   '/',
   '/login',
@@ -12,8 +11,6 @@ const PUBLIC_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  console.log('[middleware] Request:', pathname)
-
   // Assets Next.js — toujours laisser passer
   if (
     pathname.startsWith('/_next') ||
@@ -23,27 +20,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Routes publiques — toujours laisser passer, jamais rediriger
+  // Routes publiques — toujours laisser passer
   const isPublicRoute = PUBLIC_ROUTES.some(
     route => pathname === route || pathname.startsWith(route + '/')
   )
 
   if (isPublicRoute) {
-    console.log('[middleware] Public route — pass through:', pathname)
     return NextResponse.next()
   }
 
-  // Routes privées — vérifier session cookie
-  const sessionCookie = request.cookies.get('session')?.value
-
-  if (!sessionCookie) {
-    console.log('[middleware] No session — redirect to /login from:', pathname)
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  console.log('[middleware] Session found — pass through:', pathname)
+  // Routes privées — laisser passer
+  // AuthGuard dans les layouts gère la protection par rôle
+  // Le middleware ne bloque plus sur le cookie — trop de timing issues
   return NextResponse.next()
 }
 
