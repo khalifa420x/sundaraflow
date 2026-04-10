@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { AppUser } from '@/types/models';
 
@@ -24,8 +24,7 @@ export function useCurrentUser(): UseCurrentUserResult {
   useEffect(() => {
     let unsubFirestore: (() => void) | undefined;
 
-    const unsubAuth = onAuthStateChanged(auth, (fbUser) => {
-      // Clean up previous Firestore listener when auth changes
+    const unsubAuth = onAuthStateChanged(auth, async (fbUser) => {
       if (unsubFirestore) { unsubFirestore(); unsubFirestore = undefined; }
 
       if (!fbUser) {
@@ -37,24 +36,42 @@ export function useCurrentUser(): UseCurrentUserResult {
 
       setFirebaseUser(fbUser);
 
-      // Real-time sync — query by uid field (docId != Firebase UID for invited clients)
-      const q = query(collection(db, 'users'), where('uid', '==', fbUser.uid));
-      unsubFirestore = onSnapshot(
-        q,
-        (snap) => {
-          if (!snap.empty) {
-            setUser({ uid: fbUser.uid, ...snap.docs[0].data() } as AppUser);
-          } else {
-            setUser(null);
-          }
+      try {
+        // Tentative 1 — anciens users : docId = Firebase UID (coaches)
+        const directRef = doc(db, 'users', fbUser.uid);
+        const directSnap = await getDoc(directRef);
+
+        if (directSnap.exists()) {
+          console.log('[useCurrentUser] Found by docId');
+          setUser({ uid: fbUser.uid, ...directSnap.data() } as AppUser);
           setLoading(false);
-          setError(null);
-        },
-        (err) => {
-          setError(err.message);
+          unsubFirestore = onSnapshot(directRef, (snap) => {
+            if (snap.exists()) setUser({ uid: fbUser.uid, ...snap.data() } as AppUser);
+          });
+          return;
+        }
+
+        // Tentative 2 — nouveaux users : docId = emailToDocId, champ uid = Firebase UID (clients invités)
+        const snap = await getDocs(query(collection(db, 'users'), where('uid', '==', fbUser.uid)));
+        if (!snap.empty) {
+          console.log('[useCurrentUser] Found by uid field');
+          const userRef = snap.docs[0].ref;
+          setUser({ uid: fbUser.uid, ...snap.docs[0].data() } as AppUser);
           setLoading(false);
-        },
-      );
+          unsubFirestore = onSnapshot(userRef, (s) => {
+            if (s.exists()) setUser({ uid: fbUser.uid, ...s.data() } as AppUser);
+          });
+          return;
+        }
+
+        console.warn('[useCurrentUser] User not found in Firestore');
+        setUser(null);
+        setLoading(false);
+      } catch (err: any) {
+        console.error('[useCurrentUser] Error:', err);
+        setError(err.message);
+        setLoading(false);
+      }
     });
 
     return () => {
