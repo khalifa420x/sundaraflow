@@ -201,7 +201,12 @@ export default function CoachDashboard() {
   };
 
   /* ── Déconnexion (inchangé) ── */
-  const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
+  const handleSignOut = async () => {
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    console.log('[logout] Session cookie cleared');
+    router.push('/login');
+  };
 
   /* ── Filtered programs ── */
   const filteredPrograms = programs.filter((p) => !filter || p.type === filter);

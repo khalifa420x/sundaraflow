@@ -366,7 +366,12 @@ export default function ClientHome() {
   };
 
   useEffect(() => { if (user) fetchAll(user); }, [user]);
-  const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
+  const handleSignOut = async () => {
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    console.log('[logout] Session cookie cleared');
+    router.push('/login');
+  };
   const navTo = (key: string) => { setActiveTab(key as NavKey); };
 
   /* ── JSX ── */

@@ -101,7 +101,12 @@ export default function Sidebar({ role, onNavTo }: SidebarProps) {
   const homeHref = role === 'coach' ? '/coach/home' : '/client/home';
   const initials = (userName.split(' ')[0] || userName).slice(0, 2).toUpperCase() || (role === 'coach' ? 'CO' : 'MB');
 
-  const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
+  const handleSignOut = async () => {
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    console.log('[logout] Session cookie cleared');
+    router.push('/login');
+  };
 
   const NavLink = ({ label, href, icon, badge, tab }: {
     label: string; href: string; icon: string; badge?: boolean; tab?: string;

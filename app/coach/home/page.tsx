@@ -242,7 +242,12 @@ export default function CoachHome() {
     try { await deleteDoc(doc(db, 'coach_meals', mealId)); fireToast('🗑️', 'Repas supprimé', ''); await fetchAll(user); } catch { fireToast('❌', 'Erreur', 'Impossible de supprimer.'); }
     setDeletingMeal('');
   };
-  const handleSignOut = async () => { await signOut(auth); router.push('/login'); };
+  const handleSignOut = async () => {
+    await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    console.log('[logout] Session cookie cleared');
+    router.push('/login');
+  };
 
   const navTo = (key: string) => { setActiveTab(key as typeof activeTab); };
 

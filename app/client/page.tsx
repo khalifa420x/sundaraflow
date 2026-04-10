@@ -110,6 +110,8 @@ export default function ClientDashboard() {
   /* ── Déconnexion ── */
   const handleSignOut = async () => {
     await signOut(auth);
+    await fetch('/api/auth/session', { method: 'DELETE' });
+    console.log('[logout] Session cookie cleared');
     router.push('/login');
   };
 
