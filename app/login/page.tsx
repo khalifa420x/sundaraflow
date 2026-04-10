@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 /* ── TOUTE LA LOGIQUE EST PRÉSERVÉE — SEULE L'UI A ÉTÉ MODIFIÉE ── */
@@ -29,28 +29,18 @@ export default function LoginPage() {
     setError('');
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
+      const snap = await getDoc(doc(db, 'users', cred.user.uid));
+      if (!snap.exists()) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
+      const role = snap.data().role;
 
-      // Poser le cookie de session AVANT la redirection pour éviter la race condition middleware
+      // Set session cookie so middleware can gate protected routes
       const idToken = await cred.user.getIdToken();
-      const sessionRes = await fetch('/api/auth/session', {
+      await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
-      if (!sessionRes.ok) throw new Error('Erreur de session');
       console.log('[login] Session cookie set');
-
-      // Lookup utilisateur avec double fallback
-      let userData: any = null;
-      const directSnap = await getDoc(doc(db, 'users', cred.user.uid));
-      if (directSnap.exists()) {
-        userData = directSnap.data();
-      } else {
-        const q = await getDocs(query(collection(db, 'users'), where('uid', '==', cred.user.uid)));
-        if (!q.empty) userData = q.docs[0].data();
-      }
-      if (!userData) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
-      const role = userData.role;
 
       window.location.href = role === 'coach' ? '/coach/home' : '/client/home';
     } catch (err: any) {

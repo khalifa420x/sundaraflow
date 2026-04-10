@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import type { UserRole } from '@/types/models';
@@ -13,34 +13,15 @@ interface AuthGuardProps {
 export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
   const router = useRouter();
   const { user, loading } = useCurrentUser();
-  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    // Ne jamais rediriger pendant le chargement
     if (loading) return;
-
-    // Ne rediriger qu'une seule fois
-    if (hasRedirected.current) return;
-
-    if (!user) {
-      hasRedirected.current = true;
-      console.log('[AuthGuard] No user — redirect to /login');
-      router.replace('/login');
-      return;
-    }
-
-    if (user.role !== requiredRole) {
-      hasRedirected.current = true;
-      console.log(`[AuthGuard] Wrong role: ${user.role} vs ${requiredRole}`);
-      router.replace(user.role === 'coach' ? '/coach/home' : '/client/home');
-      return;
-    }
-
-    console.log(`[AuthGuard] ✅ Access granted — ${user.role}`);
+    if (!user) { router.push('/login'); return; }
+    if (user.role !== requiredRole) { router.push('/login'); }
   }, [user, loading, requiredRole, router]);
 
-  // Pendant chargement → spinner
-  if (loading) {
+  // Show loading spinner while auth resolves
+  if (loading || !user || user.role !== requiredRole) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -69,23 +50,6 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
-  }
-
-  // Pas de user ou mauvais rôle → loader pendant redirection
-  if (!user || user.role !== requiredRole) {
-    return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#000'
-      }}>
-        <div style={{ color: 'white', opacity: 0.5, fontSize: '14px' }}>
-          Chargement...
-        </div>
-      </div>
-    )
   }
 
   return <>{children}</>;

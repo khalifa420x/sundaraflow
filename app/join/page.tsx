@@ -77,14 +77,6 @@ function JoinForm() {
         }),
       ])
 
-      // Poser le cookie de session AVANT la redirection
-      const idToken = await credential.user.getIdToken()
-      await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      })
-
       router.replace('/client/home')
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
