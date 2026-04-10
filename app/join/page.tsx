@@ -90,6 +90,21 @@ function JoinForm() {
       })
 
       console.log('[join] /users doc created with uid as docId:', uid)
+
+      // Mettre à jour aussi l'ancien doc /users/{docId} si différent de uid
+      if (clientData.id !== uid) {
+        try {
+          await updateDoc(doc(db, 'users', clientData.id), {
+            status: 'active',
+            uid: uid,
+            inviteToken: null,
+          })
+          console.log('[join] legacy users doc updated:', clientData.id)
+        } catch (err) {
+          console.warn('[join] No legacy users doc to update')
+        }
+      }
+
       router.replace('/client/home')
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
