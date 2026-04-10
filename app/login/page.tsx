@@ -42,6 +42,9 @@ export default function LoginPage() {
       });
       console.log('[login] Session cookie set');
 
+      // Attendre que onAuthStateChanged se déclenche avant de rediriger
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       window.location.href = role === 'coach' ? '/coach/home' : '/client/home';
     } catch (err: any) {
       const c = err.code || '';
