@@ -623,7 +623,7 @@ export default function CoachProgrammes() {
                   </div>
 
                   {/* Durée + Séances */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                  <div className="cp-2col" style={{ marginBottom: 24 }}>
                     <div>
                       <div style={{ ...S.label, marginBottom: 10 }}>Durée — {genWeeks} semaines</div>
                       <input type="range" min={4} max={24} value={genWeeks} onChange={e => setGenWeeks(+e.target.value)} style={{ width: '100%', accentColor: '#b22a27', cursor: 'pointer' }} />
@@ -825,7 +825,7 @@ export default function CoachProgrammes() {
                   </div>
 
                   {/* Objectif + Niveau */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 20 }}>
+                  <div className="cp-2col" style={{ marginBottom: 20 }}>
                     <div>
                       <div style={{ ...S.label, marginBottom: 8 }}>Objectif</div>
                       <select value={createGoal} onChange={e => setCreateGoal(e.target.value as GoalType)} style={S.input}>
@@ -841,7 +841,7 @@ export default function CoachProgrammes() {
                   </div>
 
                   {/* Durée + Séances */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+                  <div className="cp-2col">
                     <div>
                       <div style={{ ...S.label, marginBottom: 8 }}>Durée (semaines)</div>
                       <input type="number" min={1} max={52} value={createWeeks} onChange={e => setCreateWeeks(+e.target.value)} style={S.input} />
@@ -1110,7 +1110,7 @@ export default function CoachProgrammes() {
           @media (min-width: 768px) { .cp-main { margin-left: 240px; width: calc(100vw - 240px); } }
           @media (max-width: 767px) {
             .cp-root { flex-direction: column !important; }
-            .cp-main { margin-left: 0 !important; width: 100% !important; }
+            .cp-main { margin-left: 0 !important; width: 100% !important; padding-top: 56px; }
           }
 
           .cp-prog-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
@@ -1141,6 +1141,16 @@ export default function CoachProgrammes() {
           .cp-root ::-webkit-scrollbar { width: 4px; height: 4px; }
           .cp-root ::-webkit-scrollbar-track { background: transparent; }
           .cp-root ::-webkit-scrollbar-thumb { background: rgba(178,42,39,0.35); border-radius: 10px; }
+
+          /* Mobile-first responsive grids for generate/create views */
+          .cp-2col { display: grid; grid-template-columns: 1fr; gap: 18px; }
+          @media (min-width: 580px) { .cp-2col { grid-template-columns: 1fr 1fr; } }
+
+          /* Tracking per-client card: wrap on small screens */
+          @media (max-width: 500px) {
+            .cp-root [style*="display: flex"][style*="alignItems: center"][style*="gap: 12px"] { flex-wrap: wrap; }
+          }
+
         `}</style>
       </>
     </ProtectedRoute>

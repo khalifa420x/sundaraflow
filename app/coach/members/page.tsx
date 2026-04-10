@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, doc, addDoc, Timestamp } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -110,8 +110,36 @@ export default function CoachMembers() {
   const fetchClients = async (u: import('firebase/auth').User) => {
     try {
       const snap = await getDocs(query(collection(db, 'clients'), where('coachId', '==', u.uid)));
-      setClients(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    } catch { setClients([]); }
+      console.log('[members] total client docs:', snap.size);
+      const clientData: any[] = [];
+      for (const docSnap of snap.docs) {
+        const cd = docSnap.data();
+        console.log('raw client:', docSnap.id, JSON.stringify(cd));
+        let cName = cd.name || '';
+        // Resolve name from users collection if missing
+        if (!cName && cd.clientUserId) {
+          try {
+            const uDoc = await getDoc(doc(db, 'users', cd.clientUserId));
+            if (uDoc.exists()) cName = uDoc.data().name || uDoc.data().displayName || uDoc.data().email || 'Client';
+          } catch {}
+        }
+        // Compute progress from program_assignments
+        let progress = cd.progress || 0;
+        if (cd.clientUserId) {
+          try {
+            const aSnap = await getDocs(query(
+              collection(db, 'program_assignments'),
+              where('clientId', '==', cd.clientUserId)
+            ));
+            const progresses = aSnap.docs.map((d: any) => d.data().progress || 0);
+            if (progresses.length > 0)
+              progress = Math.round(progresses.reduce((a: number, b: number) => a + b, 0) / progresses.length);
+          } catch {}
+        }
+        clientData.push({ id: docSnap.id, ...cd, name: cName || cd.email || 'Client', progress });
+      }
+      setClients(clientData);
+    } catch (e) { console.error('[members] fetchClients error:', e); setClients([]); }
   };
 
   /* Derived */
@@ -122,9 +150,8 @@ export default function CoachMembers() {
     })
     .filter(c => filterStatus === 'tous' || c.status === filterStatus);
 
-  const displayClients = clientsFiltres.length > 0
-    ? clientsFiltres
-    : (clients.length === 0 ? MOCK_CLIENTS : []);
+  // Show filtered real clients, or mock data only when no real clients loaded at all
+  const displayClients = clients.length === 0 ? MOCK_CLIENTS : clientsFiltres;
 
   /* Handlers */
   const handleSendInvite = async () => {

@@ -264,8 +264,19 @@ export default function ClientHome() {
     setLoading(false);
   };
 
-  const setupCompletionListener = (u: import('firebase/auth').User) => {
+  const setupCompletionListener = async (u: import('firebase/auth').User) => {
     if (completionUnsubRef.current) completionUnsubRef.current();
+    // Preload completions immediately via getDocs so they show on first render
+    try {
+      const initSnap = await getDocs(query(collectionGroup(db, 'exercises'), where('clientId', '==', u.uid)));
+      const initMap: Record<string, boolean> = {};
+      initSnap.docs.forEach(d => {
+        const data = d.data();
+        if (data.completed && data.assignmentId != null && data.si != null && data.ei != null)
+          initMap[`${data.assignmentId}_${data.si}_${data.ei}`] = true;
+      });
+      setCompletions(initMap);
+    } catch (e) { console.warn('[completions:init]', e); }
     const q = query(collectionGroup(db, 'exercises'), where('clientId', '==', u.uid));
     const unsub = onSnapshot(q, (snap) => {
       const map: Record<string, boolean> = {};
