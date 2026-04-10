@@ -29,27 +29,28 @@ export default function LoginPage() {
     setError('');
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      // Tentative 1 — anciens users : docId = Firebase UID (coaches)
-      let userData: any = null
-      const directSnap = await getDoc(doc(db, 'users', cred.user.uid))
-      if (directSnap.exists()) {
-        userData = directSnap.data()
-      } else {
-        // Tentative 2 — nouveaux users : docId = emailToDocId, champ uid = Firebase UID (clients invités)
-        const q = await getDocs(query(collection(db, 'users'), where('uid', '==', cred.user.uid)))
-        if (!q.empty) userData = q.docs[0].data()
-      }
-      if (!userData) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
-      const role = userData.role;
 
-      // Set session cookie so middleware can gate protected routes
+      // Poser le cookie de session AVANT la redirection pour éviter la race condition middleware
       const idToken = await cred.user.getIdToken();
-      await fetch('/api/auth/session', {
+      const sessionRes = await fetch('/api/auth/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idToken }),
       });
+      if (!sessionRes.ok) throw new Error('Erreur de session');
       console.log('[login] Session cookie set');
+
+      // Lookup utilisateur avec double fallback
+      let userData: any = null;
+      const directSnap = await getDoc(doc(db, 'users', cred.user.uid));
+      if (directSnap.exists()) {
+        userData = directSnap.data();
+      } else {
+        const q = await getDocs(query(collection(db, 'users'), where('uid', '==', cred.user.uid)));
+        if (!q.empty) userData = q.docs[0].data();
+      }
+      if (!userData) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
+      const role = userData.role;
 
       window.location.href = role === 'coach' ? '/coach/home' : '/client/home';
     } catch (err: any) {
