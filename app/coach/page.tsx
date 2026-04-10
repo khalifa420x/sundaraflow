@@ -124,11 +124,23 @@ export default function CoachDashboard() {
     const snap = await getDocs(q);
     const data: any[] = [];
     for (const docSnap of snap.docs) {
-      const clientUserId = docSnap.data().clientUserId;
-      const clientDoc = await getDoc(doc(db, 'users', clientUserId));
-      if (clientDoc.exists()) {
-        data.push({ id: docSnap.id, name: clientDoc.data().name, email: clientDoc.data().email, userId: clientUserId });
+      const cd = docSnap.data();
+      const clientUserId = cd.clientUserId;
+      // uid Firebase : priorité au champ uid du doc /clients (posé lors du join)
+      let firebaseUid = cd.uid || null;
+      let name = cd.name || '';
+      let email = cd.email || '';
+      if (clientUserId) {
+        try {
+          const clientDoc = await getDoc(doc(db, 'users', clientUserId));
+          if (clientDoc.exists()) {
+            if (!name) name = clientDoc.data().name || clientDoc.data().displayName || '';
+            if (!email) email = clientDoc.data().email || '';
+            if (!firebaseUid) firebaseUid = clientDoc.data().uid || null;
+          }
+        } catch {}
       }
+      data.push({ id: docSnap.id, name: name || email || 'Client', email, userId: clientUserId, uid: firebaseUid });
     }
     setClients(data);
   };
@@ -185,14 +197,17 @@ export default function CoachDashboard() {
     if (!selectedClient || !selectedProgram)
       return fireToast('⚠️', 'Sélection incomplète', 'Choisissez un membre et un programme.');
     try {
+      const client = clients.find((c) => c.id === selectedClient);
+      const clientUid = client?.uid || client?.userId || selectedClient;
       await addDoc(collection(db, 'program_assignments'), {
-        clientId: selectedClient,
+        clientId: clientUid,
+        clientDocId: selectedClient,
         programId: selectedProgram,
+        coachId: user?.uid,
         assignedAt: Timestamp.now(),
       });
       setSelectedClient(''); setSelectedProgram('');
       const prog = programs.find((p) => p.id === selectedProgram);
-      const client = clients.find((c) => c.id === selectedClient);
       fireToast('✅', 'Programme assigné !', `"${prog?.title}" → ${client?.name}.`);
     } catch (e) {
       console.error(e);
