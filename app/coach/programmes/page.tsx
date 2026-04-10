@@ -352,12 +352,16 @@ export default function CoachProgrammes() {
 
   const handleAssign = async () => {
     if (!user || !assignProgram || !assignClientDocId) return;
+    const clientDoc = clients.find(c => c.docId === assignClientDocId);
+    if (!clientDoc?.uid) {
+      fireToast('⚠️', 'Compte non activé', 'Ce client n\'a pas encore activé son compte.');
+      return;
+    }
     setAssignSaving(true);
     try {
-      const clientDoc = clients.find(c => c.docId === assignClientDocId);
       await addDoc(collection(db, 'program_assignments'), {
         coachId: user.uid,
-        clientId: clientDoc?.clientUserId || '',
+        clientId: clientDoc.uid,
         clientDocId: assignClientDocId,
         programId: assignProgram.id,
         programTitle: assignProgram.title,
@@ -365,7 +369,7 @@ export default function CoachProgrammes() {
         status: 'pending',
         assignedAt: Timestamp.now(),
       });
-      fireToast('✅', 'Assigné', `${assignProgram.title} → ${clientDoc?.name || 'Client'}`);
+      fireToast('✅', 'Assigné', `${assignProgram.title} → ${clientDoc.name || 'Client'}`);
       setView('list');
     } catch { fireToast('❌', 'Erreur', 'Impossible d\'assigner.'); }
     setAssignSaving(false);
