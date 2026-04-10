@@ -75,7 +75,8 @@ export default function CoachMembers() {
   const [inviteForm, setInviteForm]       = useState({ name: '', email: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
   const [inviteError, setInviteError]     = useState<string | null>(null);
   const [inviteSuccess, setInviteSuccess] = useState<string | null>(null);
-  const [inviteLink, setInviteLink]       = useState('');
+  const [inviteLink, setInviteLink]       = useState<string | null>(null);
+  const [copied, setCopied]               = useState(false);
   const [copying, setCopying]             = useState(false);
   const [saving, setSaving]               = useState(false);
   const [manualForm, setManualForm]       = useState({ name: '', email: '', password: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
@@ -171,12 +172,9 @@ export default function CoachMembers() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setInviteSuccess(`Invitation envoyée à ${inviteForm.email}`);
-      fireToast('✉️', 'Invitation envoyée', inviteForm.email);
-      setTimeout(() => {
-        setInviteForm({ name: '', email: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
-        setAddMode(null); setShowAddModal(false); setInviteSuccess(null);
-      }, 1500);
+      setInviteSuccess(`Client invité — copiez le lien ci-dessous`);
+      setInviteLink(data.inviteLink);
+      fireToast('✉️', 'Client invité', inviteForm.email);
     } catch (err: any) { setInviteError(err.message); }
     setSaving(false);
   };
@@ -218,7 +216,7 @@ export default function CoachMembers() {
     setInviteError(null); setInviteSuccess(null);
     setManualForm({ name: '', email: '', password: '', goal: 'Perte de poids', weight: '', height: '', age: '' });
     setManualError(null); setManualSuccess(null);
-    setInviteLink(''); setCopying(false);
+    setInviteLink(null); setCopied(false); setCopying(false);
   };
 
   /* ── Kinetic Monolith: Ghost border — felt, not seen ── */
@@ -656,11 +654,30 @@ export default function CoachMembers() {
                     <button
                       className="mem-cta"
                       onClick={handleSendInvite}
-                      disabled={saving || !inviteForm.name || !inviteForm.email}
-                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !inviteForm.name || !inviteForm.email) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
+                      disabled={saving || !inviteForm.name || !inviteForm.email || !!inviteLink}
+                      style={{ width: '100%', background: 'linear-gradient(135deg,#89070e,#b22a27)', color: '#e5e2e1', border: 'none', borderRadius: 999, padding: '13px', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', cursor: 'pointer', minHeight: 44, opacity: (saving || !inviteForm.name || !inviteForm.email || !!inviteLink) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                     >
-                      {saving ? 'Envoi…' : "ENVOYER L'INVITATION →"}
+                      {saving ? 'Création…' : "CRÉER L'INVITATION →"}
                     </button>
+                    {inviteLink && (
+                      <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 10, padding: '14px 16px' }}>
+                        <div style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.56rem', letterSpacing: '.15em', textTransform: 'uppercase', color: '#9CA3AF', marginBottom: 8 }}>
+                          Lien d'invitation — à envoyer à votre client
+                        </div>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.7rem', color: '#6B7280', wordBreak: 'break-all', lineHeight: 1.55, marginBottom: 10 }}>
+                          {inviteLink}
+                        </div>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(inviteLink); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+                          style={{ width: '100%', background: copied ? 'rgba(22,163,74,0.15)' : 'rgba(178,42,39,0.15)', border: 'none', borderRadius: 999, color: copied ? '#16a34a' : '#e3beb8', fontFamily: 'Lexend, sans-serif', fontWeight: 800, fontSize: '.66rem', letterSpacing: '.1em', textTransform: 'uppercase', padding: '10px', cursor: 'pointer', transition: 'background .2s, color .2s' }}
+                        >
+                          {copied ? '✓ LIEN COPIÉ !' : '📋 COPIER LE LIEN'}
+                        </button>
+                        <div style={{ fontFamily: 'Inter, sans-serif', fontSize: '.64rem', color: '#6B7280', marginTop: 8, lineHeight: 1.55 }}>
+                          ℹ️ Envoyez ce lien à votre client via WhatsApp ou email.
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -723,7 +740,7 @@ export default function CoachMembers() {
                     />
                     <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                       <button
-                        onClick={() => navigator.clipboard.writeText(inviteLink).then(() => { setCopying(true); setTimeout(() => setCopying(false), 2000); })}
+                        onClick={() => navigator.clipboard.writeText(inviteLink!).then(() => { setCopying(true); setTimeout(() => setCopying(false), 2000); })}
                         disabled={!inviteLink}
                         style={{ flex: 1, background: copying ? 'rgba(22,163,74,0.15)' : 'rgba(255,255,255,0.06)', border: 'none', borderRadius: 999, color: copying ? '#16a34a' : '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer', backdropFilter: 'blur(4px)', transition: 'background .2s, color .2s' }}
                       >
@@ -731,7 +748,7 @@ export default function CoachMembers() {
                       </button>
                       <button
                         className="mem-cta"
-                        onClick={() => navigator.share?.({ title: 'SundaraFlow', url: inviteLink })}
+                        onClick={() => navigator.share?.({ title: 'SundaraFlow', url: inviteLink! })}
                         disabled={!inviteLink || !navigator.share}
                         style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.68rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 44, cursor: 'pointer', opacity: (!inviteLink || !navigator.share) ? .45 : 1, transition: 'box-shadow .2s, opacity .2s' }}
                       >
