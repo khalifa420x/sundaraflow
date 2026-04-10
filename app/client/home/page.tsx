@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
 import {
-  collection, collectionGroup, query, where, getDocs, onSnapshot,
+  collection, query, where, getDocs, onSnapshot,
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   orderBy, limit, Timestamp, serverTimestamp,
 } from 'firebase/firestore';
@@ -266,28 +266,35 @@ export default function ClientHome() {
 
   const setupCompletionListener = async (u: import('firebase/auth').User) => {
     if (completionUnsubRef.current) completionUnsubRef.current();
-    // Preload completions immediately via getDocs so they show on first render
+
+    // Preload from sessions collection — stable IDs, no collectionGroup index needed
     try {
-      const initSnap = await getDocs(query(collectionGroup(db, 'exercises'), where('clientId', '==', u.uid)));
+      const initSnap = await getDocs(query(collection(db, 'sessions'), where('clientId', '==', u.uid)));
       const initMap: Record<string, boolean> = {};
       initSnap.docs.forEach(d => {
         const data = d.data();
-        if (data.completed && data.assignmentId != null && data.si != null && data.ei != null)
-          initMap[`${data.assignmentId}_${data.si}_${data.ei}`] = true;
+        Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+          if (done) initMap[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+        });
       });
       setCompletions(initMap);
     } catch (e) { console.warn('[completions:init]', e); }
-    const q = query(collectionGroup(db, 'exercises'), where('clientId', '==', u.uid));
+
+    // Real-time listener — sessions collection, no composite index required
+    const q = query(collection(db, 'sessions'), where('clientId', '==', u.uid));
     const unsub = onSnapshot(q, (snap) => {
       const map: Record<string, boolean> = {};
       snap.docs.forEach(d => {
         const data = d.data();
-        if (data.completed && data.assignmentId != null && data.si != null && data.ei != null)
-          map[`${data.assignmentId}_${data.si}_${data.ei}`] = true;
+        Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+          if (done) map[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+        });
       });
       setCompletions(map);
-    }, (err) => console.error('[onSnapshot]', err));
+    }, (err) => console.error('[sessions:snapshot]', err));
     completionUnsubRef.current = unsub;
+
+    // Keep exercise_completions for stats tab (completionLogs)
     try {
       const q2 = query(collection(db, 'exercise_completions'), where('clientId', '==', u.uid));
       onSnapshot(q2, (snap) => { setCompletionLogs(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, (err) => console.error(err));
@@ -301,12 +308,30 @@ export default function ClientHome() {
     const wasDone = !!completions[key];
     setCompletions(prev => { const n = { ...prev }; if (wasDone) delete n[key]; else n[key] = true; return n; });
     setSavingCompletion(key);
-    const ref = doc(db, 'program_assignments', assignmentId, 'sessions', `s${si}`, 'exercises', `e${ei}`);
+
+    // Stable session ID — survives page reloads
+    const date = new Date().toISOString().split('T')[0];
+    const sessionDocId = `${user.uid}_${assignmentId}_s${si}_${date}`;
+    const sessionRef = doc(db, 'sessions', sessionDocId);
     const prog = assignments.find((a: any) => a.id === assignmentId);
-    const completionRef = doc(db, 'exercise_completions', `${assignmentId}_${si}_${ei}`);
+
     try {
-      await setDoc(ref, { completed: !wasDone, completedAt: !wasDone ? serverTimestamp() : null, clientId: user.uid, coachId, assignmentId, sessionId: `s${si}`, si, ei, ...(exName ? { name: exName } : {}), ...(exReps ? { reps: exReps } : {}) }, { merge: true });
-      if (!wasDone) { await setDoc(completionRef, { clientId: user.uid, coachId, programId: prog?.programId || '', assignmentId, sessionIndex: si, exerciseName: exName || '', completedAt: serverTimestamp(), sets: exSets ?? 0, reps: exReps || '' }); } else { await deleteDoc(completionRef); }
+      const snap = await getDoc(sessionRef);
+      if (!snap.exists()) {
+        await setDoc(sessionRef, {
+          clientId: user.uid, coachId, assignmentId, si, date,
+          exerciseCompletions: { [ei]: !wasDone },
+        });
+      } else {
+        await updateDoc(sessionRef, { [`exerciseCompletions.${ei}`]: !wasDone });
+      }
+      // Keep exercise_completions for stats backward compat
+      const completionRef = doc(db, 'exercise_completions', `${assignmentId}_${si}_${ei}`);
+      if (!wasDone) {
+        await setDoc(completionRef, { clientId: user.uid, coachId, programId: prog?.programId || '', assignmentId, sessionIndex: si, exerciseName: exName || '', completedAt: serverTimestamp(), sets: exSets ?? 0, reps: exReps || '' });
+      } else {
+        await deleteDoc(completionRef);
+      }
       if (!wasDone) fireToast('✅', 'Exercice validé', '');
     } catch (err) {
       console.error(err);
