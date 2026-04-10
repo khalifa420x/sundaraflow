@@ -71,8 +71,22 @@ export default function AuthGuard({ children, requiredRole }: AuthGuardProps) {
     );
   }
 
-  // Pas de user ou mauvais rôle → null pendant redirection
-  if (!user || user.role !== requiredRole) return null;
+  // Pas de user ou mauvais rôle → loader pendant redirection
+  if (!user || user.role !== requiredRole) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: '#000'
+      }}>
+        <div style={{ color: 'white', opacity: 0.5, fontSize: '14px' }}>
+          Chargement...
+        </div>
+      </div>
+    )
+  }
 
   return <>{children}</>;
 }
