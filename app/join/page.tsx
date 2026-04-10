@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { doc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { auth, db } from '@/lib/firebase'
 
@@ -64,19 +64,32 @@ function JoinForm() {
       const credential = await createUserWithEmailAndPassword(auth, clientData.email, password)
       await updateProfile(credential.user, { displayName: clientData.name })
 
-      await Promise.all([
-        updateDoc(doc(db, 'clients', clientData.id), {
-          status: 'active',
-          uid: credential.user.uid,
-          inviteToken: null,
-        }),
-        updateDoc(doc(db, 'users', clientData.id), {
-          status: 'active',
-          uid: credential.user.uid,
-          inviteToken: null,
-        }),
-      ])
+      const uid = credential.user.uid
+      const now = Date.now()
 
+      // Mettre à jour /clients
+      await updateDoc(doc(db, 'clients', clientData.id), {
+        status: 'active',
+        uid: uid,
+        inviteToken: null,
+      })
+
+      // CRITIQUE — créer /users avec UID Firebase comme docId (même système que coach)
+      await setDoc(doc(db, 'users', uid), {
+        uid: uid,
+        email: clientData.email,
+        displayName: clientData.name,
+        role: 'client',
+        coachId: clientData.coachId,
+        status: 'active',
+        createdAt: now,
+        migrated: true,
+        avatarUrl: null,
+        inviteToken: null,
+        profile: clientData.profile || null,
+      })
+
+      console.log('[join] /users doc created with uid as docId:', uid)
       router.replace('/client/home')
     } catch (err: any) {
       if (err.code === 'auth/email-already-in-use') {
