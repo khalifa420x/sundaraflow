@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../../lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 
 /* ── TOUTE LA LOGIQUE EST PRÉSERVÉE — SEULE L'UI A ÉTÉ MODIFIÉE ── */
@@ -29,9 +29,9 @@ export default function LoginPage() {
     setError('');
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      const snap = await getDoc(doc(db, 'users', cred.user.uid));
-      if (!snap.exists()) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
-      const role = snap.data().role;
+      const snap = await getDocs(query(collection(db, 'users'), where('uid', '==', cred.user.uid)));
+      if (snap.empty) { setError('Utilisateur introuvable dans la base de données.'); setLoading(false); return; }
+      const role = snap.docs[0].data().role;
 
       // Set session cookie so middleware can gate protected routes
       const idToken = await cred.user.getIdToken();

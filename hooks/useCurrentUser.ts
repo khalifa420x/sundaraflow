@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { User, onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { AppUser } from '@/types/models';
 
@@ -37,12 +37,13 @@ export function useCurrentUser(): UseCurrentUserResult {
 
       setFirebaseUser(fbUser);
 
-      // Real-time sync with users/{uid}
+      // Real-time sync — query by uid field (docId != Firebase UID for invited clients)
+      const q = query(collection(db, 'users'), where('uid', '==', fbUser.uid));
       unsubFirestore = onSnapshot(
-        doc(db, 'users', fbUser.uid),
+        q,
         (snap) => {
-          if (snap.exists()) {
-            setUser({ uid: fbUser.uid, ...snap.data() } as AppUser);
+          if (!snap.empty) {
+            setUser({ uid: fbUser.uid, ...snap.docs[0].data() } as AppUser);
           } else {
             setUser(null);
           }
