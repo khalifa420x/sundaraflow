@@ -47,9 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        console.log('[Auth] fbUser.uid:', fbUser.uid)
+
         // Tentative 1 — docId = uid (coach ancien système)
         const directRef = doc(db, 'users', fbUser.uid)
         const directSnap = await getDoc(directRef)
+        console.log('[Auth] Tentative 1 - directSnap.exists():', directSnap.exists())
 
         if (directSnap.exists()) {
           console.log('[Auth] Found by docId')
@@ -64,6 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Tentative 2 — uid field (clients nouveau système)
         const q = query(collection(db, 'users'), where('uid', '==', fbUser.uid))
         const snap = await getDocs(q)
+        console.log('[Auth] Tentative 2 - snap.empty:', snap.empty, 'snap.size:', snap.size)
+        console.log('[Auth] Tentative 2 - docs:', snap.docs.map(d => ({ id: d.id, data: d.data() })))
 
         if (!snap.empty) {
           console.log('[Auth] Found by uid field')
@@ -79,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Tentative 3 — fallback /clients
         const q2 = query(collection(db, 'clients'), where('uid', '==', fbUser.uid))
         const snap2 = await getDocs(q2)
+        console.log('[Auth] Tentative 3 - snap2.empty:', snap2.empty)
 
         if (!snap2.empty) {
           console.log('[Auth] Found in /clients fallback')
