@@ -60,10 +60,13 @@ export function useSession({
   const sessionId = `${clientId}_${programId}_w${weekNumber}_d${dayIndex}_${date}`
 
   useEffect(() => {
-    if (!clientId || !programId) return
+    if (!clientId || !programId || !coachId) {
+      if (clientId && programId && !coachId) console.warn('[useSession] waiting for coachId before creating session');
+      return;
+    }
     loadOrCreateSession()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientId, programId, weekNumber, dayIndex])
+  }, [clientId, programId, weekNumber, dayIndex, coachId])
 
   async function loadOrCreateSession() {
     setLoading(true)

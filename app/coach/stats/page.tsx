@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth, db } from '@/lib/firebase';
 import {
-  collection, query, where, onSnapshot, getDocs, doc, getDoc,
+  collection, query, where, getDocs, doc, getDoc,
 } from 'firebase/firestore';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
@@ -103,6 +103,38 @@ const getMuscleDistribution = (completions: Completion[], assignments: Assignmen
     .map(([label, val]) => ({ label, val, pct: Math.round((val / total) * 100) }));
 };
 
+/* ── Expand one session doc into flat Completion records (both formats) ── */
+const expandSession = (docId: string, data: any): Completion[] => {
+  const result: Completion[] = [];
+  const dateObj = data.date ? new Date(data.date)
+    : data.completedAt ? new Date(data.completedAt)
+    : new Date(0);
+  const completedAt = { toDate: () => dateObj };
+  const base = {
+    clientId: data.clientId || '',
+    coachId: data.coachId || '',
+    programId: data.programId || '',
+    assignmentId: data.assignmentId || data.programId || '',
+    sessionIndex: data.dayIndex ?? data.si ?? 0,
+    exerciseName: '',
+    completedAt,
+    sets: 0,
+    reps: '',
+  };
+  // New format (useSession): exercises array with completed boolean
+  if (Array.isArray(data.exercises)) {
+    data.exercises.forEach((ex: any, i: number) => {
+      if (ex.completed) result.push({ id: `${docId}_ex${i}`, ...base });
+    });
+    return result;
+  }
+  // Old format (toggleExercise): exerciseCompletions object
+  Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+    if (done) result.push({ id: `${docId}_${eiStr}`, ...base });
+  });
+  return result;
+};
+
 /* ══════════════════════════
    PAGE
 ══════════════════════════ */
@@ -190,40 +222,28 @@ export default function CoachStatsPage() {
     })();
   }, [uid]);
 
-  /* Completions realtime */
+  /* Sessions — query by clientId per client (robust: coachId may be empty in old sessions) */
   useEffect(() => {
-    if (!uid) return;
-    const unsub = onSnapshot(
-      query(collection(db, 'sessions'), where('coachId', '==', uid)),
-      snap => {
-        const list: Completion[] = [];
-        snap.docs.forEach(d => {
-          const data = d.data() as any;
-          const dateObj = new Date(data.date);
-          Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
-            if (done) {
-              list.push({
-                id: `${d.id}_${eiStr}`,
-                clientId: data.clientId || '',
-                coachId: data.coachId || '',
-                programId: data.programId || '',
-                assignmentId: data.assignmentId || '',
-                sessionIndex: data.si ?? 0,
-                exerciseName: '',
-                completedAt: { toDate: () => dateObj },
-                sets: 0,
-                reps: '',
-              });
-            }
+    if (!uid || clients.length === 0) return;
+    setLoading(true);
+    (async () => {
+      try {
+        const allCompletions: Completion[] = [];
+        for (const client of clients) {
+          const clientUid = client.clientUserId;
+          if (!clientUid) continue;
+          const snap = await getDocs(
+            query(collection(db, 'sessions'), where('clientId', '==', clientUid))
+          );
+          snap.docs.forEach(d => {
+            allCompletions.push(...expandSession(d.id, d.data() as any));
           });
-        });
-        setCompletions(list);
-        setLoading(false);
-      },
-      err => { console.error('[stats:completions]', err); setLoading(false); },
-    );
-    return () => unsub();
-  }, [uid]);
+        }
+        setCompletions(allCompletions);
+      } catch (e) { console.error('[stats:sessions]', e); }
+      finally { setLoading(false); }
+    })();
+  }, [uid, clients]);
 
   /* ── Computed ─────────────────────────────────────────
      filteredCompletions = toutes les completions filtrées par période

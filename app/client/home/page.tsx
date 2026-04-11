@@ -273,13 +273,22 @@ export default function ClientHome() {
       const initLogs: any[] = [];
       initSnap.docs.forEach(d => {
         const data = d.data();
-        Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
-          if (done) {
-            initMap[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
-            const dateObj = new Date(data.date);
-            initLogs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
-          }
-        });
+        const dateObj = data.date ? new Date(data.date) : data.completedAt ? new Date(data.completedAt) : new Date(0);
+        if (Array.isArray(data.exercises)) {
+          data.exercises.forEach((ex: any, i: number) => {
+            if (ex.completed) {
+              initMap[`${data.programId}_${data.dayIndex}_${i}`] = true;
+              initLogs.push({ id: `${d.id}_ex${i}`, completedAt: { toDate: () => dateObj } });
+            }
+          });
+        } else {
+          Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+            if (done) {
+              initMap[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+              initLogs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
+            }
+          });
+        }
       });
       setCompletions(initMap);
       setCompletionLogs(initLogs);
@@ -292,13 +301,22 @@ export default function ClientHome() {
       const logs: any[] = [];
       snap.docs.forEach(d => {
         const data = d.data();
-        Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
-          if (done) {
-            map[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
-            const dateObj = new Date(data.date);
-            logs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
-          }
-        });
+        const dateObj = data.date ? new Date(data.date) : data.completedAt ? new Date(data.completedAt) : new Date(0);
+        if (Array.isArray(data.exercises)) {
+          data.exercises.forEach((ex: any, i: number) => {
+            if (ex.completed) {
+              map[`${data.programId}_${data.dayIndex}_${i}`] = true;
+              logs.push({ id: `${d.id}_ex${i}`, completedAt: { toDate: () => dateObj } });
+            }
+          });
+        } else {
+          Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+            if (done) {
+              map[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+              logs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
+            }
+          });
+        }
       });
       setCompletions(map);
       setCompletionLogs(logs);
