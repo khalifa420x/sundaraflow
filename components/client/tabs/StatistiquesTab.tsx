@@ -37,7 +37,13 @@ export default function StatistiquesTab({
         <div>
           <div style={{ fontSize: '.55rem', fontFamily: 'Inter, sans-serif', fontWeight: 600, letterSpacing: '.22em', textTransform: 'uppercase', color: 'rgba(229,226,225,0.4)', marginBottom: 8 }}>STATISTIQUES DÉTAILLÉES</div>
           <h2 style={{ fontFamily: 'Lexend, sans-serif', fontWeight: 900, fontSize: 'clamp(1.8rem,6vw,3rem)', letterSpacing: '-.05em', lineHeight: .92, color: '#e5e2e1', margin: '0 0 8px' }}>MES STATISTIQUES.</h2>
-          <p style={{ fontSize: '.72rem', color: '#6B7280', fontFamily: 'Inter, sans-serif', margin: 0 }}>Période : du 1er au 30 mars 2025 · 30 jours de suivi</p>
+          <p style={{ fontSize: '.72rem', color: '#6B7280', fontFamily: 'Inter, sans-serif', margin: 0 }}>{(() => {
+            const days = statPeriod === '7J' ? 7 : statPeriod === '30J' ? 30 : statPeriod === '3M' ? 90 : 365;
+            const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+            const from = new Date(Date.now() - days * 86400000).toLocaleDateString('fr-FR', opts);
+            const to   = new Date().toLocaleDateString('fr-FR', opts);
+            return `Période : du ${from} au ${to} · ${days} jours de suivi`;
+          })()}</p>
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {['7J', '30J', '3M', '1AN'].map(p => (

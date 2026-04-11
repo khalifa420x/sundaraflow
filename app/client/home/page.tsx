@@ -26,12 +26,6 @@ const TYPE_CONFIG: Record<string, { icon: string; label: string; color: string }
 };
 const CAT_ICON: Record<string, string>      = { nutrition: '🥗', training: '🏋️', lifestyle: '🌿', mindset: '🧠' };
 const TIP_CAT_LABEL: Record<string, string> = { nutrition: 'Nutrition', training: 'Entraînement', lifestyle: 'Lifestyle', mindset: 'Mindset' };
-const CHART_BARS = [
-  { label: 'Lun', h: 55, deficit: -380 }, { label: 'Mar', h: 70, deficit: -520 },
-  { label: 'Mer', h: 45, deficit: -290 }, { label: 'Jeu', h: 80, deficit: -610 },
-  { label: 'Ven', h: 65, deficit: -450 }, { label: 'Sam', h: 30, deficit: -180 },
-  { label: 'Dim', h: 50, deficit: -320 },
-];
 const CIRCLE_R      = 70;
 const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_R;
 
@@ -195,6 +189,11 @@ export default function ClientHome() {
     return Object.entries(weeks).slice(-4).map(([label, val]) => ({ label, val }));
   })();
   const statMaxWeek = Math.max(1, ...statWeeklyData.map(d => d.val));
+  const CHART_BARS = statWeeklyData.map(w => ({
+    label: w.label,
+    h: Math.min(100, w.val * 10),
+    deficit: w.val,
+  }));
 
   /* Mount */
   useEffect(() => { const t = setTimeout(() => setMounted(true), 60); return () => clearTimeout(t); }, []);
@@ -271,34 +270,40 @@ export default function ClientHome() {
     try {
       const initSnap = await getDocs(query(collection(db, 'sessions'), where('clientId', '==', u.uid)));
       const initMap: Record<string, boolean> = {};
+      const initLogs: any[] = [];
       initSnap.docs.forEach(d => {
         const data = d.data();
         Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
-          if (done) initMap[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+          if (done) {
+            initMap[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+            const dateObj = new Date(data.date);
+            initLogs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
+          }
         });
       });
       setCompletions(initMap);
+      setCompletionLogs(initLogs);
     } catch (e) { console.warn('[completions:init]', e); }
 
-    // Real-time listener — sessions collection, no composite index required
+    // Real-time listener — sessions collection, stats derived from same source
     const q = query(collection(db, 'sessions'), where('clientId', '==', u.uid));
     const unsub = onSnapshot(q, (snap) => {
       const map: Record<string, boolean> = {};
+      const logs: any[] = [];
       snap.docs.forEach(d => {
         const data = d.data();
         Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
-          if (done) map[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+          if (done) {
+            map[`${data.assignmentId}_${data.si}_${eiStr}`] = true;
+            const dateObj = new Date(data.date);
+            logs.push({ id: `${d.id}_${eiStr}`, completedAt: { toDate: () => dateObj } });
+          }
         });
       });
       setCompletions(map);
+      setCompletionLogs(logs);
     }, (err) => console.error('[sessions:snapshot]', err));
     completionUnsubRef.current = unsub;
-
-    // Keep exercise_completions for stats tab (completionLogs)
-    try {
-      const q2 = query(collection(db, 'exercise_completions'), where('clientId', '==', u.uid));
-      onSnapshot(q2, (snap) => { setCompletionLogs(snap.docs.map(d => ({ id: d.id, ...d.data() }))); }, (err) => console.error(err));
-    } catch (e) { console.error(e); }
   };
 
   const toggleExercise = async (assignmentId: string, si: number, ei: number, exName?: string, exReps?: string, exSets?: number) => {

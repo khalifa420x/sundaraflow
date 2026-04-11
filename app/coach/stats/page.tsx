@@ -194,8 +194,32 @@ export default function CoachStatsPage() {
   useEffect(() => {
     if (!uid) return;
     const unsub = onSnapshot(
-      query(collection(db, 'exercise_completions'), where('coachId', '==', uid)),
-      snap => { setCompletions(snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }))); setLoading(false); },
+      query(collection(db, 'sessions'), where('coachId', '==', uid)),
+      snap => {
+        const list: Completion[] = [];
+        snap.docs.forEach(d => {
+          const data = d.data() as any;
+          const dateObj = new Date(data.date);
+          Object.entries(data.exerciseCompletions || {}).forEach(([eiStr, done]) => {
+            if (done) {
+              list.push({
+                id: `${d.id}_${eiStr}`,
+                clientId: data.clientId || '',
+                coachId: data.coachId || '',
+                programId: data.programId || '',
+                assignmentId: data.assignmentId || '',
+                sessionIndex: data.si ?? 0,
+                exerciseName: '',
+                completedAt: { toDate: () => dateObj },
+                sets: 0,
+                reps: '',
+              });
+            }
+          });
+        });
+        setCompletions(list);
+        setLoading(false);
+      },
       err => { console.error('[stats:completions]', err); setLoading(false); },
     );
     return () => unsub();
