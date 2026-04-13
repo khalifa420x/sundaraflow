@@ -233,7 +233,7 @@ export default function ClientHome() {
       setAcceptedPrograms(acceptedMap);
       setupCompletionListener(u);
 
-      const clientSnap = await getDocs(query(collection(db, 'clients'), where('clientUserId', '==', u.uid)));
+      const clientSnap = await getDocs(query(collection(db, 'clients'), where('uid', '==', u.uid)));
       if (!clientSnap.empty) {
         const cId = clientSnap.docs[0].data().coachId;
         setCoachId(cId);
