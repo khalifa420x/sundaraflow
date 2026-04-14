@@ -125,11 +125,12 @@ export default function CoachMembers() {
         }
         // Compute progress from program_assignments
         let progress = cd.progress || 0;
-        if (cd.clientUserId) {
+        const clientFirebaseUid = cd.uid || cd.clientUserId;
+        if (clientFirebaseUid) {
           try {
             const aSnap = await getDocs(query(
               collection(db, 'program_assignments'),
-              where('clientId', '==', cd.clientUserId)
+              where('clientId', '==', clientFirebaseUid)
             ));
             const progresses = aSnap.docs.map((d: any) => d.data().progress || 0);
             if (progresses.length > 0)
@@ -543,7 +544,7 @@ export default function CoachMembers() {
                           Message
                         </button>
                         <button
-                          onClick={() => router.push('/coach/home')}
+                          onClick={() => router.push('/coach/programmes')}
                           style={{ flex: 1, background: 'linear-gradient(135deg,#89070e,#b22a27)', border: 'none', borderRadius: 999, color: '#e5e2e1', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.56rem', letterSpacing: '.08em', textTransform: 'uppercase', minHeight: 34, cursor: 'pointer' }}
                         >
                           Programme

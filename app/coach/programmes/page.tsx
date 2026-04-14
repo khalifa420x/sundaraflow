@@ -1027,7 +1027,7 @@ export default function CoachProgrammes() {
                     {(() => {
                       const totalEx = trackingData.reduce((a, c) => a + c.totalExercises, 0);
                       const doneEx  = trackingData.reduce((a, c) => a + c.completed, 0);
-                      const globalRate = totalEx > 0 ? Math.round((doneEx / totalEx) * 100) : 0;
+                      const globalRate = totalEx > 0 ? Math.min(100, Math.round((doneEx / totalEx) * 100)) : 0;
                       const active7d = trackingData.filter(c => c.lastAt && (Date.now() - c.lastAt.getTime()) < 7 * 86400000).length;
                       return (
                         <>
