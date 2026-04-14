@@ -393,7 +393,7 @@ export default function CoachProgrammes() {
     try {
       // Step 0: fresh client list to avoid stale closure
       const cSnap = await getDocs(query(collection(db, 'clients'), where('coachId', '==', u.uid)));
-      const freshClients: { docId: string; clientUserId: string; name: string }[] = [];
+      const freshClients: { docId: string; uid: string; clientUserId: string; name: string }[] = [];
       for (const d of cSnap.docs) {
         const cd = d.data();
         let cName = cd.name || '';
@@ -403,7 +403,7 @@ export default function CoachProgrammes() {
             if (uDoc.exists()) cName = uDoc.data().name || uDoc.data().email || 'Client';
           } catch {}
         }
-        freshClients.push({ docId: d.id, clientUserId: cd.clientUserId || '', name: cName || 'Client' });
+        freshClients.push({ docId: d.id, uid: cd.uid || '', clientUserId: cd.clientUserId || '', name: cName || 'Client' });
       }
       console.log('[fetchTracking] freshClients:', freshClients.length);
       // Step 1: one-time fetch of totals
@@ -438,14 +438,14 @@ export default function CoachProgrammes() {
       // Step 2: real-time completions listener
       const buildEntries = (compByUser: Record<string, { count: number; lastAt: Date | null }>) => {
         return freshClients.map(c => {
-          const uid = c.clientUserId || '';
+          const uid = c.uid || c.clientUserId || '';
           const totals = totalsByClientRef.current[uid] || { exercises: 0, sessions: 0 };
           const comp = compByUser[uid] || { count: 0, lastAt: null };
           const completionRate = totals.exercises > 0 ? Math.min(100, Math.round((comp.count / totals.exercises) * 100)) : 0;
           return { name: c.name, uid, completed: comp.count, totalExercises: totals.exercises, totalSessions: totals.sessions, completionRate, lastAt: comp.lastAt };
         });
       };
-      const clientUids = freshClients.map(c => c.clientUserId).filter(Boolean).slice(0, 10);
+      const clientUids = freshClients.map(c => c.uid || c.clientUserId).filter(Boolean).slice(0, 10);
       if (clientUids.length === 0) {
         setTrackingData(buildEntries({}));
         setTrackingLoading(false);
