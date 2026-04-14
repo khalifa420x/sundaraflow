@@ -27,6 +27,7 @@ interface Client {
   id: string;
   name: string;
   clientUserId: string;
+  uid: string;
   initials: string;
   color: string;
 }
@@ -185,6 +186,7 @@ export default function CoachStatsPage() {
           list.push({
             id: d.id, name,
             clientUserId: data.clientUserId || d.id,
+            uid: data.uid || data.clientUserId || d.id,
             initials: mkInitials(name),
             color: AVATAR_COLORS[ci % AVATAR_COLORS.length],
           });
@@ -283,7 +285,7 @@ export default function CoachStatsPage() {
   const muscleData = useMemo(() => getMuscleDistribution(displayCompletions, displayAssignments), [displayCompletions, displayAssignments]);
 
   const selName = selectedClientId
-    ? (clients.find(c => c.clientUserId === selectedClientId)?.name || 'Client')
+    ? (clients.find(c => c.uid === selectedClientId)?.name || 'Client')
     : 'Équipe';
 
   /* Last activity map (always from all completions, for the client list) */
@@ -549,7 +551,7 @@ export default function CoachStatsPage() {
                     {insightDesc}
                   </p>
                   <button
-                    onClick={() => setSelectedClientId(selectedClientId ? null : (clients[0]?.clientUserId ?? null))}
+                    onClick={() => setSelectedClientId(selectedClientId ? null : (clients[0]?.uid ?? null))}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', fontWeight: 700, fontSize: '.72rem', letterSpacing: '.1em', textTransform: 'uppercase', color: '#b22a27', padding: 0, marginTop: 2 }}
                   >
                     {selectedClientId ? '← VOIR L\'ÉQUIPE' : '→ VOIR UN CLIENT'}
@@ -566,9 +568,9 @@ export default function CoachStatsPage() {
                     const ts = lastActivityMap.get(cl.clientUserId) || 0;
                     /* Per-client stats always computed from ALL completions, not displayCompletions */
                     const clComps = filterByPeriod(
-                      completions.filter(c => c.clientId === cl.clientUserId), period,
+                      completions.filter(c => c.clientId === cl.uid), period,
                     );
-                    const clTotal = getTotalExercises(assignments.filter(a => a.clientId === cl.clientUserId));
+                    const clTotal = getTotalExercises(assignments.filter(a => a.clientId === cl.uid));
                     const clRate  = getCompletionRate(clComps.length, clTotal);
                     const isRecent = ts > 0 && Date.now() - ts < 7 * 86400000;
                     return { ...cl, ts, clRate, isRecent };
@@ -577,7 +579,7 @@ export default function CoachStatsPage() {
                   .map(cl => (
                     <div
                       key={cl.id}
-                      onClick={() => setSelectedClientId(selectedClientId === cl.clientUserId ? null : cl.clientUserId)}
+                      onClick={() => setSelectedClientId(selectedClientId === cl.uid ? null : cl.uid)}
                       style={{
                         background: selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.07)' : '#1c1b1b',
                         border: `1px solid ${selectedClientId === cl.clientUserId ? 'rgba(178,42,39,0.28)' : 'rgba(255,255,255,0.06)'}`,

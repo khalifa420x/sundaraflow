@@ -445,8 +445,14 @@ export default function CoachProgrammes() {
           return { name: c.name, uid, completed: comp.count, totalExercises: totals.exercises, totalSessions: totals.sessions, completionRate, lastAt: comp.lastAt };
         });
       };
+      const clientUids = freshClients.map(c => c.clientUserId).filter(Boolean).slice(0, 10);
+      if (clientUids.length === 0) {
+        setTrackingData(buildEntries({}));
+        setTrackingLoading(false);
+        return;
+      }
       const unsub = onSnapshot(
-        query(collection(db, 'exercise_completions'), where('coachId', '==', u.uid)),
+        query(collection(db, 'exercise_completions'), where('clientId', 'in', clientUids)),
         (snap) => {
           const compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
           snap.docs.forEach(d => {
