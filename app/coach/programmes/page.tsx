@@ -499,24 +499,36 @@ export default function CoachProgrammes() {
         return;
       }
       const unsub = onSnapshot(
-        query(collection(db, 'exercise_completions'), where('clientId', 'in', clientUids)),
+        query(collection(db, 'sessions'), where('clientId', 'in', clientUids)),
         (snap) => {
           const compByUser: Record<string, { count: number; lastAt: Date | null }> = {};
           snap.docs.forEach(d => {
             const data = d.data();
             const uid = data.clientId as string;
             if (!uid) return;
-            const at: Date = data.completedAt?.toDate?.() ?? new Date(0);
+            const dateObj: Date = data.date ? new Date(data.date) : data.completedAt?.toDate?.() ?? new Date(0);
+
+            // Compter les exercices complétés dans ce document session
+            let doneCount = 0;
+            if (Array.isArray(data.exercises)) {
+              doneCount = data.exercises.filter((ex: any) => ex.completed).length;
+            } else if (data.exerciseCompletions && typeof data.exerciseCompletions === 'object') {
+              doneCount = Object.values(data.exerciseCompletions).filter(Boolean).length;
+            }
+
+            if (doneCount === 0) return;
             if (!compByUser[uid]) compByUser[uid] = { count: 0, lastAt: null };
-            compByUser[uid].count += 1;
-            if (!compByUser[uid].lastAt || at > compByUser[uid].lastAt!) compByUser[uid].lastAt = at;
+            compByUser[uid].count += doneCount;
+            if (!compByUser[uid].lastAt || dateObj > compByUser[uid].lastAt!) {
+              compByUser[uid].lastAt = dateObj;
+            }
           });
-          console.log('[onSnapshot:exercise_completions] docs:', snap.size, '→ freshClients:', freshClients.length);
+          console.log('[onSnapshot:sessions] docs:', snap.size, '→ compByUser:', JSON.stringify(compByUser));
           setTrackingData(buildEntries(compByUser));
           setTrackingLoading(false);
         },
         (err) => {
-          console.error('[onSnapshot:exercise_completions] error:', err);
+          console.error('[onSnapshot:sessions] error:', err);
           setTrackingData(buildEntries({}));
           setTrackingLoading(false);
         }
