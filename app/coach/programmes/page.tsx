@@ -411,6 +411,10 @@ export default function CoachProgrammes() {
       console.log('[fetchTracking] assignments found:', aSnap.size);
       const totalsByClient: Record<string, { exercises: number; sessions: number }> = {};
       let totalExFetched = 0;
+      // Dédupliquer les assignments par (clientId + programId) pour éviter
+      // le double comptage si un même programme est assigné plusieurs fois au même client
+      const seenAssignments = new Set<string>();
+
       for (const aDoc of aSnap.docs) {
         const aData = aDoc.data();
         const clientId = aData.clientId as string | undefined;
@@ -418,6 +422,12 @@ export default function CoachProgrammes() {
         const status = aData.status as string | undefined;
         if (!clientId || !programId) continue;
         if (status === 'revoked' || status === 'cancelled') continue;
+
+        // Clé unique par client + programme → on skip si déjà compté
+        const assignKey = `${clientId}__${programId}`;
+        if (seenAssignments.has(assignKey)) continue;
+        seenAssignments.add(assignKey);
+
         try {
           const pDoc = await getDoc(doc(db, 'programs', programId));
           if (!pDoc.exists()) continue;
@@ -434,6 +444,8 @@ export default function CoachProgrammes() {
         }
       }
       console.log('[fetchTracking] total exercises across all clients:', totalExFetched);
+      console.log('[DEBUG] totalsByClient:', JSON.stringify(totalsByClient));
+      console.log('[DEBUG] seenAssignments size:', seenAssignments.size);
       totalsByClientRef.current = totalsByClient;
       // Step 2: real-time completions listener
       const buildEntries = (compByUser: Record<string, { count: number; lastAt: Date | null }>) => {
