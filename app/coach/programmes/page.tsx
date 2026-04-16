@@ -449,13 +449,30 @@ export default function CoachProgrammes() {
         try {
           const pDoc = await getDoc(doc(db, 'programs', programId));
           if (!pDoc.exists()) continue;
-          const sessions: any[] = Array.isArray(pDoc.data().sessions) ? pDoc.data().sessions : [];
+          const pData = pDoc.data();
+          const sessions: any[] = Array.isArray(pData.sessions) ? pData.sessions : [];
+          const durationWeeks: number = pData.durationWeeks || 1;
+
+          // Calculer les semaines écoulées depuis startDate
+          let weeksElapsed = 1;
+          const startDateStr = aData.startDate as string | undefined;
+          if (startDateStr) {
+            const start = new Date(startDateStr);
+            const now = new Date();
+            const diffMs = now.getTime() - start.getTime();
+            const diffWeeks = Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)) + 1;
+            weeksElapsed = Math.min(Math.max(diffWeeks, 1), durationWeeks);
+          }
+
+          console.log('[DEBUG weeks]', { clientId, weeksElapsed, durationWeeks, startDate: startDateStr });
+
           if (!totalsByClient[clientId]) totalsByClient[clientId] = { exercises: 0, sessions: 0 };
           sessions.forEach((s: any) => {
             if (!s) return;
-            totalsByClient[clientId].sessions += 1;
-            totalsByClient[clientId].exercises += Array.isArray(s.exercises) ? s.exercises.length : 0;
-            totalExFetched += Array.isArray(s.exercises) ? s.exercises.length : 0;
+            totalsByClient[clientId].sessions += weeksElapsed;
+            const exCount = Array.isArray(s.exercises) ? s.exercises.length : 0;
+            totalsByClient[clientId].exercises += exCount * weeksElapsed;
+            totalExFetched += exCount * weeksElapsed;
           });
         } catch (innerErr) {
           console.error('[fetchTracking] error fetching program:', programId, innerErr);
