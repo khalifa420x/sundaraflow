@@ -417,11 +417,29 @@ export default function CoachProgrammes() {
 
       for (const aDoc of aSnap.docs) {
         const aData = aDoc.data();
-        const clientId = aData.clientId as string | undefined;
+        let clientId = aData.clientId as string | undefined;
         const programId = aData.programId as string | undefined;
         const status = aData.status as string | undefined;
-        if (!clientId || !programId) continue;
+        const clientDocId = aData.clientDocId as string | undefined;
+
+        console.log('[DEBUG assignment]', {
+          docId: aDoc.id,
+          clientId,
+          programId,
+          status,
+          clientDocId,
+        });
+
         if (status === 'revoked' || status === 'cancelled') continue;
+        if (!programId) continue;
+
+        // Fallback : si clientId est vide, le résoudre via clientDocId dans freshClients
+        if (!clientId && clientDocId) {
+          const matched = freshClients.find(c => c.docId === clientDocId);
+          if (matched) clientId = matched.uid || matched.clientUserId || undefined;
+        }
+
+        if (!clientId) continue;
 
         // Clé unique par client + programme → on skip si déjà compté
         const assignKey = `${clientId}__${programId}`;
